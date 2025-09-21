@@ -1,0 +1,14 @@
+{
+  "name": "odin-facebook-clone",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "start cmd /k \"npm run server\" & start cmd /k \"npm run client\"",
+    "client":"cd client && npm run dev",
+    "server":"cd server && npm run start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
