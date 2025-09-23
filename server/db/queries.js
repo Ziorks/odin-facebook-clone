@@ -14,6 +14,38 @@ const prisma = new PrismaClient({
   },
 });
 
+async function getUserById(id) {
+  const user = await prisma.user.findUnique({
+    where: { id },
+  });
+
+  return user;
+}
+
+async function getUserByUsername(username) {
+  const user = await prisma.user.findFirst({
+    where: {
+      username: {
+        equals: username,
+        mode: "insensitive",
+      },
+    },
+  });
+
+  return user;
+}
+
+async function createUser(username, hashedPassword) {
+  const user = await prisma.user.create({
+    data: {
+      username,
+      password: hashedPassword,
+    },
+  });
+
+  return user;
+}
+
 async function resetDatabase() {
   const tableNames = Object.values(Prisma.ModelName);
   for (const tableName of tableNames) {
@@ -23,4 +55,4 @@ async function resetDatabase() {
   }
 }
 
-module.exports = { resetDatabase };
+module.exports = { getUserById, getUserByUsername, createUser, resetDatabase };
