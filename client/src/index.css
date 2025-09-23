@@ -10,5 +10,7 @@ body {
 }
 
 a {
-  color: #fff;
+  color: lightskyblue;
+  text-decoration: underline;
+  cursor: pointer;
 }
