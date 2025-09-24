@@ -1,9 +1,10 @@
-import { useState } from "react";
-import axios from "axios";
-const host = import.meta.env.VITE_API_HOST;
+import { useContext, useState } from "react";
+import api from "../../api";
+import AuthContext from "../../contexts/AuthContext";
 // import styles from "./Login.module.css";
 
-function SignUpForm({ handleLogin, toggleForm }) {
+function SignUpForm() {
+  const { setAuthFromResponse } = useContext(AuthContext);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
@@ -15,15 +16,17 @@ function SignUpForm({ handleLogin, toggleForm }) {
     setErrors(null);
     setIsLoading(true);
 
-    axios
-      .post(`${host}/register`, { username, password, passwordConfirmation })
+    api
+      .post(
+        "/register",
+        { username, password, passwordConfirmation },
+        { withCredentials: true },
+      )
       .then((res) => {
-        const { id, username } = res.data.user;
-        const user = { id, username, token: res.data.token };
-        handleLogin(user);
+        setAuthFromResponse(res);
       })
       .catch((err) => {
-        console.log(err);
+        console.error("registration error", err);
 
         if (err.response?.status === 400) {
           setErrors(err.response.data.errors);
@@ -53,7 +56,6 @@ function SignUpForm({ handleLogin, toggleForm }) {
           <label htmlFor="username">Username: </label>
           <input
             type="text"
-            name="username"
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -64,7 +66,6 @@ function SignUpForm({ handleLogin, toggleForm }) {
           <label htmlFor="password">Password: </label>
           <input
             type="password"
-            name="password"
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -75,7 +76,6 @@ function SignUpForm({ handleLogin, toggleForm }) {
           <label htmlFor="passwordConfirmation">Confirm Password: </label>
           <input
             type="password"
-            name="passwordConfirmation"
             id="passwordConfirmation"
             value={passwordConfirmation}
             onChange={(e) => setPasswordConfirmation(e.target.value)}
@@ -88,14 +88,12 @@ function SignUpForm({ handleLogin, toggleForm }) {
           </button>
         </div>
       </form>
-      <p>
-        Already have an account? <a onClick={toggleForm}>Log in</a>
-      </p>
     </>
   );
 }
 
-function LoginForm({ handleLogin, toggleForm }) {
+function LoginForm() {
+  const { setAuthFromResponse } = useContext(AuthContext);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -106,15 +104,13 @@ function LoginForm({ handleLogin, toggleForm }) {
     setError(null);
     setIsLoading(true);
 
-    axios
-      .post(`${host}/login`, { username, password })
+    api
+      .post("/login", { username, password }, { withCredentials: true })
       .then((res) => {
-        const { id, username } = res.data.user;
-        const user = { id, username, token: res.data.token };
-        handleLogin(user);
+        setAuthFromResponse(res);
       })
       .catch((err) => {
-        console.log(err);
+        console.error("login error", err);
         setError(err.response?.data?.message || "Something went wrong.");
       })
       .finally(() => {
@@ -131,7 +127,6 @@ function LoginForm({ handleLogin, toggleForm }) {
           <label htmlFor="username">Username: </label>
           <input
             type="text"
-            name="username"
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -142,7 +137,6 @@ function LoginForm({ handleLogin, toggleForm }) {
           <label htmlFor="password">Password: </label>
           <input
             type="password"
-            name="password"
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -155,12 +149,11 @@ function LoginForm({ handleLogin, toggleForm }) {
           </button>
         </div>
       </form>
-      <a onClick={toggleForm}>Sign up for [insert site name]</a>
     </>
   );
 }
 
-function Login({ handleLogin }) {
+function Login() {
   const [showSignUp, setShowSignUp] = useState(false);
 
   const toggleForm = () => {
@@ -169,10 +162,13 @@ function Login({ handleLogin }) {
 
   return (
     <>
+      {showSignUp ? <SignUpForm /> : <LoginForm />}
       {showSignUp ? (
-        <SignUpForm handleLogin={handleLogin} toggleForm={toggleForm} />
+        <p>
+          Already have an account?<a onClick={toggleForm}>Log in</a>
+        </p>
       ) : (
-        <LoginForm handleLogin={handleLogin} toggleForm={toggleForm} />
+        <a onClick={toggleForm}>Sign up for [insert site name]</a>
       )}
     </>
   );

@@ -1,33 +1,37 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Outlet } from "react-router-dom";
+import AuthContext from "./contexts/AuthContext";
+import useRefreshToken from "./hooks/useRefreshToken";
 import Login from "./pages/Login";
 
 function App() {
-  const [user, setUser] = useState(null);
+  const { auth } = useContext(AuthContext);
+  const refresh = useRefreshToken();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      setUser(JSON.parse(user));
-    }
-  }, []);
+    setIsLoading(true);
+    let isMounted = true;
+    const controller = new AbortController();
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-  };
+    refresh(controller.signal).finally(() => {
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    });
 
-  const handleLogin = (user) => {
-    localStorage.setItem("user", JSON.stringify(user));
-    setUser(user);
-  };
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [refresh]);
 
   return (
     <>
-      {user ? (
-        <Outlet context={{ user, handleLogout }} />
+      {isLoading ? (
+        <h1>Loading...</h1>
       ) : (
-        <Login handleLogin={handleLogin} />
+        <>{auth.user ? <Outlet /> : <Login />}</>
       )}
     </>
   );
