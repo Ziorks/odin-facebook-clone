@@ -1,28 +1,47 @@
-require("dotenv").config();
 const passport = require("passport");
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
 const db = require("../db/queries");
 const { validateRegister } = require("../utilities/validators");
+const {
+  generateAccessToken,
+  generateRefreshToken,
+  getTokenRecord,
+  sanitizeUser,
+} = require("../utilities/helperFunctions");
 
-function generateToken(userId) {
-  return `Bearer ${jwt.sign({ sub: userId }, process.env.JWT_SECRET)}`;
-}
+const REFRESH_TOKEN_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "None",
+  maxAge: 1000 * 60 * 60 * 24 * 7, //7 days
+};
 
 const loginPost = (req, res, next) => {
-  passport.authenticate("local", { session: false }, (error, user, info) => {
-    if (error) {
-      return next(error);
-    }
+  passport.authenticate(
+    "local",
+    { session: false },
+    async (error, user, info) => {
+      if (error) {
+        return next(error);
+      }
 
-    if (!user) {
-      return res.status(400).json({ message: info.message });
-    }
+      if (!user) {
+        return res.status(400).json({ message: info.message });
+      }
 
-    const token = generateToken(user.id);
-    return res.json({ message: "login was successful", user, token });
-  })(req, res, next);
+      const accessToken = generateAccessToken(user.id);
+      const refreshToken = await generateRefreshToken(user.id);
+
+      res.cookie("refreshToken", refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+
+      return res.json({
+        message: "login was successful",
+        user: sanitizeUser(user),
+        accessToken,
+      });
+    }
+  )(req, res, next);
 };
 
 const registerPost = [
@@ -60,11 +79,16 @@ const registerPost = [
 
       try {
         const user = await db.createUser(username, hashedPassword);
-        const token = generateToken(user.id);
+
+        const accessToken = generateAccessToken(user.id);
+        const refreshToken = await generateRefreshToken(user.id);
+
+        res.cookie("refreshToken", refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+
         return res.json({
           message: "registration was successful",
-          user,
-          token,
+          user: sanitizeUser(user),
+          accessToken,
         });
       } catch (err) {
         return next(err);
@@ -73,4 +97,52 @@ const registerPost = [
   },
 ];
 
-module.exports = { loginPost, registerPost };
+const refreshPost = async (req, res) => {
+  const { refreshToken } = req.cookies;
+  if (!refreshToken) {
+    return res.status(400).json({ message: "missing refresh token" });
+  }
+
+  const tokenRecord = await getTokenRecord(refreshToken);
+  if (!tokenRecord) {
+    return res.status(403).json({
+      message: "invalid or expired refresh token",
+    });
+  }
+
+  await db.updateRefreshToken(tokenRecord.id, { revoked: true });
+
+  const newAccessToken = generateAccessToken(tokenRecord.userId);
+  const newRefreshToken = await generateRefreshToken(tokenRecord.userId);
+
+  const user = await db.getUserById(+refreshToken.split(".")[0]);
+
+  res.cookie("refreshToken", newRefreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+
+  return res.json({
+    user: sanitizeUser(user),
+    accessToken: newAccessToken,
+  });
+};
+
+const logoutPost = async (req, res) => {
+  const { refreshToken } = req.cookies;
+  if (!refreshToken) {
+    return res.status(400).json({ message: "missing refresh token" });
+  }
+
+  const tokenRecord = await getTokenRecord(refreshToken);
+  if (!tokenRecord) {
+    return res.status(403).json({
+      message: "invalid or expired refresh token",
+    });
+  }
+
+  await db.updateRefreshToken(tokenRecord.id, { revoked: true });
+
+  res.clearCookie("refreshToken", REFRESH_TOKEN_COOKIE_OPTIONS);
+
+  return res.json({ message: "logged out successfully" });
+};
+
+module.exports = { loginPost, registerPost, refreshPost, logoutPost };

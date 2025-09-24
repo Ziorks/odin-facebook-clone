@@ -14,6 +14,8 @@ const prisma = new PrismaClient({
   },
 });
 
+//READ QUERIES
+
 async function getUserById(id) {
   const user = await prisma.user.findUnique({
     where: { id },
@@ -35,6 +37,20 @@ async function getUserByUsername(username) {
   return user;
 }
 
+async function getValidRefreshTokensByUserId(userId) {
+  const refreshToken = await prisma.refreshToken.findMany({
+    where: {
+      userId,
+      revoked: false,
+      expiresAt: { gt: new Date() },
+    },
+  });
+
+  return refreshToken;
+}
+
+//CREATE QUERIES
+
 async function createUser(username, hashedPassword) {
   const user = await prisma.user.create({
     data: {
@@ -46,6 +62,33 @@ async function createUser(username, hashedPassword) {
   return user;
 }
 
+async function createRefreshToken(hashedToken, userId, expiresAt) {
+  const refreshToken = await prisma.refreshToken.create({
+    data: {
+      token: hashedToken,
+      user: { connect: { id: userId } },
+      expiresAt,
+    },
+  });
+
+  return refreshToken;
+}
+
+//UPDATE QUERIES
+
+async function updateRefreshToken(tokenId, { revoked }) {
+  const token = await prisma.refreshToken.update({
+    where: {
+      id: tokenId,
+    },
+    data: {
+      revoked,
+    },
+  });
+
+  return token;
+}
+
 async function resetDatabase() {
   const tableNames = Object.values(Prisma.ModelName);
   for (const tableName of tableNames) {
@@ -55,4 +98,12 @@ async function resetDatabase() {
   }
 }
 
-module.exports = { getUserById, getUserByUsername, createUser, resetDatabase };
+module.exports = {
+  getUserById,
+  getUserByUsername,
+  getValidRefreshTokensByUserId,
+  createUser,
+  createRefreshToken,
+  updateRefreshToken,
+  resetDatabase,
+};
