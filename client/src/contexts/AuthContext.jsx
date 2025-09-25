@@ -1,18 +1,15 @@
-import { createContext, useCallback, useState } from "react";
+import { createContext, useState } from "react";
 
 const AuthContext = createContext({});
 
 export function AuthProvider({ children }) {
   const [auth, setAuth] = useState({});
 
-  const setAuthFromResponse = useCallback(
-    (response) => {
-      const accessToken = response?.data?.accessToken;
-      const user = response?.data?.user;
-      setAuth({ user, accessToken });
-    },
-    [setAuth],
-  );
+  const setAuthFromResponse = (response) => {
+    const accessToken = response?.data?.accessToken;
+    const user = response?.data?.user;
+    setAuth({ user, accessToken });
+  };
 
   const clearAuth = () => {
     setAuth({});

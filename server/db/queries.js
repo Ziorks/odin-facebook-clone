@@ -62,11 +62,17 @@ async function createUser(username, hashedPassword) {
   return user;
 }
 
-async function createRefreshToken(hashedToken, userId, expiresAt) {
+async function createRefreshToken(
+  hashedToken,
+  userId,
+  rememberDevice,
+  expiresAt
+) {
   const refreshToken = await prisma.refreshToken.create({
     data: {
       token: hashedToken,
       user: { connect: { id: userId } },
+      rememberDevice,
       expiresAt,
     },
   });

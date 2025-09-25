@@ -13,7 +13,7 @@ function generateAccessToken(userId) {
   });
 }
 
-async function generateRefreshToken(userId) {
+async function generateRefreshToken(userId, rememberMe = false) {
   const rawToken = crypto.randomBytes(40).toString("hex");
   const combinedToken = `${userId}.${rawToken}`;
   const hashedToken = await bcrypt.hash(rawToken, 10);
@@ -21,6 +21,7 @@ async function generateRefreshToken(userId) {
   await db.createRefreshToken(
     hashedToken,
     userId,
+    rememberMe,
     new Date(Date.now() + REFRESH_TOKEN_EXPIRY_TIME)
   );
 

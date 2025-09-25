@@ -10,11 +10,13 @@ const {
   sanitizeUser,
 } = require("../utilities/helperFunctions");
 
-const REFRESH_TOKEN_COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: true,
-  sameSite: "None",
-  maxAge: 1000 * 60 * 60 * 24 * 7, //7 days
+const getRefreshTokenCookieOptions = (rememberDevice = false) => {
+  return {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+    maxAge: rememberDevice ? 1000 * 60 * 60 * 24 * 7 : undefined, //7 days
+  };
 };
 
 const loginPost = (req, res, next) => {
@@ -29,11 +31,14 @@ const loginPost = (req, res, next) => {
       if (!user) {
         return res.status(400).json({ message: info.message });
       }
+      const { rememberMe } = req.body;
 
       const accessToken = generateAccessToken(user.id);
-      const refreshToken = await generateRefreshToken(user.id);
+      const refreshToken = await generateRefreshToken(user.id, rememberMe);
 
-      res.cookie("refreshToken", refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+      const cookieOpts = getRefreshTokenCookieOptions(rememberMe);
+
+      res.cookie("refreshToken", refreshToken, cookieOpts);
 
       return res.json({
         message: "login was successful",
@@ -83,7 +88,9 @@ const registerPost = [
         const accessToken = generateAccessToken(user.id);
         const refreshToken = await generateRefreshToken(user.id);
 
-        res.cookie("refreshToken", refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+        const cookieOpts = getRefreshTokenCookieOptions();
+
+        res.cookie("refreshToken", refreshToken, cookieOpts);
 
         return res.json({
           message: "registration was successful",
@@ -113,11 +120,16 @@ const refreshPost = async (req, res) => {
   await db.updateRefreshToken(tokenRecord.id, { revoked: true });
 
   const newAccessToken = generateAccessToken(tokenRecord.userId);
-  const newRefreshToken = await generateRefreshToken(tokenRecord.userId);
+  const newRefreshToken = await generateRefreshToken(
+    tokenRecord.userId,
+    tokenRecord.rememberDevice
+  );
+
+  const cookieOpts = getRefreshTokenCookieOptions(tokenRecord.rememberDevice);
 
   const user = await db.getUserById(+refreshToken.split(".")[0]);
 
-  res.cookie("refreshToken", newRefreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+  res.cookie("refreshToken", newRefreshToken, cookieOpts);
 
   return res.json({
     user: sanitizeUser(user),
@@ -140,7 +152,9 @@ const logoutPost = async (req, res) => {
 
   await db.updateRefreshToken(tokenRecord.id, { revoked: true });
 
-  res.clearCookie("refreshToken", REFRESH_TOKEN_COOKIE_OPTIONS);
+  const cookieOpts = getRefreshTokenCookieOptions(tokenRecord.rememberDevice);
+
+  res.clearCookie("refreshToken", cookieOpts);
 
   return res.json({ message: "logged out successfully" });
 };

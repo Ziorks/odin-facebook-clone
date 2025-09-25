@@ -96,6 +96,7 @@ function LoginForm() {
   const { setAuthFromResponse } = useContext(AuthContext);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -105,7 +106,11 @@ function LoginForm() {
     setIsLoading(true);
 
     api
-      .post("/login", { username, password }, { withCredentials: true })
+      .post(
+        "/login",
+        { username, password, rememberMe },
+        { withCredentials: true },
+      )
       .then((res) => {
         setAuthFromResponse(res);
       })
@@ -142,6 +147,17 @@ function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            id="rememberMe"
+            checked={rememberMe}
+            onChange={() => {
+              setRememberMe((prev) => !prev);
+            }}
+          />
+          <label htmlFor="rememberMe">Remember Me</label>
         </div>
         <div>
           <button type="submit" disabled={isLoading}>

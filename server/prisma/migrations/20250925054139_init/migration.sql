@@ -14,6 +14,7 @@ CREATE TABLE "public"."RefreshToken" (
     "userId" INTEGER NOT NULL,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "rememberDevice" BOOLEAN NOT NULL DEFAULT false,
     "revoked" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "RefreshToken_pkey" PRIMARY KEY ("id")
