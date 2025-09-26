@@ -1,11 +1,13 @@
 import { useContext, useState } from "react";
 import api from "../../api";
 import AuthContext from "../../contexts/AuthContext";
+const apiHost = import.meta.env.VITE_API_HOST;
 // import styles from "./Login.module.css";
 
 function SignUpForm() {
   const { setAuthFromResponse } = useContext(AuthContext);
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +21,7 @@ function SignUpForm() {
     api
       .post(
         "/register",
-        { username, password, passwordConfirmation },
+        { username, email, password, passwordConfirmation },
         { withCredentials: true },
       )
       .then((res) => {
@@ -59,6 +61,16 @@ function SignUpForm() {
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="email">Email: </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
@@ -129,7 +141,7 @@ function LoginForm() {
       {error && <p>{error}</p>}
       <form onSubmit={handleLoginSubmit}>
         <div>
-          <label htmlFor="username">Username: </label>
+          <label htmlFor="username">Username or Email: </label>
           <input
             type="text"
             id="username"
@@ -169,6 +181,22 @@ function LoginForm() {
   );
 }
 
+function GoogleAuth() {
+  const handleGoogleAuth = () => {
+    window.location.href = `${apiHost}/auth/google`;
+  };
+
+  return <button onClick={handleGoogleAuth}>Sign in with Google</button>;
+}
+
+function GithubAuth() {
+  const handleGithubAuth = () => {
+    window.location.href = `${apiHost}/auth/github`;
+  };
+
+  return <button onClick={handleGithubAuth}>Sign in with Github</button>;
+}
+
 function Login() {
   const [showSignUp, setShowSignUp] = useState(false);
 
@@ -186,6 +214,12 @@ function Login() {
       ) : (
         <a onClick={toggleForm}>Sign up for [insert site name]</a>
       )}
+      <div>
+        <GoogleAuth />
+      </div>{" "}
+      <div>
+        <GithubAuth />
+      </div>
     </>
   );
 }

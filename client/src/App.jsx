@@ -9,7 +9,15 @@ function App() {
   const isLoading = usePersistLogin();
 
   return (
-    <>{isLoading ? <p>Loading...</p> : auth?.user ? <Outlet /> : <Login />}</>
+    <>
+      {isLoading ? (
+        <p>Fetching your profile...</p>
+      ) : auth?.user ? (
+        <Outlet />
+      ) : (
+        <Login />
+      )}
+    </>
   );
 }
 

@@ -37,6 +37,28 @@ async function getUserByUsername(username) {
   return user;
 }
 
+async function getUserByEmail(email) {
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  return user;
+}
+
+async function getUserByOauthToken(tokenId) {
+  const oauthToken = await prisma.oauthToken.findUnique({
+    where: { id: tokenId },
+    include: { user: true },
+  });
+
+  if (oauthToken) {
+    return oauthToken.user;
+  }
+  return oauthToken;
+}
+
 async function getValidRefreshTokensByUserId(userId) {
   const refreshToken = await prisma.refreshToken.findMany({
     where: {
@@ -49,13 +71,25 @@ async function getValidRefreshTokensByUserId(userId) {
   return refreshToken;
 }
 
+async function getFederatedCredentials(providerId, provider) {
+  const credentials = await prisma.federatedCredential.findUnique({
+    where: {
+      provider_providerId: { provider, providerId },
+    },
+    include: { user: true },
+  });
+
+  return credentials;
+}
+
 //CREATE QUERIES
 
-async function createUser(username, hashedPassword) {
+async function createUser(username, hashedPassword, email) {
   const user = await prisma.user.create({
     data: {
       username,
       password: hashedPassword,
+      email,
     },
   });
 
@@ -80,6 +114,28 @@ async function createRefreshToken(
   return refreshToken;
 }
 
+async function createFederatedCredentials(providerId, provider, userId) {
+  const credentials = await prisma.federatedCredential.create({
+    data: {
+      providerId,
+      provider,
+      user: { connect: { id: userId } },
+    },
+  });
+
+  return credentials;
+}
+
+async function createOauthToken(userId) {
+  const oauthToken = await prisma.oauthToken.create({
+    data: {
+      user: { connect: { id: userId } },
+    },
+  });
+
+  return oauthToken;
+}
+
 //UPDATE QUERIES
 
 async function updateRefreshToken(tokenId, { revoked }) {
@@ -95,6 +151,16 @@ async function updateRefreshToken(tokenId, { revoked }) {
   return token;
 }
 
+//DELETE QUERIES
+
+async function deleteOauthToken(tokenId) {
+  const oauthToken = await prisma.oauthToken.delete({
+    where: { id: tokenId },
+  });
+
+  return oauthToken;
+}
+
 async function resetDatabase() {
   const tableNames = Object.values(Prisma.ModelName);
   for (const tableName of tableNames) {
@@ -107,9 +173,15 @@ async function resetDatabase() {
 module.exports = {
   getUserById,
   getUserByUsername,
+  getUserByEmail,
+  getUserByOauthToken,
   getValidRefreshTokensByUserId,
+  getFederatedCredentials,
   createUser,
   createRefreshToken,
+  createFederatedCredentials,
+  createOauthToken,
   updateRefreshToken,
+  deleteOauthToken,
   resetDatabase,
 };

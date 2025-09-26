@@ -13,7 +13,7 @@ function Home() {
   const handleLogout = () => {
     setIsLoading(true);
     api
-      .post("/logout", {}, { withCredentials: true })
+      .post("/auth/logout", {}, { withCredentials: true })
       .then(() => {
         clearAuth();
       })

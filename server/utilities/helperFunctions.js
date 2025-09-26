@@ -46,6 +46,15 @@ async function getTokenRecord(token) {
   return null;
 }
 
+const getRefreshTokenCookieOptions = (rememberDevice = false) => {
+  return {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+    maxAge: rememberDevice ? 1000 * 60 * 60 * 24 * 7 : undefined, //7 days
+  };
+};
+
 function sanitizeUser(user) {
   const { id, username } = user;
   return { id, username };
@@ -55,5 +64,6 @@ module.exports = {
   generateAccessToken,
   generateRefreshToken,
   getTokenRecord,
+  getRefreshTokenCookieOptions,
   sanitizeUser,
 };

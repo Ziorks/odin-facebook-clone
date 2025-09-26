@@ -9,7 +9,7 @@ const useRefreshToken = () => {
   const refresh = async (signal) => {
     try {
       const response = await api.post(
-        "/refresh",
+        "/auth/refresh",
         {},
         { withCredentials: true, signal },
       );

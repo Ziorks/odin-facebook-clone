@@ -1,6 +1,7 @@
 import App from "../App";
 import Error from "../pages/Error";
 import Home from "../pages/Home";
+import Oauth from "../pages/Oauth";
 
 const routes = [
   {
@@ -13,6 +14,10 @@ const routes = [
         element: <Home />,
       },
     ],
+  },
+  {
+    path: "/oauth",
+    element: <Oauth />,
   },
 ];
 

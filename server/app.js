@@ -8,14 +8,9 @@ require("./utilities/configurePassport");
 
 const app = express();
 
-const origin =
-  process.env.NODE_ENV.trim() === "production"
-    ? process.env.CLIENT_ORIGIN
-    : "http://localhost:5173";
-
 app.use(
   cors({
-    origin,
+    origin: process.env.CLIENT_ORIGIN,
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
   })

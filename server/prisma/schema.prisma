@@ -15,19 +15,38 @@ datasource db {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  username      String         @unique @db.VarChar(16)
-  password      String
-  refreshTokens RefreshToken[]
+  id                   Int                   @id @default(autoincrement())
+  username             String                @unique @db.VarChar(128)
+  password             String?
+  email                String?               @unique
+  refreshTokens        RefreshToken[]
+  federatedCredentials FederatedCredential[]
+  oauthTokens          OauthToken[]
 }
 
 model RefreshToken {
   id             Int      @id @default(autoincrement())
   token          String   @unique
-  user           User     @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId         Int
   expiresAt      DateTime
   createdAt      DateTime @default(now())
   rememberDevice Boolean  @default(false)
   revoked        Boolean  @default(false)
+}
+
+model FederatedCredential {
+  id         Int    @id @default(autoincrement())
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  provider   String
+  providerId String
+
+  @@unique([provider, providerId])
+}
+
+model OauthToken {
+  id     String @id @default(uuid())
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
 }

@@ -6,18 +6,9 @@ const { validateRegister } = require("../utilities/validators");
 const {
   generateAccessToken,
   generateRefreshToken,
-  getTokenRecord,
+  getRefreshTokenCookieOptions,
   sanitizeUser,
 } = require("../utilities/helperFunctions");
-
-const getRefreshTokenCookieOptions = (rememberDevice = false) => {
-  return {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-    maxAge: rememberDevice ? 1000 * 60 * 60 * 24 * 7 : undefined, //7 days
-  };
-};
 
 const loginPost = (req, res, next) => {
   passport.authenticate(
@@ -59,10 +50,10 @@ const registerPost = [
         .json({ message: "validation failed", errors: errors.array() });
     }
 
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
 
-    const user = await db.getUserByUsername(username);
-    if (user) {
+    const usernameTaken = await db.getUserByUsername(username);
+    if (usernameTaken) {
       return res.status(400).json({
         message: "validation failed",
         errors: [
@@ -77,13 +68,29 @@ const registerPost = [
       });
     }
 
+    const emailTaken = await db.getUserByEmail(email);
+    if (emailTaken) {
+      return res.status(400).json({
+        message: "validation failed",
+        errors: [
+          {
+            type: "field",
+            value: email,
+            msg: "Email is already in use",
+            path: "email",
+            location: "body",
+          },
+        ],
+      });
+    }
+
     bcrypt.hash(password, 10, async (err, hashedPassword) => {
       if (err) {
         return next(err);
       }
 
       try {
-        const user = await db.createUser(username, hashedPassword);
+        const user = await db.createUser(username, hashedPassword, email);
 
         const accessToken = generateAccessToken(user.id);
         const refreshToken = await generateRefreshToken(user.id);
@@ -104,59 +111,4 @@ const registerPost = [
   },
 ];
 
-const refreshPost = async (req, res) => {
-  const { refreshToken } = req.cookies;
-  if (!refreshToken) {
-    return res.status(400).json({ message: "missing refresh token" });
-  }
-
-  const tokenRecord = await getTokenRecord(refreshToken);
-  if (!tokenRecord) {
-    return res.status(403).json({
-      message: "invalid or expired refresh token",
-    });
-  }
-
-  await db.updateRefreshToken(tokenRecord.id, { revoked: true });
-
-  const newAccessToken = generateAccessToken(tokenRecord.userId);
-  const newRefreshToken = await generateRefreshToken(
-    tokenRecord.userId,
-    tokenRecord.rememberDevice
-  );
-
-  const cookieOpts = getRefreshTokenCookieOptions(tokenRecord.rememberDevice);
-
-  const user = await db.getUserById(+refreshToken.split(".")[0]);
-
-  res.cookie("refreshToken", newRefreshToken, cookieOpts);
-
-  return res.json({
-    user: sanitizeUser(user),
-    accessToken: newAccessToken,
-  });
-};
-
-const logoutPost = async (req, res) => {
-  const { refreshToken } = req.cookies;
-  if (!refreshToken) {
-    return res.status(400).json({ message: "missing refresh token" });
-  }
-
-  const tokenRecord = await getTokenRecord(refreshToken);
-  if (!tokenRecord) {
-    return res.status(403).json({
-      message: "invalid or expired refresh token",
-    });
-  }
-
-  await db.updateRefreshToken(tokenRecord.id, { revoked: true });
-
-  const cookieOpts = getRefreshTokenCookieOptions(tokenRecord.rememberDevice);
-
-  res.clearCookie("refreshToken", cookieOpts);
-
-  return res.json({ message: "logged out successfully" });
-};
-
-module.exports = { loginPost, registerPost, refreshPost, logoutPost };
+module.exports = { loginPost, registerPost };
