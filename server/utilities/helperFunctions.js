@@ -8,12 +8,10 @@ const ACCESS_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_EXPIRY_TIME = 1000 * 60 * 60 * 24 * 7; //7 days
 
 function generateAccessToken(userId) {
-  return jwt.sign({ sub: userId }, ACCESS_SECRET, {
-    expiresIn: "15m",
-  });
+  return jwt.sign({ sub: userId }, ACCESS_SECRET, { expiresIn: "15m" });
 }
 
-async function generateRefreshToken(userId, rememberMe = false) {
+async function generateRefreshToken(userId, { rememberDevice = false } = {}) {
   const rawToken = crypto.randomBytes(40).toString("hex");
   const combinedToken = `${userId}.${rawToken}`;
   const hashedToken = await bcrypt.hash(rawToken, 10);
@@ -21,7 +19,7 @@ async function generateRefreshToken(userId, rememberMe = false) {
   await db.createRefreshToken(
     hashedToken,
     userId,
-    rememberMe,
+    rememberDevice,
     new Date(Date.now() + REFRESH_TOKEN_EXPIRY_TIME)
   );
 
@@ -46,12 +44,12 @@ async function getTokenRecord(token) {
   return null;
 }
 
-const getRefreshTokenCookieOptions = (rememberDevice = false) => {
+const getRefreshTokenCookieOptions = ({ rememberDevice = false } = {}) => {
   return {
     httpOnly: true,
     secure: true,
     sameSite: "None",
-    maxAge: rememberDevice ? 1000 * 60 * 60 * 24 * 7 : undefined, //7 days
+    maxAge: rememberDevice ? REFRESH_TOKEN_EXPIRY_TIME : undefined,
   };
 };
 

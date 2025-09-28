@@ -22,12 +22,14 @@ const loginPost = (req, res, next) => {
       if (!user) {
         return res.status(400).json({ message: info.message });
       }
-      const { rememberMe } = req.body;
+      const { rememberDevice } = req.body;
 
       const accessToken = generateAccessToken(user.id);
-      const refreshToken = await generateRefreshToken(user.id, rememberMe);
+      const refreshToken = await generateRefreshToken(user.id, {
+        rememberDevice,
+      });
 
-      const cookieOpts = getRefreshTokenCookieOptions(rememberMe);
+      const cookieOpts = getRefreshTokenCookieOptions({ rememberDevice });
 
       res.cookie("refreshToken", refreshToken, cookieOpts);
 

@@ -108,7 +108,7 @@ function LoginForm() {
   const { setAuthFromResponse } = useContext(AuthContext);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberDevice, setRememberDevice] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -120,7 +120,7 @@ function LoginForm() {
     api
       .post(
         "/login",
-        { username, password, rememberMe },
+        { username, password, rememberDevice },
         { withCredentials: true },
       )
       .then((res) => {
@@ -163,13 +163,13 @@ function LoginForm() {
         <div>
           <input
             type="checkbox"
-            id="rememberMe"
-            checked={rememberMe}
+            id="rememberDevice"
+            checked={rememberDevice}
             onChange={() => {
-              setRememberMe((prev) => !prev);
+              setRememberDevice((prev) => !prev);
             }}
           />
-          <label htmlFor="rememberMe">Remember Me</label>
+          <label htmlFor="rememberDevice">Remember Me</label>
         </div>
         <div>
           <button type="submit" disabled={isLoading}>
@@ -197,6 +197,40 @@ function GithubAuth() {
   return <button onClick={handleGithubAuth}>Sign in with Github</button>;
 }
 
+function DemoLogin() {
+  const { setAuthFromResponse } = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleDemoLogin = () => {
+    setError(null);
+    setIsLoading(true);
+
+    api
+      .get("/auth/guest", { withCredentials: true })
+      .then((res) => {
+        setAuthFromResponse(res);
+      })
+      .catch((err) => {
+        console.error("demo account login error", err);
+
+        setError(err.response?.data?.message || "Something went wrong.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  return (
+    <>
+      <button onClick={handleDemoLogin} disabled={isLoading}>
+        Demo Account Login
+      </button>
+      {error && <span>{error}</span>}
+    </>
+  );
+}
+
 function Login() {
   const [showSignUp, setShowSignUp] = useState(false);
 
@@ -215,8 +249,11 @@ function Login() {
         <a onClick={toggleForm}>Sign up for [insert site name]</a>
       )}
       <div>
+        <DemoLogin />
+      </div>
+      <div>
         <GoogleAuth />
-      </div>{" "}
+      </div>
       <div>
         <GithubAuth />
       </div>

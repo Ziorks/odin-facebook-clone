@@ -22,12 +22,14 @@ const tokenExchangePost = async (req, res, next) => {
     }
 
     await db.deleteOauthToken(oauthToken);
-    const rememberMe = true;
+    const rememberDevice = true;
 
     const accessToken = generateAccessToken(user.id);
-    const refreshToken = await generateRefreshToken(user.id, rememberMe);
+    const refreshToken = await generateRefreshToken(user.id, {
+      rememberDevice,
+    });
 
-    const cookieOpts = getRefreshTokenCookieOptions(rememberMe);
+    const cookieOpts = getRefreshTokenCookieOptions({ rememberDevice });
 
     res.cookie("refreshToken", refreshToken, cookieOpts);
 
@@ -53,16 +55,16 @@ const refreshPost = async (req, res) => {
       message: "invalid or expired refresh token",
     });
   }
+  const { rememberDevice } = tokenRecord;
 
   await db.updateRefreshToken(tokenRecord.id, { revoked: true });
 
   const newAccessToken = generateAccessToken(tokenRecord.userId);
-  const newRefreshToken = await generateRefreshToken(
-    tokenRecord.userId,
-    tokenRecord.rememberDevice
-  );
+  const newRefreshToken = await generateRefreshToken(tokenRecord.userId, {
+    rememberDevice,
+  });
 
-  const cookieOpts = getRefreshTokenCookieOptions(tokenRecord.rememberDevice);
+  const cookieOpts = getRefreshTokenCookieOptions({ rememberDevice });
 
   const user = await db.getUserById(+refreshToken.split(".")[0]);
 
@@ -86,14 +88,38 @@ const logoutPost = async (req, res) => {
       message: "invalid or expired refresh token",
     });
   }
+  const { rememberDevice } = tokenRecord;
 
   await db.updateRefreshToken(tokenRecord.id, { revoked: true });
 
-  const cookieOpts = getRefreshTokenCookieOptions(tokenRecord.rememberDevice);
-
+  const cookieOpts = getRefreshTokenCookieOptions({ rememberDevice });
   res.clearCookie("refreshToken", cookieOpts);
 
   return res.json({ message: "logged out successfully" });
+};
+
+const guestLoginGet = async (req, res, next) => {
+  const DEMO_ACCOUNT_USERNAME = "Demo_User";
+
+  try {
+    let user = await db.getUserByUsername(DEMO_ACCOUNT_USERNAME);
+    if (!user) {
+      user = await db.createUser(DEMO_ACCOUNT_USERNAME);
+    }
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = await generateRefreshToken(user.id);
+
+    const cookieOpts = getRefreshTokenCookieOptions();
+    res.cookie("refreshToken", refreshToken, cookieOpts);
+
+    return res.json({
+      message: "guest user login successful",
+      user,
+      accessToken,
+    });
+  } catch (err) {
+    return next(err);
+  }
 };
 
 const googleOauthGet = passport.authenticate("google", {
@@ -148,6 +174,7 @@ module.exports = {
   tokenExchangePost,
   refreshPost,
   logoutPost,
+  guestLoginGet,
   googleOauthGet,
   googleCallbackGet,
   githubOauthGet,
