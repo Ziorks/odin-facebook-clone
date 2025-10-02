@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 import AuthContext from "./contexts/AuthContext";
 import Login from "./pages/Login";
 import usePersistLogin from "./hooks/usePersistLogin";
@@ -13,7 +13,13 @@ function App() {
       {isLoading ? (
         <p>Fetching your profile...</p>
       ) : auth?.user ? (
-        <Outlet />
+        <>
+          <nav>
+            <Link to={"/"}>Home</Link> <Link to={"/friends"}>Friends</Link>{" "}
+            <Link to={"/users"}>User Search</Link>
+          </nav>
+          <Outlet />
+        </>
       ) : (
         <Login />
       )}

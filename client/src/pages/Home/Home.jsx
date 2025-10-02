@@ -1,6 +1,7 @@
 import { useState, useContext } from "react";
 import AuthContext from "../../contexts/AuthContext";
 import useApiPrivate from "../../hooks/useApiPrivate";
+import { Link } from "react-router-dom";
 // import styles from "./Home.module.css";
 
 function Home() {

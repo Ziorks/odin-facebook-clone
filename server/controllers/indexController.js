@@ -93,6 +93,10 @@ const registerPost = [
 
       try {
         const user = await db.createUser(username, hashedPassword, email);
+        await db.createProfile(user.id, {
+          avatar:
+            "https://res.cloudinary.com/dwf29bnr3/image/upload/v1754109878/messaging_app_profile_pics/icsll72wpxwcku6gb1by.jpg",
+        });
 
         const accessToken = generateAccessToken(user.id);
         const refreshToken = await generateRefreshToken(user.id);

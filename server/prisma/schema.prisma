@@ -22,6 +22,9 @@ model User {
   refreshTokens        RefreshToken[]
   federatedCredentials FederatedCredential[]
   oauthTokens          OauthToken[]
+  sentFrienships       Friendship[]          @relation("Sender")
+  recievedFriendships  Friendship[]          @relation("Recipient")
+  profile              Profile?
 }
 
 model RefreshToken {
@@ -49,4 +52,26 @@ model OauthToken {
   id     String @id @default(uuid())
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
+}
+
+model Friendship {
+  id        Int      @id @default(autoincrement())
+  user1     User     @relation("Sender", fields: [user1Id], references: [id], onDelete: Cascade)
+  user1Id   Int
+  user2     User     @relation("Recipient", fields: [user2Id], references: [id], onDelete: Cascade)
+  user2Id   Int
+  accepted  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@unique([user1Id, user2Id])
+}
+
+model Profile {
+  id        Int     @id @default(autoincrement())
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int     @unique
+  firstName String? @db.VarChar(64)
+  lastName  String? @db.VarChar(64)
+  avatar    String?
 }

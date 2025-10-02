@@ -62,7 +62,8 @@ async function findOrCreateUser(
   username,
   email,
   verified,
-  done
+  done,
+  { avatar, firstName, lastName } = {}
 ) {
   email = email && email.toLowerCase();
 
@@ -91,7 +92,7 @@ async function findOrCreateUser(
       undefined,
       verified ? email : undefined
     );
-    //TODO:create a user profile here
+    await db.createProfile(user.id, { avatar, firstName, lastName });
     await db.createFederatedCredentials(providerId, provider, user.id);
     return done(null, user);
   } catch (err) {
@@ -107,10 +108,25 @@ passport.use(
       callbackURL: `${process.env.SERVER_ORIGIN}/api/v1/auth/google/callback`,
     },
     (accessToken, refreshToken, profile, done) => {
-      const { id, provider, displayName, emails } = profile;
-      const { value: email, verified } = emails[0];
+      const {
+        sub,
+        name,
+        email,
+        email_verified,
+        picture,
+        given_name,
+        family_name,
+      } = profile._json;
 
-      findOrCreateUser(id, provider, displayName, email, verified, done);
+      findOrCreateUser(
+        sub,
+        profile.provider,
+        name,
+        email,
+        email_verified,
+        done,
+        { avatar: picture, firstName: given_name, lastName: family_name }
+      );
     }
   )
 );
@@ -124,9 +140,14 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       const { id, provider, username, _json } = profile;
-      const { email } = _json;
+      const { email, avatar_url, name } = _json;
+      const [firstName, lastName] = name.split(" ");
 
-      findOrCreateUser(id, provider, username, email, true, done);
+      findOrCreateUser(id, provider, username, email, true, done, {
+        avatar: avatar_url,
+        firstName,
+        lastName,
+      });
     }
   )
 );

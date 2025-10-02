@@ -59,6 +59,33 @@ async function getUserByOauthToken(tokenId) {
   return oauthToken;
 }
 
+async function getUserWithProfile(userId) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      id: true,
+      username: true,
+      profile: true,
+    },
+  });
+
+  return user;
+}
+
+async function getAllUsers() {
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      username: true,
+      profile: { select: { avatar: true } },
+    },
+  });
+
+  return users;
+}
+
 async function getValidRefreshTokensByUserId(userId) {
   const refreshToken = await prisma.refreshToken.findMany({
     where: {
@@ -82,6 +109,50 @@ async function getFederatedCredentials(providerId, provider) {
   return credentials;
 }
 
+async function getFriendshipById(id) {
+  const friendship = await prisma.friendship.findUnique({
+    where: { id },
+  });
+
+  return friendship;
+}
+
+async function getFriendshipByUserIds(userId1, userId2) {
+  const friendship = await prisma.friendship.findFirst({
+    where: {
+      OR: [
+        { user1Id: userId1, user2Id: userId2 },
+        { user1Id: userId2, user2Id: userId1 },
+      ],
+    },
+  });
+
+  return friendship;
+}
+
+async function getUsersFriends(userId, { pending = false } = {}) {
+  const userOptions = {
+    select: {
+      username: true,
+      id: true,
+      profile: { select: { avatar: true } },
+    },
+  };
+
+  const friends = await prisma.friendship.findMany({
+    where: {
+      OR: [{ user1Id: userId }, { user2Id: userId }],
+      accepted: !pending,
+    },
+    include: {
+      user1: userOptions,
+      user2: userOptions,
+    },
+  });
+
+  return friends;
+}
+
 //CREATE QUERIES
 
 async function createUser(username, hashedPassword, email) {
@@ -94,6 +165,19 @@ async function createUser(username, hashedPassword, email) {
   });
 
   return user;
+}
+
+async function createProfile(userId, { avatar, firstName, lastName } = {}) {
+  const profile = await prisma.profile.create({
+    data: {
+      user: { connect: { id: userId } },
+      avatar,
+      firstName,
+      lastName,
+    },
+  });
+
+  return profile;
 }
 
 async function createRefreshToken(
@@ -136,7 +220,33 @@ async function createOauthToken(userId) {
   return oauthToken;
 }
 
+async function createFriendship(senderId, recipientId) {
+  const friendship = await prisma.friendship.create({
+    data: {
+      user1: { connect: { id: senderId } },
+      user2: { connect: { id: recipientId } },
+    },
+  });
+
+  return friendship;
+}
+
 //UPDATE QUERIES
+
+async function updateProfile(profileId, { avatar, firstName, lastName } = {}) {
+  const profile = await prisma.profile.update({
+    where: {
+      id: profileId,
+    },
+    data: {
+      avatar,
+      firstName,
+      lastName,
+    },
+  });
+
+  return profile;
+}
 
 async function updateRefreshToken(tokenId, { revoked }) {
   const token = await prisma.refreshToken.update({
@@ -151,6 +261,20 @@ async function updateRefreshToken(tokenId, { revoked }) {
   return token;
 }
 
+async function updateFriendship(friendshipId, { accepted }) {
+  const friendship = await prisma.friendship.update({
+    where: {
+      id: friendshipId,
+    },
+    data: {
+      accepted,
+      updatedAt: new Date(),
+    },
+  });
+
+  return friendship;
+}
+
 //DELETE QUERIES
 
 async function deleteOauthToken(tokenId) {
@@ -159,6 +283,16 @@ async function deleteOauthToken(tokenId) {
   });
 
   return oauthToken;
+}
+
+async function deleteFriendship(id) {
+  const deletedFriendship = await prisma.friendship.delete({
+    where: {
+      id,
+    },
+  });
+
+  return deletedFriendship;
 }
 
 async function resetDatabase() {
@@ -175,13 +309,23 @@ module.exports = {
   getUserByUsername,
   getUserByEmail,
   getUserByOauthToken,
+  getUserWithProfile,
+  getAllUsers,
   getValidRefreshTokensByUserId,
   getFederatedCredentials,
+  getFriendshipById,
+  getFriendshipByUserIds,
+  getUsersFriends,
   createUser,
+  createProfile,
   createRefreshToken,
   createFederatedCredentials,
   createOauthToken,
+  createFriendship,
+  updateProfile,
   updateRefreshToken,
+  updateFriendship,
   deleteOauthToken,
+  deleteFriendship,
   resetDatabase,
 };
