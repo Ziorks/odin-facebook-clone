@@ -34,4 +34,69 @@ const validateRegister = [
     .withMessage("'passwordConfirmation' must match 'password'"),
 ];
 
-module.exports = { validateRegister };
+const validatePostEdit = [
+  body("content")
+    .exists()
+    .withMessage("'content'" + existsMessage)
+    .trim()
+    .isString()
+    .withMessage("Content must be a string"),
+];
+
+const validatePostCreate = [
+  ...validatePostEdit,
+  body("wallId")
+    .exists()
+    .withMessage("'wallId'" + existsMessage)
+    .isInt()
+    .withMessage("WallId must be an integer")
+    .toInt(),
+];
+
+const validateCommentEdit = [
+  body("content")
+    .exists()
+    .withMessage("'content'" + existsMessage)
+    .trim()
+    .isString()
+    .withMessage("Content must be a string"),
+];
+
+const validateCommentCreate = [
+  ...validateCommentEdit,
+  body("postId")
+    .exists()
+    .withMessage("'postId'" + existsMessage)
+    .isInt()
+    .withMessage("PostId must be an integer"),
+  body("parentId")
+    .optional({ values: "null" })
+    .isInt()
+    .withMessage("ParentId must be an integer or null")
+    .toInt(),
+  ,
+];
+
+const validateLike = [
+  body("targetId")
+    .exists()
+    .withMessage("'targetId'" + existsMessage)
+    .isInt()
+    .withMessage("TargetId must be an integer")
+    .toInt(),
+  body("targetType")
+    .exists()
+    .withMessage("'targetType'" + existsMessage)
+    .trim()
+    .isIn(["POST", "COMMENT"])
+    .withMessage("TargetType must be either 'POST' or 'COMMENT'"),
+];
+
+module.exports = {
+  validateRegister,
+  validatePostCreate,
+  validatePostEdit,
+  validateCommentCreate,
+  validateCommentEdit,
+  validateLike,
+};

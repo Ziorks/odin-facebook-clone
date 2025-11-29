@@ -7,7 +7,6 @@ const {
   generateAccessToken,
   generateRefreshToken,
   getRefreshTokenCookieOptions,
-  sanitizeUser,
 } = require("../utilities/helperFunctions");
 
 const loginPost = (req, res, next) => {
@@ -33,9 +32,11 @@ const loginPost = (req, res, next) => {
 
       res.cookie("refreshToken", refreshToken, cookieOpts);
 
+      const sanitizedUser = await db.getUserSanitized(user.id);
+
       return res.json({
         message: "login was successful",
-        user: sanitizeUser(user),
+        user: sanitizedUser,
         accessToken,
       });
     }
@@ -92,10 +93,12 @@ const registerPost = [
       }
 
       try {
+        const AVATAR_URL =
+          "https://res.cloudinary.com/dwf29bnr3/image/upload/v1754109878/messaging_app_profile_pics/icsll72wpxwcku6gb1by.jpg";
+
         const user = await db.createUser(username, hashedPassword, email);
         await db.createProfile(user.id, {
-          avatar:
-            "https://res.cloudinary.com/dwf29bnr3/image/upload/v1754109878/messaging_app_profile_pics/icsll72wpxwcku6gb1by.jpg",
+          avatar: AVATAR_URL,
         });
 
         const accessToken = generateAccessToken(user.id);
@@ -105,9 +108,15 @@ const registerPost = [
 
         res.cookie("refreshToken", refreshToken, cookieOpts);
 
+        const sanitizedUser = {
+          id: user.id,
+          username: user.username,
+          profile: { avatar: AVATAR_URL },
+        };
+
         return res.json({
           message: "registration was successful",
-          user: sanitizeUser(user),
+          user: sanitizedUser,
           accessToken,
         });
       } catch (err) {

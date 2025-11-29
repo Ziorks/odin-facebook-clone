@@ -1,8 +1,9 @@
+import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import useDataFetch from "../../hooks/useDataFetch";
 import useApiPrivate from "../../hooks/useApiPrivate";
-import { useContext } from "react";
 import AuthContext from "../../contexts/AuthContext";
+import Wall from "../../components/Wall/Wall";
 // import styles from "./UserProfile.module.css";
 
 function UserProfile() {
@@ -15,7 +16,7 @@ function UserProfile() {
     api
       .post("/friendship/request", { userId: +userId })
       .then((resp) =>
-        setData((prev) => ({ ...prev, friendship: resp.data.friendship })),
+        setData((prev) => ({ ...prev, friendship: resp.data.friendship }))
       )
       .catch((err) => console.log(err));
   };
@@ -23,7 +24,7 @@ function UserProfile() {
     api
       .post("/friendship/accept", { id: data.friendship.id })
       .then((resp) =>
-        setData((prev) => ({ ...prev, friendship: resp.data.friendship })),
+        setData((prev) => ({ ...prev, friendship: resp.data.friendship }))
       )
       .catch((err) => console.log(err));
   };
@@ -37,6 +38,7 @@ function UserProfile() {
   return (
     <>
       <h1>User Profile Page</h1>
+
       {isLoading && <p>Loading...</p>}
       {error && <p>An error occured</p>}
       {data && (
@@ -60,9 +62,9 @@ function UserProfile() {
           ) : (
             <button onClick={handleAdd}>Add Friend</button>
           )}
-
           <p>Username: {data.user.username}</p>
           <img src={data.user.profile.avatar} style={{ height: "100px" }} />
+          <Wall user={data.user} />
         </>
       )}
     </>

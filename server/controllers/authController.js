@@ -6,7 +6,6 @@ const {
   generateRefreshToken,
   getRefreshTokenCookieOptions,
   getTokenRecord,
-  sanitizeUser,
 } = require("../utilities/helperFunctions");
 
 const tokenExchangePost = async (req, res, next) => {
@@ -33,9 +32,11 @@ const tokenExchangePost = async (req, res, next) => {
 
     res.cookie("refreshToken", refreshToken, cookieOpts);
 
+    const sanitizedUser = await db.getUserSanitized(user.id);
+
     return res.json({
       message: "login was successful",
-      user: sanitizeUser(user),
+      user: sanitizedUser,
       accessToken,
     });
   } catch (err) {
@@ -66,12 +67,12 @@ const refreshPost = async (req, res) => {
 
   const cookieOpts = getRefreshTokenCookieOptions({ rememberDevice });
 
-  const user = await db.getUserById(+refreshToken.split(".")[0]);
+  const sanitizedUser = await db.getUserSanitized(+refreshToken.split(".")[0]);
 
   res.cookie("refreshToken", newRefreshToken, cookieOpts);
 
   return res.json({
-    user: sanitizeUser(user),
+    user: sanitizedUser,
     accessToken: newAccessToken,
   });
 };
@@ -100,6 +101,8 @@ const logoutPost = async (req, res) => {
 
 const guestLoginGet = async (req, res, next) => {
   const DEMO_ACCOUNT_USERNAME = "Demo_User";
+  const AVATAR_URL =
+    "https://res.cloudinary.com/dwf29bnr3/image/upload/v1754109878/messaging_app_profile_pics/icsll72wpxwcku6gb1by.jpg";
 
   try {
     let user = await db.getUserByUsername(DEMO_ACCOUNT_USERNAME);
@@ -108,8 +111,7 @@ const guestLoginGet = async (req, res, next) => {
       await db.createProfile(user.id, {
         firstname: "Demo",
         lastname: "User",
-        avatar:
-          "https://res.cloudinary.com/dwf29bnr3/image/upload/v1754109878/messaging_app_profile_pics/icsll72wpxwcku6gb1by.jpg",
+        avatar: AVATAR_URL,
       });
     }
     const accessToken = generateAccessToken(user.id);
@@ -118,9 +120,15 @@ const guestLoginGet = async (req, res, next) => {
     const cookieOpts = getRefreshTokenCookieOptions();
     res.cookie("refreshToken", refreshToken, cookieOpts);
 
+    const sanitizedUser = {
+      id: user.id,
+      username: user.username,
+      profile: { avatar: AVATAR_URL },
+    };
+
     return res.json({
       message: "guest user login successful",
-      user,
+      user: sanitizedUser,
       accessToken,
     });
   } catch (err) {

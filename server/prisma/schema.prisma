@@ -25,6 +25,10 @@ model User {
   sentFrienships       Friendship[]          @relation("Sender")
   recievedFriendships  Friendship[]          @relation("Recipient")
   profile              Profile?
+  posts                Post[]                @relation("PostAuthor")
+  wallPosts            Post[]                @relation("PostWall")
+  likes                Like[]
+  comments             Comment[]
 }
 
 model RefreshToken {
@@ -62,7 +66,7 @@ model Friendship {
   user2Id   Int
   accepted  Boolean  @default(false)
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([user1Id, user2Id])
 }
@@ -74,4 +78,53 @@ model Profile {
   firstName String? @db.VarChar(64)
   lastName  String? @db.VarChar(64)
   avatar    String?
+}
+
+enum PostType {
+  REGULAR
+  PROFILE_PIC_UPDATE
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  type      PostType  @default(REGULAR)
+  content   String?
+  mediaUrl  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  author    User      @relation(name: "PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  Int
+  wall      User      @relation(name: "PostWall", fields: [wallId], references: [id], onDelete: Cascade)
+  wallId    Int
+  comments  Comment[]
+}
+
+model Comment {
+  id        Int       @id @default(autoincrement())
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isDeleted Boolean   @default(false)
+  author    User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorId  Int?
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+  parent    Comment?  @relation(name: "CommentReplies", fields: [parentId], references: [id], onDelete: Restrict)
+  parentId  Int?
+  replies   Comment[] @relation("CommentReplies")
+}
+
+enum LikeTargetType {
+  POST
+  COMMENT
+}
+
+model Like {
+  id         Int            @id @default(autoincrement())
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  targetId   Int
+  targetType LikeTargetType
+
+  @@unique([userId, targetId, targetType])
 }

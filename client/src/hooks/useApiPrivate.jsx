@@ -10,7 +10,7 @@ const useApiPrivate = () => {
   useEffect(() => {
     const reqInterceptor = api.interceptors.request.use(
       (config) => {
-        if (auth?.accessToken) {
+        if (!config.headers.Authorization && auth?.accessToken) {
           config.headers.Authorization = `Bearer ${auth.accessToken}`;
         }
         return config;

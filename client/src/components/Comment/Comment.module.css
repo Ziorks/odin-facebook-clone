@@ -1,0 +1,14 @@
+.container {
+  padding-left: 8px;
+  padding-top: 12px;
+  border-left: 1px solid black;
+}
+
+.avatar {
+  height: 25px;
+  border-radius: 50%;
+}
+
+.replyChain {
+  list-style: none;
+}

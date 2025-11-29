@@ -53,9 +53,23 @@ const getRefreshTokenCookieOptions = ({ rememberDevice = false } = {}) => {
   };
 };
 
-function sanitizeUser(user) {
-  const { id, username } = user;
-  return { id, username };
+function configureLikedByObject(object, currentUserId) {
+  if (!object.likedBy || !Array.isArray(object.likedBy)) {
+    console.error(
+      "Object passed to configureLikedByObject needs to have likedBy array property"
+    );
+    return;
+  }
+  const likedByMe = object.likedBy.findIndex(
+    (like) => like.id === currentUserId
+  );
+  if (likedByMe !== -1) {
+    //move me to index 0
+    object.likedBy.unshift(object.likedBy.splice(likedByMe, 1)[0]);
+  }
+  object.likedBySample = object.likedBy.slice(0, 20);
+  object.likedByMe = likedByMe === -1 ? false : true;
+  delete object.likedBy;
 }
 
 module.exports = {
@@ -63,5 +77,5 @@ module.exports = {
   generateRefreshToken,
   getTokenRecord,
   getRefreshTokenCookieOptions,
-  sanitizeUser,
+  configureLikedByObject,
 };

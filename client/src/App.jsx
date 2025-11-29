@@ -16,7 +16,8 @@ function App() {
         <>
           <nav>
             <Link to={"/"}>Home</Link> <Link to={"/friends"}>Friends</Link>{" "}
-            <Link to={"/users"}>User Search</Link>
+            <Link to={"/users"}>User Search</Link>{" "}
+            <Link to={`/users/${auth.user.id}`}>My Profile</Link>
           </nav>
           <Outlet />
         </>
