@@ -96,8 +96,7 @@ const registerPost = [
         const AVATAR_URL =
           "https://res.cloudinary.com/dwf29bnr3/image/upload/v1754109878/messaging_app_profile_pics/icsll72wpxwcku6gb1by.jpg";
 
-        const user = await db.createUser(username, hashedPassword, email);
-        await db.createProfile(user.id, {
+        const user = await db.createUser(username, hashedPassword, email, {
           avatar: AVATAR_URL,
         });
 

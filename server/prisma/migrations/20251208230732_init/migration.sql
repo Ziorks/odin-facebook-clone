@@ -69,6 +69,43 @@ CREATE TABLE "public"."Profile" (
 );
 
 -- CreateTable
+CREATE TABLE "public"."WorkAndEducation" (
+    "id" SERIAL NOT NULL,
+    "profileId" INTEGER NOT NULL,
+
+    CONSTRAINT "WorkAndEducation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Work" (
+    "id" SERIAL NOT NULL,
+    "company" VARCHAR(128) NOT NULL,
+    "position" VARCHAR(128),
+    "location" VARCHAR(128),
+    "description" VARCHAR(256),
+    "startYear" SMALLINT,
+    "endYear" SMALLINT,
+    "currentJob" BOOLEAN NOT NULL DEFAULT true,
+    "workAndEducationId" INTEGER NOT NULL,
+
+    CONSTRAINT "Work_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."School" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(128) NOT NULL,
+    "description" VARCHAR(256),
+    "degree" VARCHAR(128),
+    "startYear" SMALLINT,
+    "endYear" SMALLINT,
+    "graduated" BOOLEAN NOT NULL DEFAULT true,
+    "workAndEducationId" INTEGER NOT NULL,
+
+    CONSTRAINT "School_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "public"."Post" (
     "id" SERIAL NOT NULL,
     "type" "public"."PostType" NOT NULL DEFAULT 'REGULAR',
@@ -125,6 +162,9 @@ CREATE UNIQUE INDEX "Friendship_user1Id_user2Id_key" ON "public"."Friendship"("u
 CREATE UNIQUE INDEX "Profile_userId_key" ON "public"."Profile"("userId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "WorkAndEducation_profileId_key" ON "public"."WorkAndEducation"("profileId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Like_userId_targetId_targetType_key" ON "public"."Like"("userId", "targetId", "targetType");
 
 -- AddForeignKey
@@ -144,6 +184,15 @@ ALTER TABLE "public"."Friendship" ADD CONSTRAINT "Friendship_user2Id_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "public"."Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."WorkAndEducation" ADD CONSTRAINT "WorkAndEducation_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Work" ADD CONSTRAINT "Work_workAndEducationId_fkey" FOREIGN KEY ("workAndEducationId") REFERENCES "public"."WorkAndEducation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."School" ADD CONSTRAINT "School_workAndEducationId_fkey" FOREIGN KEY ("workAndEducationId") REFERENCES "public"."WorkAndEducation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Post" ADD CONSTRAINT "Post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

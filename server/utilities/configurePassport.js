@@ -90,9 +90,9 @@ async function findOrCreateUser(
     const user = await db.createUser(
       username, //TODO:make username unique if already exists OR random generate username OR let user pick username
       undefined,
-      verified ? email : undefined
+      verified ? email : undefined,
+      { avatar, firstName, lastName }
     );
-    await db.createProfile(user.id, { avatar, firstName, lastName });
     await db.createFederatedCredentials(providerId, provider, user.id);
     return done(null, user);
   } catch (err) {

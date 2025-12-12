@@ -92,6 +92,60 @@ const validateLike = [
     .withMessage("TargetType must be either 'POST' or 'COMMENT'"),
 ];
 
+const validateWork = [
+  body("company")
+    .exists()
+    .withMessage("'company'" + existsMessage)
+    .isString()
+    .withMessage("Company must be a string")
+    .trim()
+    .notEmpty()
+    .withMessage("Company can't be an empty string")
+    .isLength({ max: 128 })
+    .withMessage("Company can be no longer than 128 characters"),
+  body("position")
+    .optional()
+    .isString()
+    .withMessage("Position must be a string")
+    .trim()
+    .isLength({ max: 128 })
+    .withMessage("Position can be no longer than 128 characters"),
+  body("location")
+    .optional()
+    .isString()
+    .withMessage("Location must be a string")
+    .trim()
+    .isLength({ max: 128 })
+    .withMessage("Location can be no longer than 128 characters"),
+  body("description")
+    .optional()
+    .isString()
+    .withMessage("Description must be a string")
+    .trim()
+    .isLength({ max: 128 })
+    .withMessage("Description can be no longer than 256 characters"),
+  body("startYear")
+    .optional()
+    .isInt()
+    .withMessage("StartYear must be an integer"),
+  body("endYear")
+    .optional()
+    .isInt()
+    .withMessage("EndYear must be an integer")
+    .custom((value, { req }) => {
+      return value >= req.body.startYear;
+    })
+    .withMessage("EndYear cannot be less than StartYear"),
+  body("currentJob")
+    .customSanitizer((value, { req }) => {
+      return req.body.endYear ? value : true;
+    })
+    .exists()
+    .withMessage("'currentJob'" + existsMessage)
+    .isBoolean()
+    .withMessage("CurrentJob must be a boolean"),
+];
+
 module.exports = {
   validateRegister,
   validatePostCreate,
@@ -99,4 +153,5 @@ module.exports = {
   validateCommentCreate,
   validateCommentEdit,
   validateLike,
+  validateWork,
 };

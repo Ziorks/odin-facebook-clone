@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import useDataFetch from "../../hooks/useDataFetch";
 import AuthContext from "../../contexts/AuthContext";
 import PostCreationModal from "../PostCreationModal";
@@ -80,7 +81,8 @@ function WallItem({ wallItem }) {
   );
 }
 
-function Wall({ user }) {
+function Wall() {
+  const { user } = useOutletContext();
   const wallId = user.id;
   const { auth } = useContext(AuthContext);
   const { data, isLoading, error, refetch } = useDataFetch(`/wall/${wallId}`);

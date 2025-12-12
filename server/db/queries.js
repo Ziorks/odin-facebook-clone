@@ -67,7 +67,7 @@ async function getUserWithProfile(userId) {
     select: {
       id: true,
       username: true,
-      profile: true,
+      profile: { include: { workAndEducation: true } },
     },
   });
 
@@ -558,31 +558,63 @@ async function getWall(wallId) {
   return wall;
 }
 
+async function getWorkAndEducationByUserId(userId) {
+  const workAndEducation = await prisma.workAndEducation.findFirst({
+    where: { profile: { userId } },
+    include: {
+      works: {
+        orderBy: [
+          { endYear: "desc" },
+          { startYear: "desc" },
+          { currentJob: "desc" },
+        ],
+      },
+      schools: { orderBy: [{ endYear: "desc" }, { startYear: "desc" }] },
+    },
+  });
+
+  return workAndEducation;
+}
+
+async function getWork(workId) {
+  const work = await prisma.work.findUnique({ where: { id: workId } });
+
+  return work;
+}
+
+async function getUsersWorksCount(userId) {
+  const count = await prisma.work.count({
+    where: { workAndEducation: { profile: { userId } } },
+  });
+
+  return count;
+}
+
 //CREATE QUERIES
 
-async function createUser(username, hashedPassword, email) {
+async function createUser(
+  username,
+  hashedPassword,
+  email,
+  { avatar, firstName, lastName } = {}
+) {
   const user = await prisma.user.create({
     data: {
       username,
       password: hashedPassword,
       email,
+      profile: {
+        create: {
+          avatar,
+          firstName,
+          lastName,
+          workAndEducation: { create: {} },
+        },
+      },
     },
   });
 
   return user;
-}
-
-async function createProfile(userId, { avatar, firstName, lastName } = {}) {
-  const profile = await prisma.profile.create({
-    data: {
-      user: { connect: { id: userId } },
-      avatar,
-      firstName,
-      lastName,
-    },
-  });
-
-  return profile;
 }
 
 async function createRefreshToken(
@@ -703,6 +735,26 @@ async function createLike(userId, targetId, targetType) {
   return like;
 }
 
+async function createWork(
+  workAndEducationId,
+  { company, position, location, description, currentJob, startYear, endYear }
+) {
+  const work = await prisma.work.create({
+    data: {
+      workAndEducation: { connect: { id: workAndEducationId } },
+      company,
+      position,
+      location,
+      description,
+      currentJob,
+      startYear,
+      endYear,
+    },
+  });
+
+  return work;
+}
+
 //UPDATE QUERIES
 
 async function updateProfile(profileId, { avatar, firstName, lastName } = {}) {
@@ -765,6 +817,26 @@ async function updateComment(commentId, { content }) {
   return comment;
 }
 
+async function updateWork(
+  workId,
+  { company, position, location, description, currentJob, startYear, endYear }
+) {
+  const work = await prisma.work.update({
+    where: { id: workId },
+    data: {
+      company,
+      position,
+      location,
+      description,
+      currentJob,
+      startYear,
+      endYear,
+    },
+  });
+
+  return work;
+}
+
 //DELETE QUERIES
 
 async function deleteOauthToken(tokenId) {
@@ -793,6 +865,14 @@ async function deletePost(postId) {
   return post;
 }
 
+async function deleteLike(likeId) {
+  const like = await prisma.like.delete({
+    where: { id: likeId },
+  });
+
+  return like;
+}
+
 async function softDeleteComment(commentId) {
   const comment = await prisma.comment.update({
     where: { id: commentId },
@@ -802,12 +882,12 @@ async function softDeleteComment(commentId) {
   return comment;
 }
 
-async function deleteLike(likeId) {
-  const like = await prisma.like.delete({
-    where: { id: likeId },
+async function deleteWork(workId) {
+  const work = await prisma.work.delete({
+    where: { id: workId },
   });
 
-  return like;
+  return work;
 }
 
 async function resetDatabase() {
@@ -838,8 +918,10 @@ module.exports = {
   getCommentReplies,
   getLike,
   getWall,
+  getWorkAndEducationByUserId,
+  getWork,
+  getUsersWorksCount,
   createUser,
-  createProfile,
   createRefreshToken,
   createFederatedCredentials,
   createOauthToken,
@@ -848,15 +930,18 @@ module.exports = {
   createProfilePicUpdatePost,
   createComment,
   createLike,
+  createWork,
   updateProfile,
   updateRefreshToken,
   updateFriendship,
   updatePost,
   updateComment,
+  updateWork,
   deleteOauthToken,
   deleteFriendship,
   deletePost,
   deleteLike,
   softDeleteComment,
+  deleteWork,
   resetDatabase,
 };

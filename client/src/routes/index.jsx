@@ -3,8 +3,12 @@ import Error from "../pages/Error";
 import Home from "../pages/Home";
 import Oauth from "../pages/Oauth";
 import Friends from "../pages/Friends";
-import UserProfile from "../pages/UserProfile";
 import UserSearch from "../pages/UserSearch/UserSearch";
+import UserProfile from "../pages/UserProfile";
+import Wall from "../components/Wall";
+import AboutLayout from "../pages/AboutLayout";
+import AboutOverview from "../components/AboutOverview";
+import AboutWorkAndEducation from "../components/AboutWorkAndEducation";
 
 const routes = [
   {
@@ -30,6 +34,20 @@ const routes = [
           {
             path: ":userId",
             element: <UserProfile />,
+            children: [
+              { index: true, element: <Wall /> },
+              {
+                element: <AboutLayout />,
+                children: [
+                  { path: "about", element: <AboutOverview /> },
+                  { path: "about_overview", element: <AboutOverview /> },
+                  {
+                    path: "about_work_and_education",
+                    element: <AboutWorkAndEducation />,
+                  },
+                ],
+              },
+            ],
           },
         ],
       },

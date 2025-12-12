@@ -107,8 +107,7 @@ const guestLoginGet = async (req, res, next) => {
   try {
     let user = await db.getUserByUsername(DEMO_ACCOUNT_USERNAME);
     if (!user) {
-      user = await db.createUser(DEMO_ACCOUNT_USERNAME);
-      await db.createProfile(user.id, {
+      user = await db.createUser(DEMO_ACCOUNT_USERNAME, undefined, undefined, {
         firstname: "Demo",
         lastname: "User",
         avatar: AVATAR_URL,

@@ -72,13 +72,70 @@ model Friendship {
 }
 
 model Profile {
-  id        Int     @id @default(autoincrement())
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int     @unique
-  firstName String? @db.VarChar(64)
-  lastName  String? @db.VarChar(64)
-  avatar    String?
+  id               Int               @id @default(autoincrement())
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           Int               @unique
+  firstName        String?           @db.VarChar(64)
+  lastName         String?           @db.VarChar(64)
+  avatar           String?
+  workAndEducation WorkAndEducation?
+  // hometown      City?        @relation(fields: [hometownId], references: [id], name: "hometown", onDelete: SetNull)
+  // hometownId    Int?
+  // currentCity   City?        @relation(fields: [currentCityId], references: [id], name: "currentCity", onDelete: SetNull)
+  // currentCityId Int?
+  // placesLived   PlaceLived[]
 }
+
+model WorkAndEducation {
+  id        Int      @id @default(autoincrement())
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId Int      @unique
+  works     Work[]
+  schools   School[]
+}
+
+model Work {
+  id                 Int              @id @default(autoincrement())
+  company            String           @db.VarChar(128)
+  position           String?          @db.VarChar(128)
+  location           String?          @db.VarChar(128)
+  description        String?          @db.VarChar(256)
+  startYear          Int?             @db.SmallInt()
+  endYear            Int?             @db.SmallInt()
+  currentJob         Boolean          @default(true)
+  workAndEducation   WorkAndEducation @relation(fields: [workAndEducationId], references: [id], onDelete: Cascade)
+  workAndEducationId Int
+}
+
+model School {
+  id                 Int              @id @default(autoincrement())
+  name               String           @db.VarChar(128)
+  description        String?          @db.VarChar(256)
+  degree             String?          @db.VarChar(128)
+  startYear          Int?             @db.SmallInt()
+  endYear            Int?             @db.SmallInt()
+  graduated          Boolean          @default(true)
+  workAndEducation   WorkAndEducation @relation(fields: [workAndEducationId], references: [id], onDelete: Cascade)
+  workAndEducationId Int
+}
+
+// model City {
+//   id            Int          @id @default(autoincrement())
+//   name          String       @db.VarChar(64)
+//   country       String       @db.VarChar(64)
+//   hometowns     Profile[]    @relation(name: "hometown")
+//   currentCities Profile[]    @relation(name: "currentCity")
+//   placeLiveds   PlaceLived[]
+// }
+
+// model PlaceLived {
+//   id        Int       @id @default(autoincrement())
+//   dateMoved DateTime?
+//   city      City      @relation(fields: [cityId], references: [id], onDelete: Cascade)
+//   cityId    Int
+//   profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+//   profileId Int
+// }
 
 enum PostType {
   REGULAR

@@ -1,9 +1,8 @@
 import { useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Outlet, Link } from "react-router-dom";
 import useDataFetch from "../../hooks/useDataFetch";
 import useApiPrivate from "../../hooks/useApiPrivate";
 import AuthContext from "../../contexts/AuthContext";
-import Wall from "../../components/Wall/Wall";
 // import styles from "./UserProfile.module.css";
 
 function UserProfile() {
@@ -64,7 +63,10 @@ function UserProfile() {
           )}
           <p>Username: {data.user.username}</p>
           <img src={data.user.profile.avatar} style={{ height: "100px" }} />
-          <Wall user={data.user} />
+          <nav>
+            <Link to={""}>Posts</Link> <Link to={"about"}>About</Link>
+          </nav>
+          <Outlet context={{ user: data.user }} />
         </>
       )}
     </>

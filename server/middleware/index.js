@@ -71,6 +71,56 @@ const commentEditAuth = async (req, res, next) => {
   return next();
 };
 
+const wallExistsCheck = async (req, res, next) => {
+  const { wallId } = req.params;
+
+  const wallExists = await db.getUserById(+wallId);
+  if (!wallExists) {
+    return res.status(404).json({ message: "wall not found" });
+  }
+
+  return next();
+};
+
+const getUser = async (req, res, next) => {
+  const { userId } = req.params;
+
+  const user = await db.getUserWithProfile(+userId);
+  if (!user) {
+    return res
+      .status(404)
+      .json({ message: `user with id:${userId} not found` });
+  }
+
+  req.paramsUser = user;
+  return next();
+};
+
+const profileEditAuth = async (req, res, next) => {
+  const user = req.paramsUser;
+
+  if (req.user.id !== user.id) {
+    return res
+      .status(403)
+      .json({ message: "you are not authorized to edit this profile" });
+  }
+
+  return next();
+};
+
+const getWork = async (req, res, next) => {
+  const { workId } = req.params;
+  const work = await db.getWork(+workId);
+  if (!work) {
+    return res
+      .status(404)
+      .json({ message: `work with id:${workId} not found` });
+  }
+
+  req.work = work;
+  return next();
+};
+
 module.exports = {
   notFoundHandler,
   errorHandler,
@@ -79,4 +129,8 @@ module.exports = {
   postEditAuth,
   getComment,
   commentEditAuth,
+  wallExistsCheck,
+  getUser,
+  profileEditAuth,
+  getWork,
 };

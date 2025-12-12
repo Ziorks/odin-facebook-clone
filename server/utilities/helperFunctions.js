@@ -68,7 +68,7 @@ function configureLikedByObject(object, currentUserId) {
     object.likedBy.unshift(object.likedBy.splice(likedByMe, 1)[0]);
   }
   object.likedBySample = object.likedBy.slice(0, 20);
-  object.likedByMe = likedByMe === -1 ? false : true;
+  object.likedByMe = likedByMe !== -1;
   delete object.likedBy;
 }
 
