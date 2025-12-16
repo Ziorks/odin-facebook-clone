@@ -121,6 +121,56 @@ const getWork = async (req, res, next) => {
   return next();
 };
 
+const getSchool = async (req, res, next) => {
+  const { schoolId } = req.params;
+  const school = await db.getSchool(+schoolId);
+  if (!school) {
+    return res
+      .status(404)
+      .json({ message: `school with id:${schoolId} not found` });
+  }
+
+  req.school = school;
+  return next();
+};
+
+const getCity = async (req, res, next) => {
+  const { cityId } = req.params;
+  const city = await db.getCity(+cityId);
+  if (!city) {
+    return res
+      .status(404)
+      .json({ message: `city with id:${cityId} not found` });
+  }
+
+  req.city = city;
+  return next();
+};
+
+const getHometown = async (req, res, next) => {
+  const hometown = await db.getUsersHometown(req.user.id);
+  if (!hometown) {
+    return res
+      .status(404)
+      .json({ message: `user has no hometown associated with it` });
+  }
+
+  req.hometown = hometown;
+  return next();
+};
+
+const getCurrentCity = async (req, res, next) => {
+  const currentCity = await db.getUsersCurrentCity(req.user.id);
+  if (!currentCity) {
+    return res
+      .status(404)
+      .json({ message: `user has no current city associated with it` });
+  }
+
+  req.currentCity = currentCity;
+  return next();
+};
+
 module.exports = {
   notFoundHandler,
   errorHandler,
@@ -133,4 +183,8 @@ module.exports = {
   getUser,
   profileEditAuth,
   getWork,
+  getSchool,
+  getCity,
+  getHometown,
+  getCurrentCity,
 };

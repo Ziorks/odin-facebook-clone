@@ -9,6 +9,7 @@ import Wall from "../components/Wall";
 import AboutLayout from "../pages/AboutLayout";
 import AboutOverview from "../components/AboutOverview";
 import AboutWorkAndEducation from "../components/AboutWorkAndEducation";
+import AboutPlacesLived from "../components/AboutPlacesLived";
 
 const routes = [
   {
@@ -44,6 +45,10 @@ const routes = [
                   {
                     path: "about_work_and_education",
                     element: <AboutWorkAndEducation />,
+                  },
+                  {
+                    path: "about_places_lived",
+                    element: <AboutPlacesLived />,
                   },
                 ],
               },

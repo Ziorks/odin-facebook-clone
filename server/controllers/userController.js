@@ -1,11 +1,18 @@
 const { validationResult } = require("express-validator");
 const db = require("../db/queries");
-const { validateWork } = require("../utilities/validators");
+const {
+  validateWork,
+  validateSchool,
+  validateCity,
+} = require("../utilities/validators");
 const {
   getUser,
   profileEditAuth,
   getWork,
-  maxWorksCheck,
+  getSchool,
+  getCity,
+  getHometown,
+  getCurrentCity,
 } = require("../middleware");
 
 const allUsersGet = async (req, res) => {
@@ -54,11 +61,15 @@ const workPost = [
   getUser,
   profileEditAuth,
   async (req, res, next) => {
-    const MAX = 3;
+    const MAX = 20;
     const count = await db.getUsersWorksCount(req.user.id);
     if (count >= MAX) {
       return res.status(400).json({
-        message: `You have reached the limit of ${MAX} workplaces. You will need to delete an existing workplace to add a new one.`,
+        errors: [
+          {
+            msg: `You have reached the limit of ${MAX} workplaces. You will need to delete an existing workplace to add a new one.`,
+          },
+        ],
       });
     }
 
@@ -146,6 +157,317 @@ const workDelete = [
   },
 ];
 
+const schoolPost = [
+  getUser,
+  profileEditAuth,
+  async (req, res, next) => {
+    const MAX = 20;
+    const count = await db.getUsersSchoolsCount(req.user.id);
+    if (count >= MAX) {
+      return res.status(400).json({
+        errors: [
+          {
+            msg: `You have reached the limit of ${MAX} schools. You will need to delete an existing school to add a new one.`,
+          },
+        ],
+      });
+    }
+
+    return next();
+  },
+  validateSchool,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "validation failed", errors: errors.array() });
+    }
+
+    const user = req.paramsUser;
+    const { name, description, degree, startYear, endYear, graduated } =
+      req.body;
+
+    await db.createSchool(user.profile.workAndEducation.id, {
+      name,
+      description,
+      degree,
+      startYear,
+      endYear,
+      graduated,
+    });
+
+    return res.json({ message: "school created" });
+  },
+];
+
+const schoolPut = [
+  getUser,
+  profileEditAuth,
+  getSchool,
+  validateSchool,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "validation failed", errors: errors.array() });
+    }
+
+    const { name, description, degree, startYear, endYear, graduated } =
+      req.body;
+
+    await db.updateSchool(req.school.id, {
+      name,
+      degree: degree || null,
+      description: description || null,
+      startYear: startYear || null,
+      endYear: endYear || null,
+      graduated,
+    });
+
+    return res.json({ message: "school updated" });
+  },
+];
+
+const schoolDelete = [
+  getUser,
+  profileEditAuth,
+  getSchool,
+  async (req, res) => {
+    await db.deleteSchool(req.school.id);
+
+    return res.json({ message: "school deleted" });
+  },
+];
+
+const placesLivedGet = [
+  getUser,
+  async (req, res) => {
+    const user = req.paramsUser;
+
+    const placesLived = await db.getPlacesLivedByUserId(user.id);
+
+    return res.json(placesLived);
+  },
+];
+
+const cityPost = [
+  getUser,
+  profileEditAuth,
+  async (req, res, next) => {
+    const MAX = 20;
+    const count = await db.getUsersCityCount(req.user.id);
+    if (count >= MAX) {
+      return res.status(400).json({
+        errors: [
+          {
+            msg: `You have reached the limit of ${MAX} cities. You will need to delete an existing city to add a new one.`,
+          },
+        ],
+      });
+    }
+
+    return next();
+  },
+  validateCity,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "validation failed", errors: errors.array() });
+    }
+
+    const user = req.paramsUser;
+    const { name, yearMoved } = req.body;
+
+    await db.createCity(user.profile.placesLived.id, {
+      name,
+      yearMoved,
+    });
+
+    return res.json({ message: "city created" });
+  },
+];
+
+const cityPut = [
+  getUser,
+  profileEditAuth,
+  getCity,
+  validateCity,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "validation failed", errors: errors.array() });
+    }
+
+    const { name, yearMoved } = req.body;
+
+    await db.updateCity(req.city.id, {
+      name,
+      yearMoved: yearMoved || null,
+    });
+
+    return res.json({ message: "city updated" });
+  },
+];
+
+const cityDelete = [
+  getUser,
+  profileEditAuth,
+  getCity,
+  async (req, res) => {
+    await db.deleteCity(req.city.id);
+
+    return res.json({ message: "city deleted" });
+  },
+];
+
+const hometownPost = [
+  getUser,
+  profileEditAuth,
+  async (req, res, next) => {
+    const hometown = await db.getUsersHometown(req.user.id);
+    if (hometown) {
+      return res.status(400).json({
+        errors: [
+          {
+            msg: `You can only have one hometown. You will need to delete or edit the existing hometown.`,
+          },
+        ],
+      });
+    }
+
+    return next();
+  },
+  validateCity,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "validation failed", errors: errors.array() });
+    }
+
+    const user = req.paramsUser;
+    const { name } = req.body;
+
+    await db.createHometown(user.profile.placesLived.id, {
+      name,
+    });
+
+    return res.json({ message: "hometown created" });
+  },
+];
+
+const hometownPut = [
+  getUser,
+  profileEditAuth,
+  getHometown,
+  validateCity,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "validation failed", errors: errors.array() });
+    }
+
+    const { name } = req.body;
+
+    await db.updateCity(req.hometown.id, {
+      name,
+    });
+
+    return res.json({ message: "hometown updated" });
+  },
+];
+
+const hometownDelete = [
+  getUser,
+  profileEditAuth,
+  getHometown,
+  async (req, res) => {
+    await db.deleteCity(req.hometown.id);
+
+    return res.json({ message: "hometown deleted" });
+  },
+];
+
+const currentCityPost = [
+  getUser,
+  profileEditAuth,
+  async (req, res, next) => {
+    const currentCity = await db.getUsersCurrentCity(req.user.id);
+    if (currentCity) {
+      return res.status(400).json({
+        errors: [
+          {
+            msg: `You can only have one current city. You will need to delete or edit the existing current city.`,
+          },
+        ],
+      });
+    }
+
+    return next();
+  },
+  validateCity,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "validation failed", errors: errors.array() });
+    }
+
+    const user = req.paramsUser;
+    const { name } = req.body;
+
+    await db.createCurrentCity(user.profile.placesLived.id, {
+      name,
+    });
+
+    return res.json({ message: "current city created" });
+  },
+];
+
+const currentCityPut = [
+  getUser,
+  profileEditAuth,
+  getCurrentCity,
+  validateCity,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "validation failed", errors: errors.array() });
+    }
+
+    const { name } = req.body;
+
+    await db.updateCity(req.currentCity.id, {
+      name,
+    });
+
+    return res.json({ message: "current city updated" });
+  },
+];
+
+const currentCityDelete = [
+  getUser,
+  profileEditAuth,
+  getCurrentCity,
+  async (req, res) => {
+    await db.deleteCity(req.currentCity.id);
+
+    return res.json({ message: "current city deleted" });
+  },
+];
+
 module.exports = {
   allUsersGet,
   userGet,
@@ -154,4 +476,17 @@ module.exports = {
   workPost,
   workPut,
   workDelete,
+  schoolPost,
+  schoolPut,
+  schoolDelete,
+  placesLivedGet,
+  cityPost,
+  cityPut,
+  cityDelete,
+  hometownPost,
+  hometownPut,
+  hometownDelete,
+  currentCityPost,
+  currentCityPut,
+  currentCityDelete,
 };

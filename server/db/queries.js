@@ -67,7 +67,14 @@ async function getUserWithProfile(userId) {
     select: {
       id: true,
       username: true,
-      profile: { include: { workAndEducation: true } },
+      profile: {
+        include: {
+          workAndEducation: true,
+          placesLived: true,
+          contactInfo: true,
+          detailsAboutYou: true,
+        },
+      },
     },
   });
 
@@ -590,6 +597,65 @@ async function getUsersWorksCount(userId) {
   return count;
 }
 
+async function getSchool(schoolId) {
+  const school = await prisma.school.findUnique({ where: { id: schoolId } });
+
+  return school;
+}
+
+async function getUsersSchoolsCount(userId) {
+  const count = await prisma.school.count({
+    where: { workAndEducation: { profile: { userId } } },
+  });
+
+  return count;
+}
+
+async function getPlacesLivedByUserId(userId) {
+  const placesLived = await prisma.placesLived.findFirst({
+    where: { profile: { userId } },
+    include: {
+      cities: { orderBy: { yearMoved: "desc" } },
+      hometown: true,
+      currentCity: true,
+    },
+  });
+
+  return placesLived;
+}
+
+async function getUsersCityCount(userId) {
+  const count = await prisma.city.count({
+    where: { placesLived: { profile: { userId } } },
+  });
+
+  return count;
+}
+
+async function getCity(cityId) {
+  const city = await prisma.city.findUnique({
+    where: { id: cityId },
+  });
+
+  return city;
+}
+
+async function getUsersHometown(userId) {
+  const hometown = await prisma.city.findFirst({
+    where: { hometown: { profile: { userId } } },
+  });
+
+  return hometown;
+}
+
+async function getUsersCurrentCity(userId) {
+  const currentCity = await prisma.city.findFirst({
+    where: { currentCity: { profile: { userId } } },
+  });
+
+  return currentCity;
+}
+
 //CREATE QUERIES
 
 async function createUser(
@@ -609,6 +675,9 @@ async function createUser(
           firstName,
           lastName,
           workAndEducation: { create: {} },
+          placesLived: { create: {} },
+          contactInfo: { create: {} },
+          detailsAboutYou: { create: {} },
         },
       },
     },
@@ -755,6 +824,59 @@ async function createWork(
   return work;
 }
 
+async function createSchool(
+  workAndEducationId,
+  { name, description, degree, startYear, endYear, graduated }
+) {
+  const school = await prisma.school.create({
+    data: {
+      workAndEducation: { connect: { id: workAndEducationId } },
+      name,
+      description,
+      degree,
+      startYear,
+      endYear,
+      graduated,
+    },
+  });
+
+  return school;
+}
+
+async function createCity(placesLivedId, { name, yearMoved }) {
+  const city = await prisma.city.create({
+    data: {
+      placesLived: { connect: { id: placesLivedId } },
+      name,
+      yearMoved,
+    },
+  });
+
+  return city;
+}
+
+async function createHometown(placesLivedId, { name }) {
+  const hometown = await prisma.city.create({
+    data: {
+      hometown: { connect: { id: placesLivedId } },
+      name,
+    },
+  });
+
+  return hometown;
+}
+
+async function createCurrentCity(placesLivedId, { name }) {
+  const currentCity = await prisma.city.create({
+    data: {
+      currentCity: { connect: { id: placesLivedId } },
+      name,
+    },
+  });
+
+  return currentCity;
+}
+
 //UPDATE QUERIES
 
 async function updateProfile(profileId, { avatar, firstName, lastName } = {}) {
@@ -837,6 +959,34 @@ async function updateWork(
   return work;
 }
 
+async function updateSchool(
+  schoolId,
+  { name, description, degree, startYear, endYear, graduated }
+) {
+  const school = await prisma.school.update({
+    where: { id: schoolId },
+    data: {
+      name,
+      description,
+      degree,
+      startYear,
+      endYear,
+      graduated,
+    },
+  });
+
+  return school;
+}
+
+async function updateCity(cityId, { name, yearMoved }) {
+  const city = await prisma.city.update({
+    where: { id: cityId },
+    data: { name, yearMoved },
+  });
+
+  return city;
+}
+
 //DELETE QUERIES
 
 async function deleteOauthToken(tokenId) {
@@ -890,6 +1040,22 @@ async function deleteWork(workId) {
   return work;
 }
 
+async function deleteSchool(schoolId) {
+  const school = await prisma.school.delete({
+    where: { id: schoolId },
+  });
+
+  return school;
+}
+
+async function deleteCity(cityId) {
+  const city = await prisma.city.delete({
+    where: { id: cityId },
+  });
+
+  return city;
+}
+
 async function resetDatabase() {
   const tableNames = Object.values(Prisma.ModelName);
   for (const tableName of tableNames) {
@@ -921,6 +1087,13 @@ module.exports = {
   getWorkAndEducationByUserId,
   getWork,
   getUsersWorksCount,
+  getSchool,
+  getUsersSchoolsCount,
+  getPlacesLivedByUserId,
+  getUsersCityCount,
+  getCity,
+  getUsersHometown,
+  getUsersCurrentCity,
   createUser,
   createRefreshToken,
   createFederatedCredentials,
@@ -931,17 +1104,25 @@ module.exports = {
   createComment,
   createLike,
   createWork,
+  createSchool,
+  createCity,
+  createHometown,
+  createCurrentCity,
   updateProfile,
   updateRefreshToken,
   updateFriendship,
   updatePost,
   updateComment,
   updateWork,
+  updateSchool,
+  updateCity,
   deleteOauthToken,
   deleteFriendship,
   deletePost,
   deleteLike,
   softDeleteComment,
   deleteWork,
+  deleteSchool,
+  deleteCity,
   resetDatabase,
 };

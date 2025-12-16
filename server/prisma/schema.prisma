@@ -79,11 +79,9 @@ model Profile {
   lastName         String?           @db.VarChar(64)
   avatar           String?
   workAndEducation WorkAndEducation?
-  // hometown      City?        @relation(fields: [hometownId], references: [id], name: "hometown", onDelete: SetNull)
-  // hometownId    Int?
-  // currentCity   City?        @relation(fields: [currentCityId], references: [id], name: "currentCity", onDelete: SetNull)
-  // currentCityId Int?
-  // placesLived   PlaceLived[]
+  placesLived      PlacesLived?
+  contactInfo      ContactInfo?
+  detailsAboutYou  DetailsAboutYou?
 }
 
 model WorkAndEducation {
@@ -119,23 +117,94 @@ model School {
   workAndEducationId Int
 }
 
-// model City {
-//   id            Int          @id @default(autoincrement())
-//   name          String       @db.VarChar(64)
-//   country       String       @db.VarChar(64)
-//   hometowns     Profile[]    @relation(name: "hometown")
-//   currentCities Profile[]    @relation(name: "currentCity")
-//   placeLiveds   PlaceLived[]
-// }
+model PlacesLived {
+  id          Int     @id @default(autoincrement())
+  hometown    City?   @relation("Hometown")
+  currentCity City?   @relation("CurrentCity")
+  cities      City[]  @relation("PlaceLived")
+  profile     Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId   Int     @unique
+}
 
-// model PlaceLived {
-//   id        Int       @id @default(autoincrement())
-//   dateMoved DateTime?
-//   city      City      @relation(fields: [cityId], references: [id], onDelete: Cascade)
-//   cityId    Int
-//   profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
-//   profileId Int
-// }
+model City {
+  id            Int          @id @default(autoincrement())
+  name          String       @db.VarChar(64)
+  yearMoved     Int?         @db.SmallInt()
+  hometown      PlacesLived? @relation("Hometown", fields: [hometownId], references: [id], onDelete: Cascade)
+  hometownId    Int?         @unique
+  currentCity   PlacesLived? @relation("CurrentCity", fields: [currentCityId], references: [id], onDelete: Cascade)
+  currentCityId Int?         @unique
+  placesLived   PlacesLived? @relation("PlaceLived", fields: [placesLivedId], references: [id], onDelete: Cascade)
+  placesLivedId Int?
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model ContactInfo {
+  id           Int           @id @default(autoincrement())
+  phoneNumbers PhoneNumber[]
+  emails       Email[]
+  websites     Website[]
+  socialLinks  SocialLink[]
+  gender       Gender?
+  birthday     DateTime?
+  languages    Language[]
+  profile      Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId    Int           @unique
+}
+
+model PhoneNumber {
+  id            Int         @id @default(autoincrement())
+  value         String      @db.VarChar(32)
+  contactInfo   ContactInfo @relation(fields: [contactInfoId], references: [id], onDelete: Cascade)
+  contactInfoId Int
+}
+
+model Email {
+  id            Int         @id @default(autoincrement())
+  value         String      @db.VarChar(64)
+  contactInfo   ContactInfo @relation(fields: [contactInfoId], references: [id], onDelete: Cascade)
+  contactInfoId Int
+}
+
+model Website {
+  id            Int         @id @default(autoincrement())
+  value         String      @db.VarChar(128)
+  contactInfo   ContactInfo @relation(fields: [contactInfoId], references: [id], onDelete: Cascade)
+  contactInfoId Int
+}
+
+model SocialLink {
+  id            Int         @id @default(autoincrement())
+  value         String      @db.VarChar(128)
+  contactInfo   ContactInfo @relation(fields: [contactInfoId], references: [id], onDelete: Cascade)
+  contactInfoId Int
+}
+
+model Language {
+  id            Int         @id @default(autoincrement())
+  value         String      @db.VarChar(32)
+  contactInfo   ContactInfo @relation(fields: [contactInfoId], references: [id], onDelete: Cascade)
+  contactInfoId Int
+}
+
+model DetailsAboutYou {
+  id        Int     @id @default(autoincrement())
+  aboutMe   String? @db.VarChar(1024)
+  quotes    String? @db.VarChar(1024)
+  music     String? @db.VarChar(1024)
+  books     String? @db.VarChar(1024)
+  tv        String? @db.VarChar(1024)
+  movies    String? @db.VarChar(1024)
+  sports    String? @db.VarChar(1024)
+  hobbies   String? @db.VarChar(1024)
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId Int     @unique
+}
 
 enum PostType {
   REGULAR

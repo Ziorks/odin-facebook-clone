@@ -51,7 +51,7 @@ function WorkForm({ handleClose, refetch, work }) {
         console.error(`work ${work ? "edit" : "creation"} error`, err);
 
         if (err.response?.status === 400) {
-          setErrors([{ msg: err.response.data.message }]);
+          setErrors(err.response.data.errors);
         } else {
           setErrors([
             { msg: err.response?.data?.message || "Something went wrong." },
@@ -167,100 +167,145 @@ function WorkForm({ handleClose, refetch, work }) {
   );
 }
 
-function SchoolForm({ handleClose }) {
-  const [name, setName] = useState("");
-  const [graduated, setGraduated] = useState(true);
-  const [startYear, setStartYear] = useState(undefined);
-  const [endYear, setEndYear] = useState(undefined);
-  const [description, setDescription] = useState("");
-  const [degree, setDegree] = useState("");
+function SchoolForm({ handleClose, refetch, school }) {
+  const api = useApiPrivate();
+  const { user } = useOutletContext();
+  const [name, setName] = useState(school?.name ?? "");
+  const [description, setDescription] = useState(school?.description ?? "");
+  const [degree, setDegree] = useState(school?.degree ?? "");
+  const [startYear, setStartYear] = useState(school?.startYear ?? undefined);
+  const [endYear, setEndYear] = useState(school?.endYear ?? undefined);
+  const [graduated, setGraduated] = useState(school?.graduated ?? true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setErrors(null);
+    setIsLoading(true);
+
+    api({
+      method: school ? "PUT" : "POST",
+      url: `/users/${user.id}/school${school ? "/" + school.id : ""}`,
+      data: {
+        name,
+        description,
+        degree,
+        startYear,
+        endYear: startYear ? endYear : undefined,
+        graduated,
+      },
+    })
+      .then(() => {
+        refetch();
+        handleClose();
+      })
+      .catch((err) => {
+        console.error(`school ${school ? "edit" : "creation"} error`, err);
+
+        if (err.response?.status === 400) {
+          setErrors(err.response.data.errors);
+        } else {
+          setErrors([
+            { msg: err.response?.data?.message || "Something went wrong." },
+          ]);
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="name">School</label>
-        <input
-          type="text"
-          name="name"
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </div>
-      <h4>Time Period</h4>
-      <div>
-        <select
-          name="startYear"
-          id="startYear"
-          value={startYear}
-          onChange={(e) => setStartYear(+e.target.value || undefined)}
-        >
-          <option value={0}>Year</option>
-          {years.map((year) => {
-            if (year <= (endYear ?? currentYear))
-              return (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              );
-          })}
-        </select>
-        <span> to </span>
-        <select
-          name="endYear"
-          id="endYear"
-          value={endYear}
-          onChange={(e) => setEndYear(+e.target.value || undefined)}
-        >
-          <option value={0}>Year</option>
-          {years.map((year) => {
-            if (year >= (startYear ?? 0))
-              return (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              );
-          })}
-        </select>
-      </div>
-      <div>
-        <input
-          type="checkbox"
-          name="graduated"
-          id="graduated"
-          checked={graduated}
-          onChange={(e) => setGraduated(e.target.checked)}
-        />
-        <label htmlFor="graduated">Graduated</label>
-      </div>
-      <div>
-        <label htmlFor="description">Description</label>
-        <textarea
-          name="description"
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div>
-      <div>
-        <label htmlFor="degree">Degree</label>
-        <input
-          type="text"
-          name="degree"
-          id="degree"
-          value={degree}
-          onChange={(e) => setDegree(e.target.value)}
-        />
-      </div>
-      <div>
-        <button onClick={handleClose}>Cancel</button>
-        <button type="submit">Save</button>
-      </div>
-    </form>
+    <>
+      {isLoading && <p>Creating Work Record...</p>}
+      {errors && (
+        <ul>
+          {errors.map((error, i) => (
+            <li key={i}>{error.msg}</li>
+          ))}
+        </ul>
+      )}
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="name">School</label>
+          <input
+            type="text"
+            name="name"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            name="graduated"
+            id="graduated"
+            checked={graduated}
+            onChange={(e) => setGraduated(e.target.checked)}
+          />
+          <label htmlFor="graduated">Graduated</label>
+        </div>
+        <h4>Time Period</h4>
+        <div>
+          <select
+            name="startYear"
+            id="startYear"
+            value={startYear}
+            onChange={(e) => setStartYear(+e.target.value || undefined)}
+          >
+            <option value={0}>Year</option>
+            {years.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+          {startYear && (
+            <>
+              <span> to </span>
+              <select
+                name="endYear"
+                id="endYear"
+                value={endYear}
+                onChange={(e) => setEndYear(+e.target.value || undefined)}
+              >
+                <option value={0}>Year</option>
+                {years.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
+        </div>
+        <div>
+          <label htmlFor="description">Description</label>
+          <textarea
+            name="description"
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor="degree">Degree</label>
+          <input
+            type="text"
+            name="degree"
+            id="degree"
+            value={degree}
+            onChange={(e) => setDegree(e.target.value)}
+          />
+        </div>
+        <div>
+          <button onClick={handleClose}>Cancel</button>
+          <button type="submit">Save</button>
+        </div>
+      </form>
+    </>
   );
 }
 
@@ -296,7 +341,7 @@ function Work({ refetch, work }) {
     <>
       {showDeleteModal && (
         <Modal handleClose={() => setShowDeleteModal(false)}>
-          <p>Are you sure you want to delete '{work.company}' forever?</p>(
+          <p>Are you sure you want to delete '{work.company}' forever?</p>
           <div>
             <button onClick={handleDelete} disabled={isLoading}>
               DELETE
@@ -308,7 +353,7 @@ function Work({ refetch, work }) {
               Cancel
             </button>
           </div>
-          ){isLoading && <p>Deleting...</p>}
+          {isLoading && <p>Deleting...</p>}
           {error && <p>An error occured. Please try again.</p>}
         </Modal>
       )}
@@ -330,6 +375,91 @@ function Work({ refetch, work }) {
             </p>
           )}
           {work.description && <p>{work.description}</p>}
+          {auth.user.id === user.id && (
+            <>
+              <button onClick={() => setShowEditForm(true)}>Edit</button>
+              <button onClick={() => setShowDeleteModal(true)}>Delete</button>
+            </>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+function School({ refetch, school }) {
+  const api = useApiPrivate();
+  const { user } = useOutletContext();
+  const { auth } = useContext(AuthContext);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleDelete = () => {
+    setError(null);
+    setIsLoading(true);
+
+    api
+      .delete(`/users/${user.id}/school/${school.id}`)
+      .then(() => {
+        refetch();
+      })
+      .catch((err) => {
+        console.error(`school delete error`, err);
+
+        setError(err.response?.data?.message || "Something went wrong.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  return (
+    <>
+      {showDeleteModal && (
+        <Modal handleClose={() => setShowDeleteModal(false)}>
+          <p>Are you sure you want to delete '{school.name}' forever?</p>
+          <div>
+            <button onClick={handleDelete} disabled={isLoading}>
+              DELETE
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+          </div>
+          {isLoading && <p>Deleting...</p>}
+          {error && <p>An error occured. Please try again.</p>}
+        </Modal>
+      )}
+      {showEditForm ? (
+        <SchoolForm
+          handleClose={() => setShowEditForm(false)}
+          refetch={refetch}
+          school={school}
+        />
+      ) : (
+        <div>
+          <p>
+            {`Studie${school.graduated || school.endYear < currentYear ? "d" : "s"} at ${school.name}`}
+          </p>
+          {school.degree || school.endYear ? (
+            <p>
+              {school.degree && `${school.degree} `}
+              {school.endYear &&
+                `${school.degree ? " • " : ""} ${
+                  school.graduated
+                    ? `Class of ${school.endYear}`
+                    : `${school.startYear} - ${school.endYear}`
+                }`}
+            </p>
+          ) : (
+            <></>
+          )}
+          {school.description && <p>{school.description}</p>}
           {auth.user.id === user.id && (
             <>
               <button onClick={() => setShowEditForm(true)}>Edit</button>
@@ -378,7 +508,10 @@ function AboutWorkAndEducation() {
       <h3>School</h3>
       {isCurrentUser &&
         (showSchoolForm ? (
-          <SchoolForm handleClose={() => setShowSchoolForm(false)} />
+          <SchoolForm
+            handleClose={() => setShowSchoolForm(false)}
+            refetch={refetch}
+          />
         ) : (
           <button onClick={() => setShowSchoolForm(true)}>Add school</button>
         ))}
@@ -387,14 +520,7 @@ function AboutWorkAndEducation() {
       {data &&
         (data.schools.length > 0 ? (
           data.schools.map((school) => (
-            <div key={school.id}>
-              <p key={school.id}>{school.name}</p>
-              {/* 
-                TODO: display more info
-              */}{" "}
-              <button>Edit</button>
-              <button>Delete</button>
-            </div>
+            <School key={school.id} refetch={refetch} school={school} />
           ))
         ) : (
           <p>No education information</p>

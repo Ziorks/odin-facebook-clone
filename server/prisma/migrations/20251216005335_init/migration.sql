@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "public"."Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
+
+-- CreateEnum
 CREATE TYPE "public"."PostType" AS ENUM ('REGULAR', 'PROFILE_PIC_UPDATE');
 
 -- CreateEnum
@@ -106,6 +109,97 @@ CREATE TABLE "public"."School" (
 );
 
 -- CreateTable
+CREATE TABLE "public"."PlacesLived" (
+    "id" SERIAL NOT NULL,
+    "profileId" INTEGER NOT NULL,
+
+    CONSTRAINT "PlacesLived_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."City" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(64) NOT NULL,
+    "yearMoved" SMALLINT,
+    "hometownId" INTEGER,
+    "currentCityId" INTEGER,
+    "placesLivedId" INTEGER,
+
+    CONSTRAINT "City_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."ContactInfo" (
+    "id" SERIAL NOT NULL,
+    "gender" "public"."Gender",
+    "birthday" TIMESTAMP(3),
+    "profileId" INTEGER NOT NULL,
+
+    CONSTRAINT "ContactInfo_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."PhoneNumber" (
+    "id" SERIAL NOT NULL,
+    "value" VARCHAR(32) NOT NULL,
+    "contactInfoId" INTEGER NOT NULL,
+
+    CONSTRAINT "PhoneNumber_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Email" (
+    "id" SERIAL NOT NULL,
+    "value" VARCHAR(64) NOT NULL,
+    "contactInfoId" INTEGER NOT NULL,
+
+    CONSTRAINT "Email_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Website" (
+    "id" SERIAL NOT NULL,
+    "value" VARCHAR(128) NOT NULL,
+    "contactInfoId" INTEGER NOT NULL,
+
+    CONSTRAINT "Website_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."SocialLink" (
+    "id" SERIAL NOT NULL,
+    "value" VARCHAR(128) NOT NULL,
+    "contactInfoId" INTEGER NOT NULL,
+
+    CONSTRAINT "SocialLink_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Language" (
+    "id" SERIAL NOT NULL,
+    "value" VARCHAR(32) NOT NULL,
+    "contactInfoId" INTEGER NOT NULL,
+
+    CONSTRAINT "Language_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."DetailsAboutYou" (
+    "id" SERIAL NOT NULL,
+    "aboutMe" VARCHAR(1024),
+    "quotes" VARCHAR(1024),
+    "music" VARCHAR(1024),
+    "books" VARCHAR(1024),
+    "tv" VARCHAR(1024),
+    "movies" VARCHAR(1024),
+    "sports" VARCHAR(1024),
+    "hobbies" VARCHAR(1024),
+    "profileId" INTEGER NOT NULL,
+
+    CONSTRAINT "DetailsAboutYou_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "public"."Post" (
     "id" SERIAL NOT NULL,
     "type" "public"."PostType" NOT NULL DEFAULT 'REGULAR',
@@ -165,6 +259,21 @@ CREATE UNIQUE INDEX "Profile_userId_key" ON "public"."Profile"("userId");
 CREATE UNIQUE INDEX "WorkAndEducation_profileId_key" ON "public"."WorkAndEducation"("profileId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "PlacesLived_profileId_key" ON "public"."PlacesLived"("profileId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "City_hometownId_key" ON "public"."City"("hometownId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "City_currentCityId_key" ON "public"."City"("currentCityId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ContactInfo_profileId_key" ON "public"."ContactInfo"("profileId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DetailsAboutYou_profileId_key" ON "public"."DetailsAboutYou"("profileId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Like_userId_targetId_targetType_key" ON "public"."Like"("userId", "targetId", "targetType");
 
 -- AddForeignKey
@@ -193,6 +302,39 @@ ALTER TABLE "public"."Work" ADD CONSTRAINT "Work_workAndEducationId_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "public"."School" ADD CONSTRAINT "School_workAndEducationId_fkey" FOREIGN KEY ("workAndEducationId") REFERENCES "public"."WorkAndEducation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."PlacesLived" ADD CONSTRAINT "PlacesLived_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."City" ADD CONSTRAINT "City_hometownId_fkey" FOREIGN KEY ("hometownId") REFERENCES "public"."PlacesLived"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."City" ADD CONSTRAINT "City_currentCityId_fkey" FOREIGN KEY ("currentCityId") REFERENCES "public"."PlacesLived"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."City" ADD CONSTRAINT "City_placesLivedId_fkey" FOREIGN KEY ("placesLivedId") REFERENCES "public"."PlacesLived"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."ContactInfo" ADD CONSTRAINT "ContactInfo_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."PhoneNumber" ADD CONSTRAINT "PhoneNumber_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Email" ADD CONSTRAINT "Email_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Website" ADD CONSTRAINT "Website_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."SocialLink" ADD CONSTRAINT "SocialLink_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Language" ADD CONSTRAINT "Language_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."DetailsAboutYou" ADD CONSTRAINT "DetailsAboutYou_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Post" ADD CONSTRAINT "Post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

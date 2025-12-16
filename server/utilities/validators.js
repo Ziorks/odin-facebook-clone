@@ -122,7 +122,7 @@ const validateWork = [
     .isString()
     .withMessage("Description must be a string")
     .trim()
-    .isLength({ max: 128 })
+    .isLength({ max: 256 })
     .withMessage("Description can be no longer than 256 characters"),
   body("startYear")
     .optional()
@@ -146,6 +146,67 @@ const validateWork = [
     .withMessage("CurrentJob must be a boolean"),
 ];
 
+const validateSchool = [
+  body("name")
+    .exists()
+    .withMessage("'name'" + existsMessage)
+    .isString()
+    .withMessage("Name must be a string")
+    .trim()
+    .notEmpty()
+    .withMessage("Name can't be an empty string")
+    .isLength({ max: 128 })
+    .withMessage("Name can be no longer than 128 characters"),
+  body("description")
+    .optional()
+    .isString()
+    .withMessage("Description must be a string")
+    .trim()
+    .isLength({ max: 256 })
+    .withMessage("Description can be no longer than 256 characters"),
+  body("degree")
+    .optional()
+    .isString()
+    .withMessage("Degree must be a string")
+    .trim()
+    .isLength({ max: 128 })
+    .withMessage("Degree can be no longer than 128 characters"),
+  body("startYear")
+    .optional()
+    .isInt()
+    .withMessage("StartYear must be an integer"),
+  body("endYear")
+    .optional()
+    .isInt()
+    .withMessage("EndYear must be an integer")
+    .custom((value, { req }) => {
+      return value >= req.body.startYear;
+    })
+    .withMessage("EndYear cannot be less than StartYear"),
+  body("graduated")
+    .exists()
+    .withMessage("'graduated'" + existsMessage)
+    .isBoolean()
+    .withMessage("Graduated must be a boolean"),
+];
+
+const validateCity = [
+  body("name")
+    .exists()
+    .withMessage("'name'" + existsMessage)
+    .isString()
+    .withMessage("Name must be a string")
+    .trim()
+    .notEmpty()
+    .withMessage("Name can't be an empty string")
+    .isLength({ max: 64 })
+    .withMessage("Name can be no longer than 64 characters"),
+  body("yearMoved")
+    .optional()
+    .isInt()
+    .withMessage("YearMoved must be an integer"),
+];
+
 module.exports = {
   validateRegister,
   validatePostCreate,
@@ -154,4 +215,6 @@ module.exports = {
   validateCommentEdit,
   validateLike,
   validateWork,
+  validateSchool,
+  validateCity,
 };
