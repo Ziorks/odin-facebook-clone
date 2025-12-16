@@ -640,22 +640,6 @@ async function getCity(cityId) {
   return city;
 }
 
-async function getUsersHometown(userId) {
-  const hometown = await prisma.city.findFirst({
-    where: { hometown: { profile: { userId } } },
-  });
-
-  return hometown;
-}
-
-async function getUsersCurrentCity(userId) {
-  const currentCity = await prisma.city.findFirst({
-    where: { currentCity: { profile: { userId } } },
-  });
-
-  return currentCity;
-}
-
 //CREATE QUERIES
 
 async function createUser(
@@ -1092,8 +1076,6 @@ module.exports = {
   getPlacesLivedByUserId,
   getUsersCityCount,
   getCity,
-  getUsersHometown,
-  getUsersCurrentCity,
   createUser,
   createRefreshToken,
   createFederatedCredentials,

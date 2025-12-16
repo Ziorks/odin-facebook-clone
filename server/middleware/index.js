@@ -147,30 +147,6 @@ const getCity = async (req, res, next) => {
   return next();
 };
 
-const getHometown = async (req, res, next) => {
-  const hometown = await db.getUsersHometown(req.user.id);
-  if (!hometown) {
-    return res
-      .status(404)
-      .json({ message: `user has no hometown associated with it` });
-  }
-
-  req.hometown = hometown;
-  return next();
-};
-
-const getCurrentCity = async (req, res, next) => {
-  const currentCity = await db.getUsersCurrentCity(req.user.id);
-  if (!currentCity) {
-    return res
-      .status(404)
-      .json({ message: `user has no current city associated with it` });
-  }
-
-  req.currentCity = currentCity;
-  return next();
-};
-
 module.exports = {
   notFoundHandler,
   errorHandler,
@@ -185,6 +161,4 @@ module.exports = {
   getWork,
   getSchool,
   getCity,
-  getHometown,
-  getCurrentCity,
 };

@@ -12,6 +12,14 @@ const years = Array.from(
   (_, i) => currentYear - i,
 );
 
+const CITY_TYPES = ["PLACELIVED", "CURRENTCITY", "HOMETOWN"];
+const CITY_TYPES_STRING = CITY_TYPES.reduce((prev, cur, i) => {
+  if (i === CITY_TYPES.length - 1) {
+    return prev + `or '${cur}'`;
+  }
+  return prev + `'${cur}', `;
+}, "");
+
 function CityForm({ handleClose, refetch, city, type }) {
   const api = useApiPrivate();
   const { user } = useOutletContext();
@@ -20,25 +28,12 @@ function CityForm({ handleClose, refetch, city, type }) {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState(null);
 
-  let URL = `/users/${user.id}/`;
-
-  switch (type) {
-    case "PLACELIVED":
-      URL += `city${city ? "/" + city.id : ""}`;
-      break;
-    case "CURRENTCITY":
-      URL += "current_city";
-      break;
-    case "HOMETOWN":
-      URL += "hometown";
-      break;
-    default:
-      return (
-        <h1>
-          ERROR: a 'type' of 'PLACELIVED', 'CURRENTCITY', or 'HOMETOWN' is
-          required for the CityForm component
-        </h1>
-      );
+  if (!CITY_TYPES.includes(type)) {
+    return (
+      <h1>
+        {`ERROR: a 'type' prop is required for the CityForm component. Values for the 'type' prop can be one of ${CITY_TYPES_STRING}`}
+      </h1>
+    );
   }
 
   const handleSubmit = (e) => {
@@ -48,8 +43,13 @@ function CityForm({ handleClose, refetch, city, type }) {
 
     api({
       method: city ? "PUT" : "POST",
-      url: URL,
-      data: { name, yearMoved },
+      url: `/users/${user.id}/city${city ? "/" + city.id : ""}`,
+      data: {
+        name,
+        yearMoved,
+        isHometown: type === "HOMETOWN",
+        isCurrentCity: type === "CURRENTCITY",
+      },
     })
       .then(() => {
         refetch();
@@ -128,25 +128,12 @@ function City({ refetch, city, type }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  let DELETE_URL = `/users/${user.id}/`;
-
-  switch (type) {
-    case "PLACELIVED":
-      DELETE_URL += `city/${city.id}`;
-      break;
-    case "CURRENTCITY":
-      DELETE_URL += "current_city";
-      break;
-    case "HOMETOWN":
-      DELETE_URL += "hometown";
-      break;
-    default:
-      return (
-        <h1>
-          ERROR: a 'type' of 'PLACELIVED', 'CURRENTCITY', or 'HOMETOWN' is
-          required for the City component
-        </h1>
-      );
+  if (!CITY_TYPES.includes(type)) {
+    return (
+      <h1>
+        {`ERROR: a 'type' prop is required for the City component. Values for the 'type' prop can be one of ${CITY_TYPES_STRING}`}
+      </h1>
+    );
   }
 
   const handleDelete = () => {
@@ -154,7 +141,7 @@ function City({ refetch, city, type }) {
     setIsLoading(true);
 
     api
-      .delete(DELETE_URL)
+      .delete(`/users/${user.id}/city/${city.id}`)
       .then(() => {
         refetch();
       })

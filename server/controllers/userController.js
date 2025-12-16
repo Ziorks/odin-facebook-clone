@@ -11,8 +11,6 @@ const {
   getWork,
   getSchool,
   getCity,
-  getHometown,
-  getCurrentCity,
 } = require("../middleware");
 
 const allUsersGet = async (req, res) => {
@@ -256,16 +254,52 @@ const cityPost = [
   getUser,
   profileEditAuth,
   async (req, res, next) => {
-    const MAX = 20;
-    const count = await db.getUsersCityCount(req.user.id);
-    if (count >= MAX) {
+    const { isHometown, isCurrentCity } = req.body;
+
+    if (isHometown && isCurrentCity) {
       return res.status(400).json({
         errors: [
           {
-            msg: `You have reached the limit of ${MAX} cities. You will need to delete an existing city to add a new one.`,
+            msg: `isHometown and isCurrentCity can't both be true. A city can either be a hometown or a current city but not both.`,
           },
         ],
       });
+    }
+
+    if (isHometown) {
+      const hometown = await db.getUsersHometown(req.user.id);
+      if (hometown) {
+        return res.status(400).json({
+          errors: [
+            {
+              msg: `You can only have one hometown. You will need to delete or edit the existing hometown.`,
+            },
+          ],
+        });
+      }
+    } else if (isCurrentCity) {
+      const currentCity = await db.getUsersCurrentCity(req.user.id);
+      if (currentCity) {
+        return res.status(400).json({
+          errors: [
+            {
+              msg: `You can only have one current city. You will need to delete or edit the existing current city.`,
+            },
+          ],
+        });
+      }
+    } else {
+      const MAX = 20;
+      const count = await db.getUsersCityCount(req.user.id);
+      if (count >= MAX) {
+        return res.status(400).json({
+          errors: [
+            {
+              msg: `You have reached the limit of ${MAX} cities. You will need to delete an existing city to add a new one.`,
+            },
+          ],
+        });
+      }
     }
 
     return next();
@@ -280,12 +314,18 @@ const cityPost = [
     }
 
     const user = req.paramsUser;
-    const { name, yearMoved } = req.body;
+    const { name, yearMoved, isHometown, isCurrentCity } = req.body;
 
-    await db.createCity(user.profile.placesLived.id, {
-      name,
-      yearMoved,
-    });
+    if (isHometown) {
+      await db.createHometown(user.profile.placesLived.id, { name });
+    } else if (isCurrentCity) {
+      await db.createCurrentCity(user.profile.placesLived.id, { name });
+    } else {
+      await db.createCity(user.profile.placesLived.id, {
+        name,
+        yearMoved,
+      });
+    }
 
     return res.json({ message: "city created" });
   },
@@ -326,148 +366,6 @@ const cityDelete = [
   },
 ];
 
-const hometownPost = [
-  getUser,
-  profileEditAuth,
-  async (req, res, next) => {
-    const hometown = await db.getUsersHometown(req.user.id);
-    if (hometown) {
-      return res.status(400).json({
-        errors: [
-          {
-            msg: `You can only have one hometown. You will need to delete or edit the existing hometown.`,
-          },
-        ],
-      });
-    }
-
-    return next();
-  },
-  validateCity,
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
-    const user = req.paramsUser;
-    const { name } = req.body;
-
-    await db.createHometown(user.profile.placesLived.id, {
-      name,
-    });
-
-    return res.json({ message: "hometown created" });
-  },
-];
-
-const hometownPut = [
-  getUser,
-  profileEditAuth,
-  getHometown,
-  validateCity,
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
-    const { name } = req.body;
-
-    await db.updateCity(req.hometown.id, {
-      name,
-    });
-
-    return res.json({ message: "hometown updated" });
-  },
-];
-
-const hometownDelete = [
-  getUser,
-  profileEditAuth,
-  getHometown,
-  async (req, res) => {
-    await db.deleteCity(req.hometown.id);
-
-    return res.json({ message: "hometown deleted" });
-  },
-];
-
-const currentCityPost = [
-  getUser,
-  profileEditAuth,
-  async (req, res, next) => {
-    const currentCity = await db.getUsersCurrentCity(req.user.id);
-    if (currentCity) {
-      return res.status(400).json({
-        errors: [
-          {
-            msg: `You can only have one current city. You will need to delete or edit the existing current city.`,
-          },
-        ],
-      });
-    }
-
-    return next();
-  },
-  validateCity,
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
-    const user = req.paramsUser;
-    const { name } = req.body;
-
-    await db.createCurrentCity(user.profile.placesLived.id, {
-      name,
-    });
-
-    return res.json({ message: "current city created" });
-  },
-];
-
-const currentCityPut = [
-  getUser,
-  profileEditAuth,
-  getCurrentCity,
-  validateCity,
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
-    const { name } = req.body;
-
-    await db.updateCity(req.currentCity.id, {
-      name,
-    });
-
-    return res.json({ message: "current city updated" });
-  },
-];
-
-const currentCityDelete = [
-  getUser,
-  profileEditAuth,
-  getCurrentCity,
-  async (req, res) => {
-    await db.deleteCity(req.currentCity.id);
-
-    return res.json({ message: "current city deleted" });
-  },
-];
-
 module.exports = {
   allUsersGet,
   userGet,
@@ -483,10 +381,4 @@ module.exports = {
   cityPost,
   cityPut,
   cityDelete,
-  hometownPost,
-  hometownPut,
-  hometownDelete,
-  currentCityPost,
-  currentCityPut,
-  currentCityDelete,
 };

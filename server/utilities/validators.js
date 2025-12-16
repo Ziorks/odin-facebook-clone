@@ -205,6 +205,14 @@ const validateCity = [
     .optional()
     .isInt()
     .withMessage("YearMoved must be an integer"),
+  body("isHometown")
+    .optional()
+    .isBoolean()
+    .withMessage("IsHometown must be a boolean"),
+  body("isCurrentCity")
+    .optional()
+    .isBoolean()
+    .withMessage("IsCurrentCity must be a boolean"),
 ];
 
 module.exports = {
