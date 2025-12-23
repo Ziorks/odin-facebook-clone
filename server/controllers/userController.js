@@ -4,6 +4,7 @@ const {
   validateWork,
   validateSchool,
   validateCity,
+  validateBasicInfo,
 } = require("../utilities/validators");
 const {
   getUser,
@@ -62,12 +63,9 @@ const workPost = [
     const MAX = 20;
     const count = await db.getUsersWorksCount(req.user.id);
     if (count >= MAX) {
+      const msg = `You have reached the limit of ${MAX} workplaces. You will need to delete an existing workplace to add a new one.`;
       return res.status(400).json({
-        errors: [
-          {
-            msg: `You have reached the limit of ${MAX} workplaces. You will need to delete an existing workplace to add a new one.`,
-          },
-        ],
+        errors: [{ msg }],
       });
     }
 
@@ -162,12 +160,9 @@ const schoolPost = [
     const MAX = 20;
     const count = await db.getUsersSchoolsCount(req.user.id);
     if (count >= MAX) {
+      const msg = `You have reached the limit of ${MAX} schools. You will need to delete an existing school to add a new one.`;
       return res.status(400).json({
-        errors: [
-          {
-            msg: `You have reached the limit of ${MAX} schools. You will need to delete an existing school to add a new one.`,
-          },
-        ],
+        errors: [{ msg }],
       });
     }
 
@@ -257,47 +252,35 @@ const cityPost = [
     const { isHometown, isCurrentCity } = req.body;
 
     if (isHometown && isCurrentCity) {
+      const msg = `isHometown and isCurrentCity can't both be true. A city can either be a hometown or a current city but not both.`;
       return res.status(400).json({
-        errors: [
-          {
-            msg: `isHometown and isCurrentCity can't both be true. A city can either be a hometown or a current city but not both.`,
-          },
-        ],
+        errors: [{ msg }],
       });
     }
 
     if (isHometown) {
       const hometown = await db.getUsersHometown(req.user.id);
       if (hometown) {
+        const msg = `You can only have one hometown. You will need to delete or edit the existing hometown.`;
         return res.status(400).json({
-          errors: [
-            {
-              msg: `You can only have one hometown. You will need to delete or edit the existing hometown.`,
-            },
-          ],
+          errors: [{ msg }],
         });
       }
     } else if (isCurrentCity) {
       const currentCity = await db.getUsersCurrentCity(req.user.id);
       if (currentCity) {
+        const msg = `You can only have one current city. You will need to delete or edit the existing current city.`;
         return res.status(400).json({
-          errors: [
-            {
-              msg: `You can only have one current city. You will need to delete or edit the existing current city.`,
-            },
-          ],
+          errors: [{ msg }],
         });
       }
     } else {
       const MAX = 20;
       const count = await db.getUsersCityCount(req.user.id);
       if (count >= MAX) {
+        const msg = `You have reached the limit of ${MAX} cities. You will need to delete an existing city to add a new one.`;
         return res.status(400).json({
-          errors: [
-            {
-              msg: `You have reached the limit of ${MAX} cities. You will need to delete an existing city to add a new one.`,
-            },
-          ],
+          errors: [{ msg }],
         });
       }
     }
@@ -366,6 +349,54 @@ const cityDelete = [
   },
 ];
 
+const contactInfoGet = [
+  getUser,
+  async (req, res) => {
+    const user = req.paramsUser;
+
+    const contactInfo = await db.getContactInfoByUserId(user.id);
+
+    return res.json(contactInfo);
+  },
+];
+
+const basicInfoPut = [
+  getUser,
+  profileEditAuth,
+  validateBasicInfo,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "validation failed", errors: errors.array() });
+    }
+
+    const user = req.paramsUser;
+    const {
+      phoneNumbers,
+      emails,
+      websites,
+      socialLinks,
+      gender,
+      birthday,
+      languages,
+    } = req.body;
+
+    await db.updateContactInfo(user.profile.contactInfo.id, {
+      phoneNumbers,
+      emails,
+      websites,
+      socialLinks,
+      gender,
+      birthday,
+      languages,
+    });
+
+    return res.json({ message: "basic info updated" });
+  },
+];
+
 module.exports = {
   allUsersGet,
   userGet,
@@ -381,4 +412,6 @@ module.exports = {
   cityPost,
   cityPut,
   cityDelete,
+  contactInfoGet,
+  basicInfoPut,
 };

@@ -131,56 +131,26 @@ CREATE TABLE "public"."City" (
 -- CreateTable
 CREATE TABLE "public"."ContactInfo" (
     "id" SERIAL NOT NULL,
+    "phoneNumbers" VARCHAR(32)[],
+    "emails" VARCHAR(64)[],
+    "websites" VARCHAR(128)[],
+    "socialLinks" VARCHAR(128)[],
     "gender" "public"."Gender",
-    "birthday" TIMESTAMP(3),
+    "languages" VARCHAR(32)[],
     "profileId" INTEGER NOT NULL,
 
     CONSTRAINT "ContactInfo_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "public"."PhoneNumber" (
+CREATE TABLE "public"."Birthday" (
     "id" SERIAL NOT NULL,
-    "value" VARCHAR(32) NOT NULL,
+    "month" SMALLINT,
+    "day" SMALLINT,
+    "year" SMALLINT,
     "contactInfoId" INTEGER NOT NULL,
 
-    CONSTRAINT "PhoneNumber_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "public"."Email" (
-    "id" SERIAL NOT NULL,
-    "value" VARCHAR(64) NOT NULL,
-    "contactInfoId" INTEGER NOT NULL,
-
-    CONSTRAINT "Email_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "public"."Website" (
-    "id" SERIAL NOT NULL,
-    "value" VARCHAR(128) NOT NULL,
-    "contactInfoId" INTEGER NOT NULL,
-
-    CONSTRAINT "Website_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "public"."SocialLink" (
-    "id" SERIAL NOT NULL,
-    "value" VARCHAR(128) NOT NULL,
-    "contactInfoId" INTEGER NOT NULL,
-
-    CONSTRAINT "SocialLink_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "public"."Language" (
-    "id" SERIAL NOT NULL,
-    "value" VARCHAR(32) NOT NULL,
-    "contactInfoId" INTEGER NOT NULL,
-
-    CONSTRAINT "Language_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Birthday_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -271,6 +241,9 @@ CREATE UNIQUE INDEX "City_currentCityId_key" ON "public"."City"("currentCityId")
 CREATE UNIQUE INDEX "ContactInfo_profileId_key" ON "public"."ContactInfo"("profileId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Birthday_contactInfoId_key" ON "public"."Birthday"("contactInfoId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "DetailsAboutYou_profileId_key" ON "public"."DetailsAboutYou"("profileId");
 
 -- CreateIndex
@@ -319,19 +292,7 @@ ALTER TABLE "public"."City" ADD CONSTRAINT "City_placesLivedId_fkey" FOREIGN KEY
 ALTER TABLE "public"."ContactInfo" ADD CONSTRAINT "ContactInfo_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."PhoneNumber" ADD CONSTRAINT "PhoneNumber_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."Email" ADD CONSTRAINT "Email_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."Website" ADD CONSTRAINT "Website_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."SocialLink" ADD CONSTRAINT "SocialLink_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."Language" ADD CONSTRAINT "Language_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."Birthday" ADD CONSTRAINT "Birthday_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."DetailsAboutYou" ADD CONSTRAINT "DetailsAboutYou_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;

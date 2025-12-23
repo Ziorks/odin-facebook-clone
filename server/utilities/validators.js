@@ -215,6 +215,126 @@ const validateCity = [
     .withMessage("IsCurrentCity must be a boolean"),
 ];
 
+const validateBasicInfo = [
+  body("phoneNumbers")
+    .optional()
+    .isArray({ max: 5 })
+    .withMessage("PhoneNumbers must be an array of at most 5 elements")
+    .bail()
+    .customSanitizer((arr) =>
+      arr
+        .map((string) => (typeof string === "string" ? string.trim() : string))
+        .filter((string) =>
+          typeof string === "string" ? string.length > 0 : true
+        )
+    ),
+  body("phoneNumbers.*")
+    .isString()
+    .withMessage("Each element of phoneNumbers must be a string")
+    .bail()
+    .isLength({ max: 32 })
+    .withMessage("Each string in phoneNumbers must be 32 characters or less"),
+  body("emails")
+    .optional()
+    .isArray({ max: 5 })
+    .withMessage("Emails must be an array of at most 5 elements")
+    .bail()
+    .customSanitizer((arr) =>
+      arr
+        .map((string) => (typeof string === "string" ? string.trim() : string))
+        .filter((string) =>
+          typeof string === "string" ? string.length > 0 : true
+        )
+    ),
+  body("emails.*")
+    .isEmail()
+    .withMessage("Each element of emails must be an email address")
+    .bail()
+    .isLength({ max: 64 })
+    .withMessage("Each email must be 64 characters or less"),
+  body("websites")
+    .optional()
+    .isArray({ max: 5 })
+    .withMessage("Websites must be an array of at most 5 elements")
+    .bail()
+    .customSanitizer((arr) =>
+      arr
+        .map((string) => (typeof string === "string" ? string.trim() : string))
+        .filter((string) =>
+          typeof string === "string" ? string.length > 0 : true
+        )
+    ),
+  body("websites.*")
+    .isURL()
+    .withMessage("Each element of websites must be a URL")
+    .bail()
+    .isLength({ max: 128 })
+    .withMessage("Each website must be 128 characters or less"),
+  body("socialLinks")
+    .optional()
+    .isArray({ max: 5 })
+    .withMessage("SocialLinks must be an array of at most 5 elements")
+    .bail()
+    .customSanitizer((arr) =>
+      arr
+        .map((string) => (typeof string === "string" ? string.trim() : string))
+        .filter((string) =>
+          typeof string === "string" ? string.length > 0 : true
+        )
+    ),
+  body("socialLinks.*")
+    .isURL()
+    .withMessage("Each element of socialLinks must be a URL")
+    .bail()
+    .isLength({ max: 128 })
+    .withMessage("Each socialLink must be 128 characters or less"),
+
+  body("gender")
+    .optional({ values: "null" })
+    .trim()
+    .toUpperCase()
+    .isIn(["MALE", "FEMALE", "OTHER"])
+    .withMessage("Gender must be one of 'MALE', 'FEMALE', or 'OTHER'"),
+  body("birthday")
+    .optional()
+    .isObject()
+    .withMessage("Birthday must be an object"),
+  body("birthday.month")
+    .optional({ values: "null" })
+    .isInt({ min: 1, max: 12 })
+    .withMessage("Birthday month must be an integer between 1 and 12"),
+  body("birthday.day")
+    .optional({ values: "null" })
+    .custom((_, { req }) => {
+      return req.body.birthday?.month;
+    })
+    .withMessage("A month is required to add a day.")
+    .isInt({ min: 1, max: 31 })
+    .withMessage("Birthday day must be an integer between 1 and 31"),
+  body("birthday.year")
+    .optional({ values: "null" })
+    .isInt({ min: 1900, max: new Date().getFullYear() })
+    .withMessage("Birthday year must be a valid year"),
+  body("languages")
+    .optional()
+    .isArray({ max: 20 })
+    .withMessage("Languages must be an array of at most 20 elements")
+    .bail()
+    .customSanitizer((arr) =>
+      arr
+        .map((string) => (typeof string === "string" ? string.trim() : string))
+        .filter((string) =>
+          typeof string === "string" ? string.length > 0 : true
+        )
+    ),
+  body("languages.*")
+    .isString()
+    .withMessage("Each element of languages must be a string")
+    .bail()
+    .isLength({ max: 32 })
+    .withMessage("Each language must be 32 characters or less"),
+];
+
 module.exports = {
   validateRegister,
   validatePostCreate,
@@ -225,4 +345,5 @@ module.exports = {
   validateWork,
   validateSchool,
   validateCity,
+  validateBasicInfo,
 };

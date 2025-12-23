@@ -145,51 +145,25 @@ enum Gender {
 }
 
 model ContactInfo {
-  id           Int           @id @default(autoincrement())
-  phoneNumbers PhoneNumber[]
-  emails       Email[]
-  websites     Website[]
-  socialLinks  SocialLink[]
+  id           Int       @id @default(autoincrement())
+  phoneNumbers String[]  @db.VarChar(32)
+  emails       String[]  @db.VarChar(64)
+  websites     String[]  @db.VarChar(128)
+  socialLinks  String[]  @db.VarChar(128)
   gender       Gender?
-  birthday     DateTime?
-  languages    Language[]
-  profile      Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  profileId    Int           @unique
+  birthday     Birthday?
+  languages    String[]  @db.VarChar(32)
+  profile      Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId    Int       @unique
 }
 
-model PhoneNumber {
+model Birthday {
   id            Int         @id @default(autoincrement())
-  value         String      @db.VarChar(32)
+  month         Int?        @db.SmallInt()
+  day           Int?        @db.SmallInt()
+  year          Int?        @db.SmallInt()
   contactInfo   ContactInfo @relation(fields: [contactInfoId], references: [id], onDelete: Cascade)
-  contactInfoId Int
-}
-
-model Email {
-  id            Int         @id @default(autoincrement())
-  value         String      @db.VarChar(64)
-  contactInfo   ContactInfo @relation(fields: [contactInfoId], references: [id], onDelete: Cascade)
-  contactInfoId Int
-}
-
-model Website {
-  id            Int         @id @default(autoincrement())
-  value         String      @db.VarChar(128)
-  contactInfo   ContactInfo @relation(fields: [contactInfoId], references: [id], onDelete: Cascade)
-  contactInfoId Int
-}
-
-model SocialLink {
-  id            Int         @id @default(autoincrement())
-  value         String      @db.VarChar(128)
-  contactInfo   ContactInfo @relation(fields: [contactInfoId], references: [id], onDelete: Cascade)
-  contactInfoId Int
-}
-
-model Language {
-  id            Int         @id @default(autoincrement())
-  value         String      @db.VarChar(32)
-  contactInfo   ContactInfo @relation(fields: [contactInfoId], references: [id], onDelete: Cascade)
-  contactInfoId Int
+  contactInfoId Int         @unique
 }
 
 model DetailsAboutYou {

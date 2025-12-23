@@ -624,6 +624,22 @@ async function getPlacesLivedByUserId(userId) {
   return placesLived;
 }
 
+async function getUsersHometown(userId) {
+  const hometown = await prisma.city.findFirst({
+    where: { hometown: { profile: { userId } } },
+  });
+
+  return hometown;
+}
+
+async function getUsersCurrentCity(userId) {
+  const currentCity = await prisma.city.findFirst({
+    where: { currentCity: { profile: { userId } } },
+  });
+
+  return currentCity;
+}
+
 async function getUsersCityCount(userId) {
   const count = await prisma.city.count({
     where: { placesLived: { profile: { userId } } },
@@ -638,6 +654,17 @@ async function getCity(cityId) {
   });
 
   return city;
+}
+
+async function getContactInfoByUserId(userId) {
+  const contactInfo = await prisma.contactInfo.findFirst({
+    where: { profile: { userId } },
+    include: {
+      birthday: { select: { month: true, day: true, year: true } },
+    },
+  });
+
+  return contactInfo;
 }
 
 //CREATE QUERIES
@@ -660,7 +687,7 @@ async function createUser(
           lastName,
           workAndEducation: { create: {} },
           placesLived: { create: {} },
-          contactInfo: { create: {} },
+          contactInfo: { create: { birthday: { create: {} } } },
           detailsAboutYou: { create: {} },
         },
       },
@@ -965,10 +992,35 @@ async function updateSchool(
 async function updateCity(cityId, { name, yearMoved }) {
   const city = await prisma.city.update({
     where: { id: cityId },
-    data: { name, yearMoved },
+    data: {
+      name,
+      yearMoved,
+    },
   });
 
   return city;
+}
+
+async function updateContactInfo(
+  contactInfoId,
+  { phoneNumbers, emails, websites, socialLinks, gender, birthday, languages }
+) {
+  const { day, month, year } = birthday ?? {};
+
+  const contactInfo = await prisma.contactInfo.update({
+    where: { id: contactInfoId },
+    data: {
+      phoneNumbers,
+      emails,
+      websites,
+      socialLinks,
+      gender,
+      birthday: { update: { data: { day, month, year } } },
+      languages,
+    },
+  });
+
+  return contactInfo;
 }
 
 //DELETE QUERIES
@@ -1074,8 +1126,11 @@ module.exports = {
   getSchool,
   getUsersSchoolsCount,
   getPlacesLivedByUserId,
+  getUsersHometown,
+  getUsersCurrentCity,
   getUsersCityCount,
   getCity,
+  getContactInfoByUserId,
   createUser,
   createRefreshToken,
   createFederatedCredentials,
@@ -1098,6 +1153,7 @@ module.exports = {
   updateWork,
   updateSchool,
   updateCity,
+  updateContactInfo,
   deleteOauthToken,
   deleteFriendship,
   deletePost,

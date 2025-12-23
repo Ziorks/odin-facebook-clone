@@ -18,6 +18,9 @@ function AboutLayout() {
           </Link>{" "}
           <Link to={"./about_places_lived"} preventScrollReset={true}>
             Places lived
+          </Link>{" "}
+          <Link to={"./about_contact_info"} preventScrollReset={true}>
+            Contact info
           </Link>
         </nav>
         <Outlet context={{ user }} />
