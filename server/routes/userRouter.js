@@ -15,7 +15,7 @@ const {
   cityPut,
   cityDelete,
   contactInfoGet,
-  basicInfoPut,
+  contactInfoPut,
   detailsGet,
   detailsPut,
 } = require("../controllers/userController");
@@ -38,8 +38,10 @@ router.get("/:userId/about_places_lived", placesLivedGet);
 router.post("/:userId/city", cityPost);
 router.route("/:userId/city/:cityId").put(cityPut).delete(cityDelete);
 
-router.get("/:userId/about_contact_info", contactInfoGet); //TODO: this and below should be same route
-router.put("/:userId/basic_info", basicInfoPut);
+router
+  .route("/:userId/about_contact_info")
+  .get(contactInfoGet)
+  .put(contactInfoPut);
 
 router.route("/:userId/about_details").get(detailsGet).put(detailsPut);
 

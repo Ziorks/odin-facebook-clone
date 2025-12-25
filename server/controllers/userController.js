@@ -361,7 +361,7 @@ const contactInfoGet = [
   },
 ];
 
-const basicInfoPut = [
+const contactInfoPut = [
   getUser,
   profileEditAuth,
   validateBasicInfo,
@@ -456,7 +456,7 @@ module.exports = {
   cityPut,
   cityDelete,
   contactInfoGet,
-  basicInfoPut,
+  contactInfoPut,
   detailsGet,
   detailsPut,
 };
