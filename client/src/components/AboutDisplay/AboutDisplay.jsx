@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import { useOutletContext } from "react-router-dom";
 import useApiPrivate from "../../hooks/useApiPrivate";
 import AuthContext from "../../contexts/AuthContext";
+import Modal from "../Modal";
 // import styles from "./AboutDisplay.module.css";
 
 function AboutDisplay({
