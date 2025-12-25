@@ -72,7 +72,7 @@ async function getUserWithProfile(userId) {
           workAndEducation: true,
           placesLived: true,
           contactInfo: true,
-          detailsAboutYou: true,
+          details: true,
         },
       },
     },
@@ -667,6 +667,14 @@ async function getContactInfoByUserId(userId) {
   return contactInfo;
 }
 
+async function getDetailsByUserId(userId) {
+  const details = await prisma.details.findFirst({
+    where: { profile: { userId } },
+  });
+
+  return details;
+}
+
 //CREATE QUERIES
 
 async function createUser(
@@ -688,7 +696,7 @@ async function createUser(
           workAndEducation: { create: {} },
           placesLived: { create: {} },
           contactInfo: { create: { birthday: { create: {} } } },
-          detailsAboutYou: { create: {} },
+          details: { create: {} },
         },
       },
     },
@@ -1023,6 +1031,27 @@ async function updateContactInfo(
   return contactInfo;
 }
 
+async function updateDetails(
+  detailsId,
+  { aboutMe, quotes, music, books, tv, movies, sports, hobbies }
+) {
+  const details = await prisma.details.update({
+    where: { id: detailsId },
+    data: {
+      aboutMe,
+      quotes,
+      music,
+      books,
+      tv,
+      movies,
+      sports,
+      hobbies,
+    },
+  });
+
+  return details;
+}
+
 //DELETE QUERIES
 
 async function deleteOauthToken(tokenId) {
@@ -1131,6 +1160,7 @@ module.exports = {
   getUsersCityCount,
   getCity,
   getContactInfoByUserId,
+  getDetailsByUserId,
   createUser,
   createRefreshToken,
   createFederatedCredentials,
@@ -1154,6 +1184,7 @@ module.exports = {
   updateSchool,
   updateCity,
   updateContactInfo,
+  updateDetails,
   deleteOauthToken,
   deleteFriendship,
   deletePost,

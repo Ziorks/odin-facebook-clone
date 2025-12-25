@@ -1,8 +1,11 @@
+import { useContext } from "react";
 import { Link, useOutletContext, Outlet } from "react-router-dom";
+import AuthContext from "../../contexts/AuthContext";
 // import styles from "./AboutLayout.module.css";
 
 function AboutLayout() {
   const { user } = useOutletContext();
+  const { auth } = useContext(AuthContext);
 
   return (
     <>
@@ -21,6 +24,9 @@ function AboutLayout() {
           </Link>{" "}
           <Link to={"./about_contact_info"} preventScrollReset={true}>
             Contact info
+          </Link>{" "}
+          <Link to={"./about_details"} preventScrollReset={true}>
+            Details about {auth.user.id === user.id ? "you" : user.username}
           </Link>
         </nav>
         <Outlet context={{ user }} />

@@ -5,6 +5,7 @@ const {
   validateSchool,
   validateCity,
   validateBasicInfo,
+  validateDetails,
 } = require("../utilities/validators");
 const {
   getUser,
@@ -397,6 +398,48 @@ const basicInfoPut = [
   },
 ];
 
+const detailsGet = [
+  getUser,
+  async (req, res) => {
+    const user = req.paramsUser;
+
+    const details = await db.getDetailsByUserId(user.id);
+
+    return res.json(details);
+  },
+];
+
+const detailsPut = [
+  getUser,
+  profileEditAuth,
+  validateDetails,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "validation failed", errors: errors.array() });
+    }
+
+    const user = req.paramsUser;
+    const { aboutMe, quotes, music, books, tv, movies, sports, hobbies } =
+      req.body;
+
+    await db.updateDetails(user.profile.details.id, {
+      aboutMe,
+      quotes,
+      music,
+      books,
+      tv,
+      movies,
+      sports,
+      hobbies,
+    });
+
+    return res.json({ message: "details updated" });
+  },
+];
+
 module.exports = {
   allUsersGet,
   userGet,
@@ -414,4 +457,6 @@ module.exports = {
   cityDelete,
   contactInfoGet,
   basicInfoPut,
+  detailsGet,
+  detailsPut,
 };

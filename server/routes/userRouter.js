@@ -16,6 +16,8 @@ const {
   cityDelete,
   contactInfoGet,
   basicInfoPut,
+  detailsGet,
+  detailsPut,
 } = require("../controllers/userController");
 
 const router = Router();
@@ -36,9 +38,9 @@ router.get("/:userId/about_places_lived", placesLivedGet);
 router.post("/:userId/city", cityPost);
 router.route("/:userId/city/:cityId").put(cityPut).delete(cityDelete);
 
-router.get("/:userId/about_contact_info", contactInfoGet);
+router.get("/:userId/about_contact_info", contactInfoGet); //TODO: this and below should be same route
 router.put("/:userId/basic_info", basicInfoPut);
 
-// router.get("/:userId/about_details", detailsAboutYouGet);
+router.route("/:userId/about_details").get(detailsGet).put(detailsPut);
 
 module.exports = router;

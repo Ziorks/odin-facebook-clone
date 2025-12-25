@@ -154,19 +154,19 @@ CREATE TABLE "public"."Birthday" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."DetailsAboutYou" (
+CREATE TABLE "public"."Details" (
     "id" SERIAL NOT NULL,
-    "aboutMe" VARCHAR(1024),
-    "quotes" VARCHAR(1024),
-    "music" VARCHAR(1024),
-    "books" VARCHAR(1024),
-    "tv" VARCHAR(1024),
-    "movies" VARCHAR(1024),
-    "sports" VARCHAR(1024),
-    "hobbies" VARCHAR(1024),
+    "aboutMe" VARCHAR(512),
+    "quotes" VARCHAR(512),
+    "music" VARCHAR(512),
+    "books" VARCHAR(512),
+    "tv" VARCHAR(512),
+    "movies" VARCHAR(512),
+    "sports" VARCHAR(512),
+    "hobbies" VARCHAR(512),
     "profileId" INTEGER NOT NULL,
 
-    CONSTRAINT "DetailsAboutYou_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Details_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -244,7 +244,7 @@ CREATE UNIQUE INDEX "ContactInfo_profileId_key" ON "public"."ContactInfo"("profi
 CREATE UNIQUE INDEX "Birthday_contactInfoId_key" ON "public"."Birthday"("contactInfoId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "DetailsAboutYou_profileId_key" ON "public"."DetailsAboutYou"("profileId");
+CREATE UNIQUE INDEX "Details_profileId_key" ON "public"."Details"("profileId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Like_userId_targetId_targetType_key" ON "public"."Like"("userId", "targetId", "targetType");
@@ -295,7 +295,7 @@ ALTER TABLE "public"."ContactInfo" ADD CONSTRAINT "ContactInfo_profileId_fkey" F
 ALTER TABLE "public"."Birthday" ADD CONSTRAINT "Birthday_contactInfoId_fkey" FOREIGN KEY ("contactInfoId") REFERENCES "public"."ContactInfo"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."DetailsAboutYou" ADD CONSTRAINT "DetailsAboutYou_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."Details" ADD CONSTRAINT "Details_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Post" ADD CONSTRAINT "Post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

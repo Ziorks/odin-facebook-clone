@@ -81,7 +81,7 @@ model Profile {
   workAndEducation WorkAndEducation?
   placesLived      PlacesLived?
   contactInfo      ContactInfo?
-  detailsAboutYou  DetailsAboutYou?
+  details          Details?
 }
 
 model WorkAndEducation {
@@ -166,16 +166,16 @@ model Birthday {
   contactInfoId Int         @unique
 }
 
-model DetailsAboutYou {
+model Details {
   id        Int     @id @default(autoincrement())
-  aboutMe   String? @db.VarChar(1024)
-  quotes    String? @db.VarChar(1024)
-  music     String? @db.VarChar(1024)
-  books     String? @db.VarChar(1024)
-  tv        String? @db.VarChar(1024)
-  movies    String? @db.VarChar(1024)
-  sports    String? @db.VarChar(1024)
-  hobbies   String? @db.VarChar(1024)
+  aboutMe   String? @db.VarChar(512)
+  quotes    String? @db.VarChar(512)
+  music     String? @db.VarChar(512)
+  books     String? @db.VarChar(512)
+  tv        String? @db.VarChar(512)
+  movies    String? @db.VarChar(512)
+  sports    String? @db.VarChar(512)
+  hobbies   String? @db.VarChar(512)
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   profileId Int     @unique
 }
