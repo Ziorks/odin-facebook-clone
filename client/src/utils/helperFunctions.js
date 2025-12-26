@@ -7,3 +7,10 @@ export function formatDistanceToNowShort(time) {
 
   return `${number}${unit[0]}`;
 }
+
+export function capitalizeFirstLetters(string) {
+  return string
+    .split(" ")
+    .map((word) => word[0].toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
