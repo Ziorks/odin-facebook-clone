@@ -37,7 +37,15 @@ function DetailForm({ handleClose, refetch, detail, label, fieldName }) {
   );
 }
 
-function Detail({ detail, label, fieldName, refetch }) {
+function DetailDisplay({
+  detail,
+  label,
+  fieldName,
+  addBtnText,
+  refetch,
+  isCurrentUser,
+}) {
+  const [showForm, setShowForm] = useState(false);
   const renderEditForm = (handleClose) => (
     <DetailForm
       refetch={refetch}
@@ -49,9 +57,26 @@ function Detail({ detail, label, fieldName, refetch }) {
   );
 
   return (
-    <AboutDisplay refetch={refetch} renderEditForm={renderEditForm}>
-      <p>{detail}</p>
-    </AboutDisplay>
+    <>
+      {detail ? (
+        <AboutDisplay refetch={refetch} renderEditForm={renderEditForm}>
+          <p>{detail}</p>
+        </AboutDisplay>
+      ) : isCurrentUser ? (
+        showForm ? (
+          <DetailForm
+            handleClose={() => setShowForm(false)}
+            refetch={refetch}
+            label={label}
+            fieldName={fieldName}
+          />
+        ) : (
+          <button onClick={() => setShowForm(true)}>{addBtnText}</button>
+        )
+      ) : (
+        <p>No {label.toLowerCase()} to show</p>
+      )}
+    </>
   );
 }
 
@@ -61,14 +86,6 @@ function AboutDetails() {
   const { data, isLoading, error, refetch } = useDataFetch(
     `/users/${user.id}/about_details`,
   );
-  const [showAboutMeForm, setShowAboutMeForm] = useState(false);
-  const [showQuotesForm, setShowQuotesForm] = useState(false);
-  const [showMusicForm, setShowMusicForm] = useState(false);
-  const [showBooksForm, setShowBooksForm] = useState(false);
-  const [showTvForm, setShowTvForm] = useState(false);
-  const [showMoviesForm, setShowMoviesForm] = useState(false);
-  const [showSportsForm, setShowSportsForm] = useState(false);
-  const [showHobbiesForm, setShowHobbiesForm] = useState(false);
 
   const isCurrentUser = user.id === auth.user.id;
 
@@ -79,204 +96,84 @@ function AboutDetails() {
       {data && (
         <>
           <h3>About {isCurrentUser ? "you" : user.username}</h3>
-          {data.aboutMe ? (
-            <Detail
-              refetch={refetch}
-              detail={data.aboutMe}
-              label={"About Me"}
-              fieldName={"aboutMe"}
-            />
-          ) : isCurrentUser ? (
-            showAboutMeForm ? (
-              <DetailForm
-                handleClose={() => setShowAboutMeForm(false)}
-                refetch={refetch}
-                label={"About Me"}
-                fieldName={"aboutMe"}
-              />
-            ) : (
-              <button onClick={() => setShowAboutMeForm(true)}>
-                Add an about me
-              </button>
-            )
-          ) : (
-            <p>No about me to show</p>
-          )}
+          <DetailDisplay
+            detail={data.aboutMe}
+            label={"About Me"}
+            fieldName={"aboutMe"}
+            addBtnText={"Add an about me"}
+            isCurrentUser={isCurrentUser}
+            refetch={refetch}
+          />
 
           <h3>Favorite quotes</h3>
-          {data.quotes ? (
-            <Detail
-              refetch={refetch}
-              detail={data.quotes}
-              label={"Quotes"}
-              fieldName={"quotes"}
-            />
-          ) : isCurrentUser ? (
-            showQuotesForm ? (
-              <DetailForm
-                handleClose={() => setShowQuotesForm(false)}
-                refetch={refetch}
-                label={"Quotes"}
-                fieldName={"quotes"}
-              />
-            ) : (
-              <button onClick={() => setShowQuotesForm(true)}>
-                Add your favorite quotations
-              </button>
-            )
-          ) : (
-            <p>No quotes to show</p>
-          )}
+          <DetailDisplay
+            detail={data.quotes}
+            label={"Quotes"}
+            fieldName={"quotes"}
+            addBtnText={"Add your favorite quotations"}
+            isCurrentUser={isCurrentUser}
+            refetch={refetch}
+          />
 
           <h3>Music</h3>
-          {data.music ? (
-            <Detail
-              refetch={refetch}
-              detail={data.music}
-              label={"Music"}
-              fieldName={"music"}
-            />
-          ) : isCurrentUser ? (
-            showMusicForm ? (
-              <DetailForm
-                handleClose={() => setShowMusicForm(false)}
-                refetch={refetch}
-                label={"Music"}
-                fieldName={"music"}
-              />
-            ) : (
-              <button onClick={() => setShowMusicForm(true)}>
-                Add your favorite music
-              </button>
-            )
-          ) : (
-            <p>No music to show</p>
-          )}
+          <DetailDisplay
+            detail={data.music}
+            label={"Music"}
+            fieldName={"music"}
+            addBtnText={"Add your favorite music"}
+            isCurrentUser={isCurrentUser}
+            refetch={refetch}
+          />
 
           <h3>Books</h3>
-          {data.books ? (
-            <Detail
-              refetch={refetch}
-              detail={data.books}
-              label={"Books"}
-              fieldName={"books"}
-            />
-          ) : isCurrentUser ? (
-            showBooksForm ? (
-              <DetailForm
-                handleClose={() => setShowBooksForm(false)}
-                refetch={refetch}
-                label={"Books"}
-                fieldName={"books"}
-              />
-            ) : (
-              <button onClick={() => setShowBooksForm(true)}>
-                Add your favorite books
-              </button>
-            )
-          ) : (
-            <p>No books to show</p>
-          )}
+          <DetailDisplay
+            detail={data.books}
+            label={"Books"}
+            fieldName={"books"}
+            addBtnText={"Add your favorite books"}
+            isCurrentUser={isCurrentUser}
+            refetch={refetch}
+          />
 
           <h3>TV</h3>
-          {data.tv ? (
-            <Detail
-              refetch={refetch}
-              detail={data.tv}
-              label={"TV"}
-              fieldName={"tv"}
-            />
-          ) : isCurrentUser ? (
-            showTvForm ? (
-              <DetailForm
-                handleClose={() => setShowTvForm(false)}
-                refetch={refetch}
-                label={"TV"}
-                fieldName={"tv"}
-              />
-            ) : (
-              <button onClick={() => setShowTvForm(true)}>
-                Add your favorite tv shows
-              </button>
-            )
-          ) : (
-            <p>No tv shows to show</p>
-          )}
+          <DetailDisplay
+            detail={data.tv}
+            label={"TV Shows"}
+            fieldName={"tv"}
+            addBtnText={"Add your favorite tv shows"}
+            isCurrentUser={isCurrentUser}
+            refetch={refetch}
+          />
 
           <h3>Movies</h3>
-          {data.movies ? (
-            <Detail
-              refetch={refetch}
-              detail={data.movies}
-              label={"Movies"}
-              fieldName={"movies"}
-            />
-          ) : isCurrentUser ? (
-            showMoviesForm ? (
-              <DetailForm
-                handleClose={() => setShowMoviesForm(false)}
-                refetch={refetch}
-                label={"Movies"}
-                fieldName={"movies"}
-              />
-            ) : (
-              <button onClick={() => setShowMoviesForm(true)}>
-                Add your favorite movies
-              </button>
-            )
-          ) : (
-            <p>No movies to show</p>
-          )}
+          <DetailDisplay
+            detail={data.movies}
+            label={"Movies"}
+            fieldName={"movies"}
+            addBtnText={"Add your favorite movies"}
+            isCurrentUser={isCurrentUser}
+            refetch={refetch}
+          />
 
           <h3>Sports</h3>
-          {data.sports ? (
-            <Detail
-              refetch={refetch}
-              detail={data.sports}
-              label={"Sports"}
-              fieldName={"sports"}
-            />
-          ) : isCurrentUser ? (
-            showSportsForm ? (
-              <DetailForm
-                handleClose={() => setShowSportsForm(false)}
-                refetch={refetch}
-                label={"Sports"}
-                fieldName={"sports"}
-              />
-            ) : (
-              <button onClick={() => setShowSportsForm(true)}>
-                Add your favorite sports teams/players
-              </button>
-            )
-          ) : (
-            <p>No sports to show</p>
-          )}
+          <DetailDisplay
+            detail={data.sports}
+            label={"Sports"}
+            fieldName={"sports"}
+            addBtnText={"Add your favorite sports teams/players"}
+            isCurrentUser={isCurrentUser}
+            refetch={refetch}
+          />
 
           <h3>Hobbies</h3>
-          {data.hobbies ? (
-            <Detail
-              refetch={refetch}
-              detail={data.hobbies}
-              label={"Hobbies and interests"}
-              fieldName={"hobbies"}
-            />
-          ) : isCurrentUser ? (
-            showHobbiesForm ? (
-              <DetailForm
-                handleClose={() => setShowHobbiesForm(false)}
-                refetch={refetch}
-                label={"Hobbies and interests"}
-                fieldName={"hobbies"}
-              />
-            ) : (
-              <button onClick={() => setShowHobbiesForm(true)}>
-                Add your hobbies and interests
-              </button>
-            )
-          ) : (
-            <p>No hobbies to show</p>
-          )}
+          <DetailDisplay
+            detail={data.hobbies}
+            label={"Hobbies"}
+            fieldName={"hobbies"}
+            addBtnText={"Add your hobbies and interests"}
+            isCurrentUser={isCurrentUser}
+            refetch={refetch}
+          />
         </>
       )}
     </>

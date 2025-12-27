@@ -335,95 +335,27 @@ const validateBasicInfo = [
     .withMessage("Each language must be 32 characters or less"),
 ];
 
+function detailValidationChain(fieldname) {
+  return body(fieldname)
+    .optional({ values: "null" })
+    .trim()
+    .isString()
+    .withMessage(fieldname + " must be a string")
+    .bail()
+    .customSanitizer((value) => value || null)
+    .isLength({ max: 512 })
+    .withMessage(fieldname + " must be 512 characters or less");
+}
+
 const validateDetails = [
-  body("aboutMe")
-    .optional({ values: "null" })
-    .trim()
-    .isString()
-    .withMessage("aboutMe must be a string")
-    .bail()
-    .notEmpty()
-    .withMessage("aboutMe can't be an empty string")
-    .bail()
-    .isLength({ max: 512 })
-    .withMessage("aboutMe must be 512 characters or less"),
-  body("quotes")
-    .optional({ values: "null" })
-    .trim()
-    .isString()
-    .withMessage("quotes must be a string")
-    .bail()
-    .notEmpty()
-    .withMessage("quotes can't be an empty string")
-    .bail()
-    .isLength({ max: 512 })
-    .withMessage("quotes must be 512 characters or less"),
-  body("music")
-    .optional({ values: "null" })
-    .trim()
-    .isString()
-    .withMessage("music must be a string")
-    .bail()
-    .notEmpty()
-    .withMessage("music can't be an empty string")
-    .bail()
-    .isLength({ max: 512 })
-    .withMessage("music must be 512 characters or less"),
-  body("books")
-    .optional({ values: "null" })
-    .trim()
-    .isString()
-    .withMessage("books must be a string")
-    .bail()
-    .notEmpty()
-    .withMessage("books can't be an empty string")
-    .bail()
-    .isLength({ max: 512 })
-    .withMessage("books must be 512 characters or less"),
-  body("tv")
-    .optional({ values: "null" })
-    .trim()
-    .isString()
-    .withMessage("tv must be a string")
-    .bail()
-    .notEmpty()
-    .withMessage("tv can't be an empty string")
-    .bail()
-    .isLength({ max: 512 })
-    .withMessage("tv must be 512 characters or less"),
-  body("movies")
-    .optional({ values: "null" })
-    .trim()
-    .isString()
-    .withMessage("movies must be a string")
-    .bail()
-    .notEmpty()
-    .withMessage("movies can't be an empty string")
-    .bail()
-    .isLength({ max: 512 })
-    .withMessage("movies must be 512 characters or less"),
-  body("sports")
-    .optional({ values: "null" })
-    .trim()
-    .isString()
-    .withMessage("sports must be a string")
-    .bail()
-    .notEmpty()
-    .withMessage("sports can't be an empty string")
-    .bail()
-    .isLength({ max: 512 })
-    .withMessage("sports must be 512 characters or less"),
-  body("hobbies")
-    .optional({ values: "null" })
-    .trim()
-    .isString()
-    .withMessage("hobbies must be a string")
-    .bail()
-    .notEmpty()
-    .withMessage("hobbies can't be an empty string")
-    .bail()
-    .isLength({ max: 512 })
-    .withMessage("hobbies must be 512 characters or less"),
+  detailValidationChain("aboutMe"),
+  detailValidationChain("quotes"),
+  detailValidationChain("music"),
+  detailValidationChain("books"),
+  detailValidationChain("tv"),
+  detailValidationChain("movies"),
+  detailValidationChain("sports"),
+  detailValidationChain("hobbies"),
 ];
 
 module.exports = {
