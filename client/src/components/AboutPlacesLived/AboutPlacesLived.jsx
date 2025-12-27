@@ -5,13 +5,8 @@ import useDataFetch from "../../hooks/useDataFetch";
 import AboutForm from "../AboutForm";
 import AboutDisplay from "../AboutDisplay";
 import { capitalizeFirstLetters } from "../../utils/helperFunctions";
+import { YEARS } from "../../utils/constants";
 // import styles from "./AboutPlacesLived.module.css";
-
-const currentYear = new Date().getFullYear();
-const years = Array.from(
-  { length: currentYear - 1900 + 1 },
-  (_, i) => currentYear - i,
-);
 
 const CITY_TYPES = ["PLACELIVED", "CURRENTCITY", "HOMETOWN"];
 const CITY_TYPES_STRING = CITY_TYPES.reduce((prev, cur, i) => {
@@ -74,7 +69,7 @@ function CityForm({ handleClose, refetch, city, type }) {
             onChange={(e) => setYearMoved(+e.target.value || undefined)}
           >
             <option value={0}>Year</option>
-            {years.map((year) => (
+            {YEARS.map((year) => (
               <option key={year} value={year}>
                 {year}
               </option>

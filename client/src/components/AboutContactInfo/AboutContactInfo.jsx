@@ -4,27 +4,8 @@ import AuthContext from "../../contexts/AuthContext";
 import useDataFetch from "../../hooks/useDataFetch";
 import AboutForm from "../AboutForm";
 import AboutDisplay from "../AboutDisplay";
+import { YEARS, MONTHS } from "../../utils/constants";
 // import styles from "./AboutContactInfo.module.css";
-
-const currentYear = new Date().getFullYear();
-const YEARS = Array.from(
-  { length: currentYear - 1900 + 1 },
-  (_, i) => currentYear - i,
-);
-const MONTHS = [
-  { name: "January", nDays: 31 },
-  { name: "February", nDays: 29 },
-  { name: "March", nDays: 31 },
-  { name: "April", nDays: 30 },
-  { name: "May", nDays: 31 },
-  { name: "June", nDays: 30 },
-  { name: "July", nDays: 31 },
-  { name: "August", nDays: 31 },
-  { name: "September", nDays: 30 },
-  { name: "October", nDays: 31 },
-  { name: "November", nDays: 30 },
-  { name: "December", nDays: 31 },
-];
 
 function MultiStringForm({
   handleClose,

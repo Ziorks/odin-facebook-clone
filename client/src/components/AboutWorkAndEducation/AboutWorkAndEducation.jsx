@@ -4,13 +4,8 @@ import AuthContext from "../../contexts/AuthContext";
 import useDataFetch from "../../hooks/useDataFetch";
 import AboutForm from "../AboutForm";
 import AboutDisplay from "../AboutDisplay";
+import { CURRENT_YEAR, YEARS } from "../../utils/constants";
 // import styles from "./AboutWorkAndEducation.module.css";
-
-const currentYear = new Date().getFullYear();
-const years = Array.from(
-  { length: currentYear - 1900 + 1 },
-  (_, i) => currentYear - i,
-);
 
 function WorkForm({ handleClose, refetch, work }) {
   const { user } = useOutletContext();
@@ -105,7 +100,7 @@ function WorkForm({ handleClose, refetch, work }) {
           onChange={(e) => setStartYear(+e.target.value || undefined)}
         >
           <option value={0}>Year</option>
-          {years.map((year) => (
+          {YEARS.map((year) => (
             <option key={year} value={year}>
               {year}
             </option>
@@ -121,7 +116,7 @@ function WorkForm({ handleClose, refetch, work }) {
               onChange={(e) => setEndYear(+e.target.value || undefined)}
             >
               <option value={0}>Year</option>
-              {years.map((year) => (
+              {YEARS.map((year) => (
                 <option key={year} value={year}>
                   {year}
                 </option>
@@ -243,7 +238,7 @@ function SchoolForm({ handleClose, refetch, school }) {
           onChange={(e) => setStartYear(+e.target.value || undefined)}
         >
           <option value={0}>Year</option>
-          {years.map((year) => (
+          {YEARS.map((year) => (
             <option key={year} value={year}>
               {year}
             </option>
@@ -259,7 +254,7 @@ function SchoolForm({ handleClose, refetch, school }) {
               onChange={(e) => setEndYear(+e.target.value || undefined)}
             >
               <option value={0}>Year</option>
-              {years.map((year) => (
+              {YEARS.map((year) => (
                 <option key={year} value={year}>
                   {year}
                 </option>
@@ -324,7 +319,7 @@ function SchoolsDisplay({ schools, refetch, isCurrentUser }) {
               )}
             >
               <p>
-                {`Studie${school.graduated || school.endYear < currentYear ? "d" : "s"} at ${school.name}`}
+                {`Studie${school.graduated || school.endYear < CURRENT_YEAR ? "d" : "s"} at ${school.name}`}
               </p>
               {school.degree || school.endYear ? (
                 <p>
