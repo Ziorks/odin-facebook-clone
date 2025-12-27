@@ -35,12 +35,12 @@ function WorkForm({ handleClose, refetch, work }) {
       url={url}
       data={{
         company,
-        position,
-        location,
-        description,
+        position: position || null,
+        location: location || null,
+        description: description || null,
         currentJob,
-        startYear,
-        endYear: currentJob ? undefined : endYear,
+        startYear: startYear || null,
+        endYear: currentJob ? null : endYear || null,
       }}
       errMsg={errMsg}
       loadingMsg={loadingMsg}
@@ -53,6 +53,7 @@ function WorkForm({ handleClose, refetch, work }) {
           id="company"
           value={company}
           onChange={(e) => setCompany(e.target.value)}
+          required={true}
         />
       </div>
       <div>
@@ -185,8 +186,8 @@ function WorksDisplay({ works, refetch, isCurrentUser }) {
 function SchoolForm({ handleClose, refetch, school }) {
   const { user } = useOutletContext();
   const [name, setName] = useState(school?.name ?? "");
-  const [description, setDescription] = useState(school?.description ?? "");
   const [degree, setDegree] = useState(school?.degree ?? "");
+  const [description, setDescription] = useState(school?.description ?? "");
   const [startYear, setStartYear] = useState(school?.startYear ?? undefined);
   const [endYear, setEndYear] = useState(school?.endYear ?? undefined);
   const [graduated, setGraduated] = useState(school?.graduated ?? true);
@@ -204,10 +205,10 @@ function SchoolForm({ handleClose, refetch, school }) {
       url={url}
       data={{
         name,
-        description,
-        degree,
-        startYear,
-        endYear: startYear ? endYear : undefined,
+        degree: degree || null,
+        description: description || null,
+        startYear: startYear || null,
+        endYear: startYear ? endYear || null : null,
         graduated,
       }}
       errMsg={errMsg}

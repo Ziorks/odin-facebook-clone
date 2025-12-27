@@ -131,12 +131,12 @@ const workPut = [
 
     await db.updateWork(req.work.id, {
       company,
-      position: position || null,
-      location: location || null,
-      description: description || null,
+      position,
+      location,
+      description,
       currentJob,
-      startYear: startYear || null,
-      endYear: endYear || null,
+      startYear,
+      endYear,
     });
 
     return res.json({ message: "work updated" });
@@ -213,10 +213,10 @@ const schoolPut = [
 
     await db.updateSchool(req.school.id, {
       name,
-      degree: degree || null,
-      description: description || null,
-      startYear: startYear || null,
-      endYear: endYear || null,
+      degree,
+      description,
+      startYear,
+      endYear,
       graduated,
     });
 
@@ -332,7 +332,7 @@ const cityPut = [
 
     await db.updateCity(req.city.id, {
       name,
-      yearMoved: yearMoved || null,
+      yearMoved,
     });
 
     return res.json({ message: "city updated" });

@@ -104,32 +104,32 @@ const validateWork = [
     .isLength({ max: 128 })
     .withMessage("Company can be no longer than 128 characters"),
   body("position")
-    .optional()
+    .optional({ values: "null" })
     .isString()
     .withMessage("Position must be a string")
     .trim()
     .isLength({ max: 128 })
     .withMessage("Position can be no longer than 128 characters"),
   body("location")
-    .optional()
+    .optional({ values: "null" })
     .isString()
     .withMessage("Location must be a string")
     .trim()
     .isLength({ max: 128 })
     .withMessage("Location can be no longer than 128 characters"),
   body("description")
-    .optional()
+    .optional({ values: "null" })
     .isString()
     .withMessage("Description must be a string")
     .trim()
     .isLength({ max: 256 })
     .withMessage("Description can be no longer than 256 characters"),
   body("startYear")
-    .optional()
+    .optional({ values: "null" })
     .isInt()
     .withMessage("StartYear must be an integer"),
   body("endYear")
-    .optional()
+    .optional({ values: "null" })
     .isInt()
     .withMessage("EndYear must be an integer")
     .custom((value, { req }) => {
@@ -158,25 +158,25 @@ const validateSchool = [
     .isLength({ max: 128 })
     .withMessage("Name can be no longer than 128 characters"),
   body("description")
-    .optional()
+    .optional({ values: "null" })
     .isString()
     .withMessage("Description must be a string")
     .trim()
     .isLength({ max: 256 })
     .withMessage("Description can be no longer than 256 characters"),
   body("degree")
-    .optional()
+    .optional({ values: "null" })
     .isString()
     .withMessage("Degree must be a string")
     .trim()
     .isLength({ max: 128 })
     .withMessage("Degree can be no longer than 128 characters"),
   body("startYear")
-    .optional()
+    .optional({ values: "null" })
     .isInt()
     .withMessage("StartYear must be an integer"),
   body("endYear")
-    .optional()
+    .optional({ values: "null" })
     .isInt()
     .withMessage("EndYear must be an integer")
     .custom((value, { req }) => {
@@ -202,7 +202,7 @@ const validateCity = [
     .isLength({ max: 64 })
     .withMessage("Name can be no longer than 64 characters"),
   body("yearMoved")
-    .optional()
+    .optional({ values: "null" })
     .isInt()
     .withMessage("YearMoved must be an integer"),
   body("isHometown")

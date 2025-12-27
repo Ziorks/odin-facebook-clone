@@ -47,7 +47,7 @@ function CityForm({ handleClose, refetch, city, type }) {
       url={url}
       data={{
         name,
-        yearMoved,
+        yearMoved: yearMoved || null,
         isHometown: type === "HOMETOWN",
         isCurrentCity: type === "CURRENTCITY",
       }}
