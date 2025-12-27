@@ -83,6 +83,7 @@ function MultiStringDisplay({
       max={max}
     />
   );
+  const lowerLabel = label.toLowerCase();
 
   return (
     <>
@@ -105,11 +106,11 @@ function MultiStringDisplay({
           />
         ) : (
           <button onClick={() => setShowForm(true)}>
-            Add {/[aeiou]/i.test(label[0]) ? "an" : "a"} {label}
+            Add {/[aeiou]/i.test(label[0]) ? "an" : "a"} {lowerLabel}
           </button>
         )
       ) : (
-        <p>No {label.toLowerCase()}s to show</p>
+        <p>No {lowerLabel}s to show</p>
       )}
     </>
   );
@@ -167,16 +168,17 @@ function GenderDisplay({ gender, refetch, isCurrentUser }) {
           </p>
           <p>Gender</p>
         </AboutDisplay>
-      ) : (
-        isCurrentUser &&
-        (showForm ? (
+      ) : isCurrentUser ? (
+        showForm ? (
           <GenderForm
             handleClose={() => setShowForm(false)}
             refetch={refetch}
           />
         ) : (
           <button onClick={() => setShowForm(true)}>Add your gender</button>
-        ))
+        )
+      ) : (
+        <p>No gender to show</p>
       )}
     </>
   );
@@ -292,16 +294,17 @@ function BirthdayDisplay({ birthday, refetch, isCurrentUser }) {
           </p>
           <p>Birthday</p>
         </AboutDisplay>
-      ) : (
-        isCurrentUser &&
-        (showForm ? (
+      ) : isCurrentUser ? (
+        showForm ? (
           <BirthdayForm
             handleClose={() => setShowForm(false)}
             refetch={refetch}
           />
         ) : (
           <button onClick={() => setShowForm(true)}>Add your birthday</button>
-        ))
+        )
+      ) : (
+        <p>No birthday to show</p>
       )}
     </>
   );
