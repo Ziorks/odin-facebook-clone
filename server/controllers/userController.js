@@ -35,16 +35,16 @@ const userGet = [
   },
 ];
 
-const aboutOverviewGet = async (req, res) => {
-  const { userId } = req.params;
+const aboutOverviewGet = [
+  getUser,
+  async (req, res) => {
+    const user = req.paramsUser;
 
-  /*TODO: 
-    -latest work
-    -latest school
-    -current city
-    -hometown
-  */
-};
+    const overview = await db.getAboutOverviewByUserId(user.id);
+
+    return res.json(overview);
+  },
+];
 
 const aboutWorkAndEducationGet = [
   getUser,

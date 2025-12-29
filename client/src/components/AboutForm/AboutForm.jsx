@@ -5,7 +5,7 @@ import useApiPrivate from "../../hooks/useApiPrivate";
 function AboutForm({
   children,
   handleClose,
-  refetch,
+  refetch, //TODO:change refetch to onSuccess
   method,
   url,
   data,

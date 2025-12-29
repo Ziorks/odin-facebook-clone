@@ -7,7 +7,7 @@ import Modal from "../Modal";
 
 function AboutDisplay({
   children,
-  refetch,
+  refetch, //TODO:change refetch to onSuccess
   deleteUrl,
   deleteErrMsg,
   deleteConfirmMsg,
@@ -28,6 +28,7 @@ function AboutDisplay({
     api
       .delete(deleteUrl)
       .then(() => {
+        setShowDeleteModal(false);
         refetch();
       })
       .catch((err) => {

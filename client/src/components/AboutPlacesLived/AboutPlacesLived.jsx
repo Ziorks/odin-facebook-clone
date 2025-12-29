@@ -16,7 +16,7 @@ const CITY_TYPES_STRING = CITY_TYPES.reduce((prev, cur, i) => {
   return prev + `'${cur}', `;
 }, "");
 
-function CityForm({ handleClose, refetch, city, type }) {
+export function CityForm({ handleClose, refetch, city, type }) {
   const { user } = useOutletContext();
   const [name, setName] = useState(city?.name ?? "");
   const [yearMoved, setYearMoved] = useState(city?.yearMoved ?? undefined);
@@ -85,6 +85,7 @@ function UniqueCityDisplay({ city, type, refetch, isCurrentUser }) {
   const { user } = useOutletContext();
   const [showForm, setShowForm] = useState(false);
 
+  //TODO: instead of this switch statement, pass things in as props
   let label;
 
   switch (type) {

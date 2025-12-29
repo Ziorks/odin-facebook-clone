@@ -25,7 +25,6 @@ const router = Router();
 router.get("/", allUsersGet);
 router.get("/:userId", userGet);
 
-router.get("/:userId/about", aboutOverviewGet);
 router.get("/:userId/about_overview", aboutOverviewGet);
 
 router.get("/:userId/about_work_and_education", aboutWorkAndEducationGet);

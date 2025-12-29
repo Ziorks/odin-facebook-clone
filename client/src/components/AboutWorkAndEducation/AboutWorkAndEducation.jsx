@@ -7,7 +7,7 @@ import AboutDisplay from "../AboutDisplay";
 import { CURRENT_YEAR, YEARS } from "../../utils/constants";
 // import styles from "./AboutWorkAndEducation.module.css";
 
-function WorkForm({ handleClose, refetch, work }) {
+export function WorkForm({ handleClose, refetch, work }) {
   const { user } = useOutletContext();
   const [company, setCompany] = useState(work?.company ?? "");
   const [position, setPosition] = useState(work?.position ?? "");
@@ -178,7 +178,7 @@ function WorksDisplay({ works, refetch, isCurrentUser }) {
   );
 }
 
-function SchoolForm({ handleClose, refetch, school }) {
+export function SchoolForm({ handleClose, refetch, school }) {
   const { user } = useOutletContext();
   const [name, setName] = useState(school?.name ?? "");
   const [degree, setDegree] = useState(school?.degree ?? "");

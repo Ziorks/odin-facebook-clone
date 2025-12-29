@@ -565,6 +565,45 @@ async function getWall(wallId) {
   return wall;
 }
 
+async function getAboutOverviewByUserId(userId) {
+  const profile = await prisma.profile.findFirst({
+    where: { userId },
+    select: {
+      workAndEducation: {
+        select: {
+          works: {
+            take: 1,
+            orderBy: [
+              { endYear: "desc" },
+              { startYear: "desc" },
+              { currentJob: "desc" },
+            ],
+          },
+          schools: {
+            take: 1,
+            orderBy: [{ endYear: "desc" }, { startYear: "desc" }],
+          },
+        },
+      },
+      placesLived: {
+        select: {
+          currentCity: true,
+          hometown: true,
+        },
+      },
+    },
+  });
+
+  if (!profile) {
+    return profile;
+  }
+
+  const { works, schools } = profile.workAndEducation;
+  const { currentCity, hometown } = profile.placesLived;
+
+  return { work: works[0], school: schools[0], currentCity, hometown };
+}
+
 async function getWorkAndEducationByUserId(userId) {
   const workAndEducation = await prisma.workAndEducation.findFirst({
     where: { profile: { userId } },
@@ -1149,6 +1188,7 @@ module.exports = {
   getCommentReplies,
   getLike,
   getWall,
+  getAboutOverviewByUserId,
   getWorkAndEducationByUserId,
   getWork,
   getUsersWorksCount,
