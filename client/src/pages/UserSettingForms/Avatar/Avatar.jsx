@@ -22,7 +22,10 @@ function Avatar() {
       method={"PUT"}
       url={`/users/${auth.user.id}`}
       data={formData}
-      refetch={refresh}
+      onSuccess={async () => {
+        await refresh();
+        closeModal();
+      }}
       handleClose={closeModal}
       disableSave={!changesMade}
     >

@@ -6,9 +6,10 @@ import AboutForm from "../AboutForm";
 import AboutDisplay from "../AboutDisplay";
 // import styles from "./AboutDetails.module.css";
 
-function DetailForm({ handleClose, refetch, detail, label, fieldName }) {
+function DetailForm({ handleClose, onSuccess, detail, label, fieldName }) {
   const { user } = useOutletContext();
   const [value, setValue] = useState(detail || "");
+  const [changesMade, setChangesMade] = useState(false);
 
   const errMsg = `${fieldName} edit error`;
   const loadingMsg = `Updating ${label}...`;
@@ -16,12 +17,13 @@ function DetailForm({ handleClose, refetch, detail, label, fieldName }) {
   return (
     <AboutForm
       handleClose={handleClose}
-      refetch={refetch}
+      onSuccess={onSuccess}
       method={"PUT"}
       url={`/users/${user.id}/about_details`}
       data={{ [fieldName]: value || null }}
       errMsg={errMsg}
       loadingMsg={loadingMsg}
+      disableSave={!changesMade}
     >
       <div>
         <label htmlFor={fieldName}>{label}</label>{" "}
@@ -30,43 +32,50 @@ function DetailForm({ handleClose, refetch, detail, label, fieldName }) {
           name={fieldName}
           id={fieldName}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            setValue(e.target.value);
+            if (!changesMade) setChangesMade(true);
+          }}
         />
       </div>
     </AboutForm>
   );
 }
 
-function DetailDisplay({
-  detail,
-  label,
-  fieldName,
-  addBtnText,
-  refetch,
-  isCurrentUser,
-}) {
+function DetailDisplay({ detail, label, fieldName, addBtnText, refetch }) {
+  const { user } = useOutletContext();
+  const { auth } = useContext(AuthContext);
   const [showForm, setShowForm] = useState(false);
   const renderEditForm = (handleClose) => (
     <DetailForm
-      refetch={refetch}
+      onSuccess={() => {
+        refetch();
+        handleClose();
+      }}
       handleClose={handleClose}
       detail={detail}
       label={label}
       fieldName={fieldName}
     />
   );
+  const isCurrentUser = user.id === auth.user.id;
+  const handleClose = () => setShowForm(false);
+  const onSuccess = () => {
+    refetch();
+    handleClose();
+  };
 
   return (
     <>
       {detail ? (
-        <AboutDisplay refetch={refetch} renderEditForm={renderEditForm}>
+        <AboutDisplay renderEditForm={renderEditForm}>
           <p>{detail}</p>
         </AboutDisplay>
       ) : isCurrentUser ? (
         showForm ? (
           <DetailForm
-            handleClose={() => setShowForm(false)}
-            refetch={refetch}
+            handleClose={handleClose}
+            onSuccess={onSuccess}
             label={label}
             fieldName={fieldName}
           />
@@ -86,7 +95,6 @@ function AboutDetails() {
   const { data, isLoading, error, refetch } = useDataFetch(
     `/users/${user.id}/about_details`,
   );
-
   const isCurrentUser = user.id === auth.user.id;
 
   return (
@@ -101,7 +109,6 @@ function AboutDetails() {
             label={"About Me"}
             fieldName={"aboutMe"}
             addBtnText={"Add an about me"}
-            isCurrentUser={isCurrentUser}
             refetch={refetch}
           />
 
@@ -111,7 +118,6 @@ function AboutDetails() {
             label={"Quotes"}
             fieldName={"quotes"}
             addBtnText={"Add your favorite quotations"}
-            isCurrentUser={isCurrentUser}
             refetch={refetch}
           />
 
@@ -121,7 +127,6 @@ function AboutDetails() {
             label={"Music"}
             fieldName={"music"}
             addBtnText={"Add your favorite music"}
-            isCurrentUser={isCurrentUser}
             refetch={refetch}
           />
 
@@ -131,7 +136,6 @@ function AboutDetails() {
             label={"Books"}
             fieldName={"books"}
             addBtnText={"Add your favorite books"}
-            isCurrentUser={isCurrentUser}
             refetch={refetch}
           />
 
@@ -141,7 +145,6 @@ function AboutDetails() {
             label={"TV Shows"}
             fieldName={"tv"}
             addBtnText={"Add your favorite tv shows"}
-            isCurrentUser={isCurrentUser}
             refetch={refetch}
           />
 
@@ -151,7 +154,6 @@ function AboutDetails() {
             label={"Movies"}
             fieldName={"movies"}
             addBtnText={"Add your favorite movies"}
-            isCurrentUser={isCurrentUser}
             refetch={refetch}
           />
 
@@ -161,7 +163,6 @@ function AboutDetails() {
             label={"Sports"}
             fieldName={"sports"}
             addBtnText={"Add your favorite sports teams/players"}
-            isCurrentUser={isCurrentUser}
             refetch={refetch}
           />
 
@@ -171,7 +172,6 @@ function AboutDetails() {
             label={"Hobbies"}
             fieldName={"hobbies"}
             addBtnText={"Add your hobbies and interests"}
-            isCurrentUser={isCurrentUser}
             refetch={refetch}
           />
         </>

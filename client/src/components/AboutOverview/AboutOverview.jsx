@@ -30,7 +30,7 @@ function OverviewItemDisplay({
     <>
       {item ? (
         <AboutDisplay
-          refetch={refetch}
+          onDelete={refetch}
           deleteUrl={deleteUrl}
           deleteErrMsg={`${label} delete error`}
           deleteConfirmMsg={`Are you sure you want to delete '${deleteConfirmName}' forever?`}
@@ -72,7 +72,10 @@ function AboutOverview() {
             renderEditForm={(handleClose) => (
               <WorkForm
                 work={data.work}
-                refetch={refetch}
+                onSuccess={() => {
+                  refetch();
+                  handleClose();
+                }}
                 handleClose={handleClose}
               />
             )}
@@ -97,7 +100,10 @@ function AboutOverview() {
             renderEditForm={(handleClose) => (
               <SchoolForm
                 school={data.school}
-                refetch={refetch}
+                onSuccess={() => {
+                  refetch();
+                  handleClose();
+                }}
                 handleClose={handleClose}
               />
             )}
@@ -126,9 +132,12 @@ function AboutOverview() {
             renderEditForm={(handleClose) => (
               <CityForm
                 city={data.hometown}
-                refetch={refetch}
+                onSuccess={() => {
+                  refetch();
+                  handleClose();
+                }}
                 handleClose={handleClose}
-                type={"HOMETOWN"}
+                isHometown={true}
               />
             )}
             refetch={refetch}
@@ -144,9 +153,12 @@ function AboutOverview() {
             renderEditForm={(handleClose) => (
               <CityForm
                 city={data.currentCity}
-                refetch={refetch}
+                onSuccess={() => {
+                  refetch();
+                  handleClose();
+                }}
                 handleClose={handleClose}
-                type={"CURRENTCITY"}
+                isCurrentCity={true}
               />
             )}
             refetch={refetch}

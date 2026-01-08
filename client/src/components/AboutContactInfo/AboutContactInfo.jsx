@@ -9,7 +9,7 @@ import { YEARS, MONTHS } from "../../utils/constants";
 
 function MultiStringForm({
   handleClose,
-  refetch,
+  onSuccess,
   stringArr,
   label,
   fieldName,
@@ -18,6 +18,7 @@ function MultiStringForm({
 }) {
   const { user } = useOutletContext();
   const [values, setValues] = useState(stringArr || [""]);
+  const [changesMade, setChangesMade] = useState(false);
 
   const url = `/users/${user.id}/about_contact_info`;
   const errMsg = `${fieldName} edit error`;
@@ -26,12 +27,13 @@ function MultiStringForm({
   return (
     <AboutForm
       handleClose={handleClose}
-      refetch={refetch}
+      onSuccess={onSuccess}
       method={"PUT"}
       url={url}
       data={{ [fieldName]: values }}
       errMsg={errMsg}
       loadingMsg={loadingMsg}
+      disableSave={!changesMade.current}
     >
       {values.map((value, i) => {
         const id = `${fieldName}_${i}`;
@@ -43,9 +45,11 @@ function MultiStringForm({
               name={id}
               id={id}
               value={value}
-              onChange={(e) =>
-                setValues((prev) => prev.toSpliced(i, 1, e.target.value))
-              }
+              autoComplete="off"
+              onChange={(e) => {
+                setValues((prev) => prev.toSpliced(i, 1, e.target.value));
+                if (!changesMade) setChangesMade(true);
+              }}
             />
           </div>
         );
@@ -65,16 +69,20 @@ function MultiStringForm({
 function MultiStringDisplay({
   stringArr,
   refetch,
-  isCurrentUser,
   label,
   fieldName,
   inputType,
   max,
 }) {
+  const { user } = useOutletContext();
+  const { auth } = useContext(AuthContext);
   const [showForm, setShowForm] = useState(false);
   const renderEditForm = (handleClose) => (
     <MultiStringForm
-      refetch={refetch}
+      onSuccess={() => {
+        refetch();
+        handleClose();
+      }}
       handleClose={handleClose}
       stringArr={stringArr}
       label={label}
@@ -83,12 +91,18 @@ function MultiStringDisplay({
       max={max}
     />
   );
+  const isCurrentUser = user.id === auth.user.id;
   const lowerLabel = label.toLowerCase();
+  const handleClose = () => setShowForm(false);
+  const onSuccess = () => {
+    refetch();
+    handleClose();
+  };
 
   return (
     <>
       {stringArr.length > 0 ? (
-        <AboutDisplay refetch={refetch} renderEditForm={renderEditForm}>
+        <AboutDisplay renderEditForm={renderEditForm}>
           <p>{label}s</p>
           {stringArr.map((string, i) => (
             <p key={i}>{string}</p>
@@ -97,8 +111,8 @@ function MultiStringDisplay({
       ) : isCurrentUser ? (
         showForm ? (
           <MultiStringForm
-            handleClose={() => setShowForm(false)}
-            refetch={refetch}
+            handleClose={handleClose}
+            onSuccess={onSuccess}
             fieldName={fieldName}
             label={label}
             inputType={inputType}
@@ -116,9 +130,10 @@ function MultiStringDisplay({
   );
 }
 
-function GenderForm({ handleClose, refetch, gender }) {
+function GenderForm({ handleClose, onSuccess, gender }) {
   const { user } = useOutletContext();
   const [value, setValue] = useState(gender ?? undefined);
+  const [changesMade, setChangesMade] = useState(false);
 
   const method = "PUT";
   const url = `/users/${user.id}/about_contact_info`;
@@ -128,12 +143,13 @@ function GenderForm({ handleClose, refetch, gender }) {
   return (
     <AboutForm
       handleClose={handleClose}
-      refetch={refetch}
+      onSuccess={onSuccess}
       method={method}
       url={url}
       data={{ gender: value || null }}
       errMsg={errMsg}
       loadingMsg={loadingMsg}
+      disableSave={!changesMade}
     >
       <div>
         <label htmlFor="value">Gender</label>
@@ -141,7 +157,10 @@ function GenderForm({ handleClose, refetch, gender }) {
           name="value"
           id="value"
           value={value}
-          onChange={(e) => setValue(e.target.value || undefined)}
+          onChange={(e) => {
+            setValue(e.target.value || undefined);
+            if (!changesMade) setChangesMade(true);
+          }}
         >
           <option value={""}>Gender</option>
           <option value={"MALE"}>Male</option>
@@ -153,16 +172,31 @@ function GenderForm({ handleClose, refetch, gender }) {
   );
 }
 
-function GenderDisplay({ gender, refetch, isCurrentUser }) {
+function GenderDisplay({ gender, refetch }) {
+  const { user } = useOutletContext();
+  const { auth } = useContext(AuthContext);
   const [showForm, setShowForm] = useState(false);
   const renderEditForm = (handleClose) => (
-    <GenderForm refetch={refetch} handleClose={handleClose} gender={gender} />
+    <GenderForm
+      onSuccess={() => {
+        refetch();
+        handleClose();
+      }}
+      handleClose={handleClose}
+      gender={gender}
+    />
   );
+  const isCurrentUser = user.id === auth.user.id;
+  const handleClose = () => setShowForm(false);
+  const onSuccess = () => {
+    refetch();
+    handleClose();
+  };
 
   return (
     <>
       {gender ? (
-        <AboutDisplay refetch={refetch} renderEditForm={renderEditForm}>
+        <AboutDisplay renderEditForm={renderEditForm}>
           <p>
             {gender.slice(0, 1).toUpperCase() + gender.slice(1).toLowerCase()}
           </p>
@@ -170,10 +204,7 @@ function GenderDisplay({ gender, refetch, isCurrentUser }) {
         </AboutDisplay>
       ) : isCurrentUser ? (
         showForm ? (
-          <GenderForm
-            handleClose={() => setShowForm(false)}
-            refetch={refetch}
-          />
+          <GenderForm handleClose={handleClose} onSuccess={onSuccess} />
         ) : (
           <button onClick={() => setShowForm(true)}>Add your gender</button>
         )
@@ -184,11 +215,12 @@ function GenderDisplay({ gender, refetch, isCurrentUser }) {
   );
 }
 
-function BirthdayForm({ handleClose, refetch, birthday }) {
+function BirthdayForm({ handleClose, onSuccess, birthday }) {
   const { user } = useOutletContext();
   const [month, setMonth] = useState(birthday?.month ?? undefined);
   const [day, setDay] = useState(birthday?.day ?? undefined);
   const [year, setYear] = useState(birthday?.year ?? undefined);
+  const [changesMade, setChangesMade] = useState(false);
 
   const method = "PUT";
   const url = `/users/${user.id}/about_contact_info`;
@@ -198,7 +230,7 @@ function BirthdayForm({ handleClose, refetch, birthday }) {
   return (
     <AboutForm
       handleClose={handleClose}
-      refetch={refetch}
+      onSuccess={onSuccess}
       method={method}
       url={url}
       data={{
@@ -210,6 +242,7 @@ function BirthdayForm({ handleClose, refetch, birthday }) {
       }}
       errMsg={errMsg}
       loadingMsg={loadingMsg}
+      disableSave={!changesMade}
     >
       <div>
         <label htmlFor="month">Month</label>
@@ -224,6 +257,7 @@ function BirthdayForm({ handleClose, refetch, birthday }) {
             if (day > nDays || !value) {
               setDay(nDays);
             }
+            if (!changesMade) setChangesMade(true);
           }}
         >
           <option value={""}>Month</option>
@@ -241,7 +275,10 @@ function BirthdayForm({ handleClose, refetch, birthday }) {
             name="day"
             id="day"
             value={day}
-            onChange={(e) => setDay(+e.target.value || undefined)}
+            onChange={(e) => {
+              setDay(+e.target.value || undefined);
+              if (!changesMade) setChangesMade(true);
+            }}
           >
             <option value={""}>Day</option>
             {Array.from({ length: MONTHS[month - 1].nDays }).map((_, i) => (
@@ -258,7 +295,10 @@ function BirthdayForm({ handleClose, refetch, birthday }) {
           name="year"
           id="year"
           value={year}
-          onChange={(e) => setYear(+e.target.value || undefined)}
+          onChange={(e) => {
+            setYear(+e.target.value || undefined);
+            if (!changesMade) setChangesMade(true);
+          }}
         >
           <option value={""}>Year</option>
           {YEARS.map((year) => (
@@ -272,20 +312,31 @@ function BirthdayForm({ handleClose, refetch, birthday }) {
   );
 }
 
-function BirthdayDisplay({ birthday, refetch, isCurrentUser }) {
+function BirthdayDisplay({ birthday, refetch }) {
+  const { user } = useOutletContext();
+  const { auth } = useContext(AuthContext);
   const [showForm, setShowForm] = useState(false);
   const renderEditForm = (handleClose) => (
     <BirthdayForm
-      refetch={refetch}
+      onSuccess={() => {
+        refetch();
+        handleClose();
+      }}
       handleClose={handleClose}
       birthday={birthday}
     />
   );
+  const isCurrentUser = user.id === auth.user.id;
+  const handleClose = () => setShowForm(false);
+  const onSuccess = () => {
+    refetch();
+    handleClose();
+  };
 
   return (
     <>
       {birthday.month || birthday.year ? (
-        <AboutDisplay refetch={refetch} renderEditForm={renderEditForm}>
+        <AboutDisplay renderEditForm={renderEditForm}>
           <p>
             {birthday.month && MONTHS[birthday.month - 1].name}
             {birthday.day && ` ${birthday.day}`}
@@ -296,10 +347,7 @@ function BirthdayDisplay({ birthday, refetch, isCurrentUser }) {
         </AboutDisplay>
       ) : isCurrentUser ? (
         showForm ? (
-          <BirthdayForm
-            handleClose={() => setShowForm(false)}
-            refetch={refetch}
-          />
+          <BirthdayForm handleClose={handleClose} onSuccess={onSuccess} />
         ) : (
           <button onClick={() => setShowForm(true)}>Add your birthday</button>
         )
@@ -312,12 +360,9 @@ function BirthdayDisplay({ birthday, refetch, isCurrentUser }) {
 
 function AboutContactInfo() {
   const { user } = useOutletContext();
-  const { auth } = useContext(AuthContext);
   const { data, isLoading, error, refetch } = useDataFetch(
     `/users/${user.id}/about_contact_info`,
   );
-
-  const isCurrentUser = user.id === auth.user.id;
 
   return (
     <>
@@ -329,7 +374,6 @@ function AboutContactInfo() {
           <MultiStringDisplay
             stringArr={data.phoneNumbers}
             refetch={refetch}
-            isCurrentUser={isCurrentUser}
             fieldName={"phoneNumbers"}
             label={"Phone Number"}
             inputType={"tel"}
@@ -338,7 +382,6 @@ function AboutContactInfo() {
           <MultiStringDisplay
             stringArr={data.emails}
             refetch={refetch}
-            isCurrentUser={isCurrentUser}
             fieldName={"emails"}
             label={"Email"}
             inputType={"email"}
@@ -349,7 +392,6 @@ function AboutContactInfo() {
           <MultiStringDisplay
             stringArr={data.websites}
             refetch={refetch}
-            isCurrentUser={isCurrentUser}
             fieldName={"websites"}
             label={"Website"}
             inputType={"url"}
@@ -358,7 +400,6 @@ function AboutContactInfo() {
           <MultiStringDisplay
             stringArr={data.socialLinks}
             refetch={refetch}
-            isCurrentUser={isCurrentUser}
             fieldName={"socialLinks"}
             label={"Social Link"}
             inputType={"url"}
@@ -366,22 +407,13 @@ function AboutContactInfo() {
           />
 
           <h3>Basic info</h3>
-          <GenderDisplay
-            gender={data.gender}
-            refetch={refetch}
-            isCurrentUser={isCurrentUser}
-          />
+          <GenderDisplay gender={data.gender} refetch={refetch} />
 
-          <BirthdayDisplay
-            birthday={data.birthday}
-            refetch={refetch}
-            isCurrentUser={isCurrentUser}
-          />
+          <BirthdayDisplay birthday={data.birthday} refetch={refetch} />
 
           <MultiStringDisplay
             stringArr={data.languages}
             refetch={refetch}
-            isCurrentUser={isCurrentUser}
             fieldName={"languages"}
             label={"Language"}
             inputType={"text"}

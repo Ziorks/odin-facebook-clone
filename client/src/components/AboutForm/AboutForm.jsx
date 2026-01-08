@@ -5,7 +5,7 @@ import useApiPrivate from "../../hooks/useApiPrivate";
 function AboutForm({
   children,
   handleClose,
-  refetch, //TODO:change refetch to onSuccess
+  onSuccess,
   method,
   url,
   data,
@@ -28,8 +28,7 @@ function AboutForm({
       data,
     })
       .then(() => {
-        refetch();
-        handleClose();
+        onSuccess?.();
       })
       .catch((err) => {
         console.error(errMsg, err);

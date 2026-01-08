@@ -7,7 +7,7 @@ import AboutDisplay from "../AboutDisplay";
 import { CURRENT_YEAR, YEARS } from "../../utils/constants";
 // import styles from "./AboutWorkAndEducation.module.css";
 
-export function WorkForm({ handleClose, refetch, work }) {
+export function WorkForm({ handleClose, onSuccess, work }) {
   const { user } = useOutletContext();
   const [company, setCompany] = useState(work?.company ?? "");
   const [position, setPosition] = useState(work?.position ?? "");
@@ -16,6 +16,7 @@ export function WorkForm({ handleClose, refetch, work }) {
   const [currentJob, setCurrentJob] = useState(work?.currentJob ?? true);
   const [startYear, setStartYear] = useState(work?.startYear ?? undefined);
   const [endYear, setEndYear] = useState(work?.endYear ?? undefined);
+  const [changesMade, setChangesMade] = useState(false);
 
   const method = work ? "PUT" : "POST";
   const url = `/users/${user.id}/work${work ? "/" + work.id : ""}`;
@@ -25,7 +26,7 @@ export function WorkForm({ handleClose, refetch, work }) {
   return (
     <AboutForm
       handleClose={handleClose}
-      refetch={refetch}
+      onSuccess={onSuccess}
       method={method}
       url={url}
       data={{
@@ -39,6 +40,7 @@ export function WorkForm({ handleClose, refetch, work }) {
       }}
       errMsg={errMsg}
       loadingMsg={loadingMsg}
+      disableSave={!changesMade}
     >
       <div>
         <label htmlFor="company">Company</label>
@@ -47,7 +49,11 @@ export function WorkForm({ handleClose, refetch, work }) {
           name="company"
           id="company"
           value={company}
-          onChange={(e) => setCompany(e.target.value)}
+          autoComplete="off"
+          onChange={(e) => {
+            setCompany(e.target.value);
+            if (!changesMade) setChangesMade(true);
+          }}
           required={true}
         />
       </div>
@@ -58,7 +64,11 @@ export function WorkForm({ handleClose, refetch, work }) {
           name="position"
           id="position"
           value={position}
-          onChange={(e) => setPosition(e.target.value)}
+          autoComplete="off"
+          onChange={(e) => {
+            setPosition(e.target.value);
+            if (!changesMade) setChangesMade(true);
+          }}
         />
       </div>
       <div>
@@ -68,7 +78,11 @@ export function WorkForm({ handleClose, refetch, work }) {
           name="location"
           id="location"
           value={location}
-          onChange={(e) => setLocation(e.target.value)}
+          autoComplete="off"
+          onChange={(e) => {
+            setLocation(e.target.value);
+            if (!changesMade) setChangesMade(true);
+          }}
         />
       </div>
       <div>
@@ -77,7 +91,10 @@ export function WorkForm({ handleClose, refetch, work }) {
           name="description"
           id="description"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => {
+            setDescription(e.target.value);
+            if (!changesMade) setChangesMade(true);
+          }}
         />
       </div>
       <h4>Time Period</h4>
@@ -87,7 +104,10 @@ export function WorkForm({ handleClose, refetch, work }) {
           name="currentJob"
           id="currentJob"
           checked={currentJob}
-          onChange={(e) => setCurrentJob(e.target.checked)}
+          onChange={(e) => {
+            setCurrentJob(e.target.checked);
+            if (!changesMade) setChangesMade(true);
+          }}
         />
         <label htmlFor="currentJob">I currently work here</label>
       </div>
@@ -97,7 +117,10 @@ export function WorkForm({ handleClose, refetch, work }) {
           name="startYear"
           id="startYear"
           value={startYear}
-          onChange={(e) => setStartYear(+e.target.value || undefined)}
+          onChange={(e) => {
+            setStartYear(+e.target.value || undefined);
+            if (!changesMade) setChangesMade(true);
+          }}
         >
           <option value={0}>Year</option>
           {YEARS.map((year) => (
@@ -113,7 +136,10 @@ export function WorkForm({ handleClose, refetch, work }) {
               name="endYear"
               id="endYear"
               value={endYear}
-              onChange={(e) => setEndYear(+e.target.value || undefined)}
+              onChange={(e) => {
+                setEndYear(+e.target.value || undefined);
+                if (!changesMade) setChangesMade(true);
+              }}
             >
               <option value={0}>Year</option>
               {YEARS.map((year) => (
@@ -129,15 +155,23 @@ export function WorkForm({ handleClose, refetch, work }) {
   );
 }
 
-function WorksDisplay({ works, refetch, isCurrentUser }) {
+function WorksDisplay({ works, refetch }) {
   const { user } = useOutletContext();
+  const { auth } = useContext(AuthContext);
   const [showForm, setShowForm] = useState(false);
+
+  const isCurrentUser = user.id === auth.user.id;
+  const handleClose = () => setShowForm(false);
+  const onSuccess = () => {
+    refetch();
+    handleClose();
+  };
 
   return (
     <>
       {isCurrentUser &&
         (showForm ? (
-          <WorkForm handleClose={() => setShowForm(false)} refetch={refetch} />
+          <WorkForm handleClose={handleClose} onSuccess={onSuccess} />
         ) : (
           <button onClick={() => setShowForm(true)}>Add a workplace</button>
         ))}
@@ -146,13 +180,16 @@ function WorksDisplay({ works, refetch, isCurrentUser }) {
           {works.map((work) => (
             <AboutDisplay
               key={work.id}
-              refetch={refetch}
+              onDelete={refetch}
               deleteUrl={`/users/${user.id}/work/${work.id}`}
               deleteErrMsg={"work delete error"}
               deleteConfirmMsg={`Are you sure you want to delete '${work.company}' forever?`}
               renderEditForm={(handleClose) => (
                 <WorkForm
-                  refetch={refetch}
+                  onSuccess={() => {
+                    refetch();
+                    handleClose();
+                  }}
                   handleClose={handleClose}
                   work={work}
                 />
@@ -178,7 +215,7 @@ function WorksDisplay({ works, refetch, isCurrentUser }) {
   );
 }
 
-export function SchoolForm({ handleClose, refetch, school }) {
+export function SchoolForm({ handleClose, onSuccess, school }) {
   const { user } = useOutletContext();
   const [name, setName] = useState(school?.name ?? "");
   const [degree, setDegree] = useState(school?.degree ?? "");
@@ -186,6 +223,7 @@ export function SchoolForm({ handleClose, refetch, school }) {
   const [startYear, setStartYear] = useState(school?.startYear ?? undefined);
   const [endYear, setEndYear] = useState(school?.endYear ?? undefined);
   const [graduated, setGraduated] = useState(school?.graduated ?? true);
+  const [changesMade, setChangesMade] = useState(false);
 
   const method = school ? "PUT" : "POST";
   const url = `/users/${user.id}/school${school ? "/" + school.id : ""}`;
@@ -195,7 +233,7 @@ export function SchoolForm({ handleClose, refetch, school }) {
   return (
     <AboutForm
       handleClose={handleClose}
-      refetch={refetch}
+      onSuccess={onSuccess}
       method={method}
       url={url}
       data={{
@@ -208,6 +246,7 @@ export function SchoolForm({ handleClose, refetch, school }) {
       }}
       errMsg={errMsg}
       loadingMsg={loadingMsg}
+      disableSave={!changesMade}
     >
       <div>
         <label htmlFor="name">School</label>
@@ -216,7 +255,11 @@ export function SchoolForm({ handleClose, refetch, school }) {
           name="name"
           id="name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          autoComplete="off"
+          onChange={(e) => {
+            setName(e.target.value);
+            if (!changesMade) setChangesMade(true);
+          }}
         />
       </div>
       <div>
@@ -225,7 +268,10 @@ export function SchoolForm({ handleClose, refetch, school }) {
           name="graduated"
           id="graduated"
           checked={graduated}
-          onChange={(e) => setGraduated(e.target.checked)}
+          onChange={(e) => {
+            setGraduated(e.target.checked);
+            if (!changesMade) setChangesMade(true);
+          }}
         />
         <label htmlFor="graduated">Graduated</label>
       </div>
@@ -235,7 +281,10 @@ export function SchoolForm({ handleClose, refetch, school }) {
           name="startYear"
           id="startYear"
           value={startYear}
-          onChange={(e) => setStartYear(+e.target.value || undefined)}
+          onChange={(e) => {
+            setStartYear(+e.target.value || undefined);
+            if (!changesMade) setChangesMade(true);
+          }}
         >
           <option value={0}>Year</option>
           {YEARS.map((year) => (
@@ -251,7 +300,10 @@ export function SchoolForm({ handleClose, refetch, school }) {
               name="endYear"
               id="endYear"
               value={endYear}
-              onChange={(e) => setEndYear(+e.target.value || undefined)}
+              onChange={(e) => {
+                setEndYear(+e.target.value || undefined);
+                if (!changesMade) setChangesMade(true);
+              }}
             >
               <option value={0}>Year</option>
               {YEARS.map((year) => (
@@ -269,7 +321,10 @@ export function SchoolForm({ handleClose, refetch, school }) {
           name="description"
           id="description"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => {
+            setDescription(e.target.value);
+            if (!changesMade) setChangesMade(true);
+          }}
         />
       </div>
       <div>
@@ -279,25 +334,34 @@ export function SchoolForm({ handleClose, refetch, school }) {
           name="degree"
           id="degree"
           value={degree}
-          onChange={(e) => setDegree(e.target.value)}
+          autoComplete="off"
+          onChange={(e) => {
+            setDegree(e.target.value);
+            if (!changesMade) setChangesMade(true);
+          }}
         />
       </div>
     </AboutForm>
   );
 }
 
-function SchoolsDisplay({ schools, refetch, isCurrentUser }) {
+function SchoolsDisplay({ schools, refetch }) {
   const { user } = useOutletContext();
+  const { auth } = useContext(AuthContext);
   const [showForm, setShowForm] = useState(false);
+
+  const isCurrentUser = user.id === auth.user.id;
+  const handleClose = () => setShowForm(false);
+  const onSuccess = () => {
+    refetch();
+    handleClose();
+  };
 
   return (
     <>
       {isCurrentUser &&
         (showForm ? (
-          <SchoolForm
-            handleClose={() => setShowForm(false)}
-            refetch={refetch}
-          />
+          <SchoolForm handleClose={handleClose} onSuccess={onSuccess} />
         ) : (
           <button onClick={() => setShowForm(true)}>Add school</button>
         ))}
@@ -306,13 +370,16 @@ function SchoolsDisplay({ schools, refetch, isCurrentUser }) {
           {schools.map((school) => (
             <AboutDisplay
               key={school.id}
-              refetch={refetch}
+              onDelete={refetch}
               deleteUrl={`/users/${user.id}/school/${school.id}`}
               deleteErrMsg={"school delete error"}
               deleteConfirmMsg={`Are you sure you want to delete '${school.name}' forever?`}
               renderEditForm={(handleClose) => (
                 <SchoolForm
-                  refetch={refetch}
+                  onSuccess={() => {
+                    refetch();
+                    handleClose();
+                  }}
                   handleClose={handleClose}
                   school={school}
                 />
@@ -347,12 +414,9 @@ function SchoolsDisplay({ schools, refetch, isCurrentUser }) {
 
 function AboutWorkAndEducation() {
   const { user } = useOutletContext();
-  const { auth } = useContext(AuthContext);
   const { data, isLoading, error, refetch } = useDataFetch(
     `/users/${user.id}/about_work_and_education`,
   );
-
-  const isCurrentUser = user.id === auth.user.id;
 
   return (
     <>
@@ -361,17 +425,9 @@ function AboutWorkAndEducation() {
       {data && (
         <>
           <h3>Work</h3>
-          <WorksDisplay
-            works={data.works}
-            refetch={refetch}
-            isCurrentUser={isCurrentUser}
-          />
+          <WorksDisplay works={data.works} refetch={refetch} />
           <h3>Education</h3>
-          <SchoolsDisplay
-            schools={data.schools}
-            refetch={refetch}
-            isCurrentUser={isCurrentUser}
-          />
+          <SchoolsDisplay schools={data.schools} refetch={refetch} />
         </>
       )}
     </>

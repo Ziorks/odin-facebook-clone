@@ -16,7 +16,10 @@ function Username() {
       method={"PUT"}
       url={`/users/${auth.user.id}`}
       data={{ username }}
-      refetch={refresh}
+      onSuccess={async () => {
+        await refresh();
+        closeModal();
+      }}
       handleClose={closeModal}
       disableSave={!changesMade}
     >
@@ -27,6 +30,7 @@ function Username() {
           type="text"
           name="username"
           id="username"
+          autoComplete="off"
           onChange={(e) => {
             setUsername(e.target.value);
             if (!changesMade) setChangesMade(true);

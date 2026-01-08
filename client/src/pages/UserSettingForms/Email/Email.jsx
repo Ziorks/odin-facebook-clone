@@ -16,7 +16,10 @@ function Email() {
       method={"PUT"}
       url={`/users/${auth.user.id}`}
       data={{ email }}
-      refetch={refresh}
+      onSuccess={async () => {
+        await refresh();
+        closeModal();
+      }}
       handleClose={closeModal}
       disableSave={!changesMade}
     >
@@ -27,6 +30,7 @@ function Email() {
           type="email"
           name="email"
           id="email"
+          autoComplete="off"
           onChange={(e) => {
             setEmail(e.target.value);
             if (!changesMade) setChangesMade(true);

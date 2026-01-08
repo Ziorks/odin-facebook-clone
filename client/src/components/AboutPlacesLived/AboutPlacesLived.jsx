@@ -8,46 +8,43 @@ import { capitalizeFirstLetters } from "../../utils/helperFunctions";
 import { YEARS } from "../../utils/constants";
 // import styles from "./AboutPlacesLived.module.css";
 
-const CITY_TYPES = ["PLACELIVED", "CURRENTCITY", "HOMETOWN"];
-const CITY_TYPES_STRING = CITY_TYPES.reduce((prev, cur, i) => {
-  if (i === CITY_TYPES.length - 1) {
-    return prev + `or '${cur}'`;
+export function CityForm({
+  handleClose,
+  onSuccess,
+  city,
+  isCurrentCity,
+  isHometown,
+}) {
+  if (isCurrentCity && isHometown) {
+    <h1>
+      {`ERROR: The 'isCurrentCity' and 'isHometown' props for the CityForm component can't both be true.`}
+    </h1>;
   }
-  return prev + `'${cur}', `;
-}, "");
-
-export function CityForm({ handleClose, refetch, city, type }) {
   const { user } = useOutletContext();
   const [name, setName] = useState(city?.name ?? "");
   const [yearMoved, setYearMoved] = useState(city?.yearMoved ?? undefined);
+  const [changesMade, setChangesMade] = useState(false);
 
   const method = city ? "PUT" : "POST";
   const url = `/users/${user.id}/city${city ? "/" + city.id : ""}`;
-  const errMsg = `${type} ${city ? "edit" : "creation"} error`;
+  const errMsg = `city ${city ? "edit" : "creation"} error`;
   const loadingMsg = `${city ? "Updating" : "Creating"} City Record...`;
-
-  if (!CITY_TYPES.includes(type)) {
-    return (
-      <h1>
-        {`ERROR: a 'type' prop is required for the CityForm component. Values for the 'type' prop can be one of ${CITY_TYPES_STRING}`}
-      </h1>
-    );
-  }
 
   return (
     <AboutForm
       handleClose={handleClose}
-      refetch={refetch}
+      onSuccess={onSuccess}
       method={method}
       url={url}
       data={{
         name,
         yearMoved: yearMoved || null,
-        isHometown: type === "HOMETOWN",
-        isCurrentCity: type === "CURRENTCITY",
+        isHometown,
+        isCurrentCity,
       }}
       errMsg={errMsg}
       loadingMsg={loadingMsg}
+      disableSave={!changesMade}
     >
       <div>
         <label htmlFor="name">City</label>
@@ -56,17 +53,25 @@ export function CityForm({ handleClose, refetch, city, type }) {
           name="name"
           id="name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          autoComplete="off"
+          onChange={(e) => {
+            setName(e.target.value);
+            if (!changesMade) setChangesMade(true);
+          }}
+          required
         />
       </div>
-      {type === "PLACELIVED" && (
+      {!(isCurrentCity || isHometown) && (
         <div>
           {<span>Year moved </span>}
           <select
             name="yearMoved"
             id="yearMoved"
             value={yearMoved}
-            onChange={(e) => setYearMoved(+e.target.value || undefined)}
+            onChange={(e) => {
+              setYearMoved(+e.target.value || undefined);
+              if (!changesMade) setChangesMade(true);
+            }}
           >
             <option value={0}>Year</option>
             {YEARS.map((year) => (
@@ -81,46 +86,47 @@ export function CityForm({ handleClose, refetch, city, type }) {
   );
 }
 
-function UniqueCityDisplay({ city, type, refetch, isCurrentUser }) {
+function UniqueCityDisplay({ city, isCurrentCity, isHometown, refetch }) {
+  if (isCurrentCity && isHometown) {
+    <h1>
+      {`ERROR: The 'isCurrentCity' and 'isHometown' props for the UniqueCityDisplay component can't both be true.`}
+    </h1>;
+  }
   const { user } = useOutletContext();
+  const { auth } = useContext(AuthContext);
   const [showForm, setShowForm] = useState(false);
 
-  //TODO: instead of this switch statement, pass things in as props
-  let label;
+  const isCurrentUser = user.id === auth.user.id;
+  const label = isCurrentCity ? "current city" : "hometown";
 
-  switch (type) {
-    case "HOMETOWN":
-      label = "hometown";
-      break;
-    case "CURRENTCITY":
-      label = "current city";
-      break;
-    default:
-      return (
-        <h1>
-          Invalid 'type' prop: '{type}' provided to UniqueCityDisplay component.
-          Type can either be 'HOMETOWN' or 'CURRENTCITY'
-        </h1>
-      );
-  }
+  const renderEditForm = (handleClose) => (
+    <CityForm
+      onSuccess={() => {
+        refetch();
+        handleClose();
+      }}
+      handleClose={handleClose}
+      city={city}
+      isCurrentCity={isCurrentCity}
+      isHometown={isHometown}
+    />
+  );
+  const handleClose = () => setShowForm(false);
+  const onSuccess = () => {
+    refetch();
+    handleClose();
+  };
 
   return (
     <>
       {city ? (
         <AboutDisplay
           key={city.id}
-          refetch={refetch}
+          onDelete={refetch}
           deleteUrl={`/users/${user.id}/city/${city.id}`}
           deleteErrMsg={`${label} delete error`}
           deleteConfirmMsg={`Are you sure you want to delete '${city.name}' forever?`}
-          renderEditForm={(handleClose) => (
-            <CityForm
-              refetch={refetch}
-              handleClose={handleClose}
-              city={city}
-              type={type}
-            />
-          )}
+          renderEditForm={renderEditForm}
         >
           <p>{city.name}</p>
           <p>{capitalizeFirstLetters(label)}</p>
@@ -128,9 +134,10 @@ function UniqueCityDisplay({ city, type, refetch, isCurrentUser }) {
       ) : isCurrentUser ? (
         showForm ? (
           <CityForm
-            handleClose={() => setShowForm(false)}
-            refetch={refetch}
-            type={type}
+            handleClose={handleClose}
+            onSuccess={onSuccess}
+            isCurrentCity={isCurrentCity}
+            isHometown={isHometown}
           />
         ) : (
           <button onClick={() => setShowForm(true)}>Add your {label}</button>
@@ -142,20 +149,24 @@ function UniqueCityDisplay({ city, type, refetch, isCurrentUser }) {
   );
 }
 
-function PlacesLivedDisplay({ cities, refetch, isCurrentUser }) {
+function PlacesLivedDisplay({ cities, refetch }) {
   const { user } = useOutletContext();
+  const { auth } = useContext(AuthContext);
   const [showForm, setShowForm] = useState(false);
+
+  const isCurrentUser = user.id === auth.user.id;
+  const handleClose = () => setShowForm(false);
+  const onSuccess = () => {
+    refetch();
+    handleClose();
+  };
 
   return (
     <>
       {isCurrentUser &&
         cities.length < 20 &&
         (showForm ? (
-          <CityForm
-            handleClose={() => setShowForm(false)}
-            refetch={refetch}
-            type={"PLACELIVED"}
-          />
+          <CityForm handleClose={handleClose} onSuccess={onSuccess} />
         ) : (
           <button onClick={() => setShowForm(true)}>Add a city</button>
         ))}
@@ -164,16 +175,18 @@ function PlacesLivedDisplay({ cities, refetch, isCurrentUser }) {
           {cities.map((city) => (
             <AboutDisplay
               key={city.id}
-              refetch={refetch}
+              onDelete={refetch}
               deleteUrl={`/users/${user.id}/city/${city.id}`}
               deleteErrMsg={"city delete error"}
               deleteConfirmMsg={`Are you sure you want to delete '${city.name}' forever?`}
               renderEditForm={(handleClose) => (
                 <CityForm
-                  refetch={refetch}
+                  onSuccess={() => {
+                    refetch();
+                    handleClose();
+                  }}
                   handleClose={handleClose}
                   city={city}
-                  type={"PLACELIVED"}
                 />
               )}
             >
@@ -191,12 +204,9 @@ function PlacesLivedDisplay({ cities, refetch, isCurrentUser }) {
 
 function AboutPlacesLived() {
   const { user } = useOutletContext();
-  const { auth } = useContext(AuthContext);
   const { data, isLoading, error, refetch } = useDataFetch(
     `/users/${user.id}/about_places_lived`,
   );
-
-  const isCurrentUser = user.id === auth.user.id;
 
   return (
     <>
@@ -205,24 +215,18 @@ function AboutPlacesLived() {
       {data && (
         <>
           <h3>Places Lived</h3>
-          <PlacesLivedDisplay
-            cities={data.cities}
-            refetch={refetch}
-            isCurrentUser={isCurrentUser}
-          />
+          <PlacesLivedDisplay cities={data.cities} refetch={refetch} />
 
           <UniqueCityDisplay
             city={data.currentCity}
-            type={"CURRENTCITY"}
+            isCurrentCity={true}
             refetch={refetch}
-            isCurrentUser={isCurrentUser}
           />
 
           <UniqueCityDisplay
             city={data.hometown}
-            type={"HOMETOWN"}
+            isHometown={true}
             refetch={refetch}
-            isCurrentUser={isCurrentUser}
           />
         </>
       )}

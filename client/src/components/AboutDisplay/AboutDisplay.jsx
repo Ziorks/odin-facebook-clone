@@ -7,11 +7,11 @@ import Modal from "../Modal";
 
 function AboutDisplay({
   children,
-  refetch, //TODO:change refetch to onSuccess
+  renderEditForm,
   deleteUrl,
+  onDelete,
   deleteErrMsg,
   deleteConfirmMsg,
-  renderEditForm,
 }) {
   const api = useApiPrivate();
   const { user } = useOutletContext();
@@ -28,8 +28,8 @@ function AboutDisplay({
     api
       .delete(deleteUrl)
       .then(() => {
+        onDelete?.();
         setShowDeleteModal(false);
-        refetch();
       })
       .catch((err) => {
         console.error(deleteErrMsg || "delete error", err);
