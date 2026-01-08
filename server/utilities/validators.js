@@ -1,4 +1,9 @@
+const multer = require("multer");
+const storage = multer.memoryStorage();
+const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } }); //2MB limit
+const bcrypt = require("bcryptjs");
 const { body } = require("express-validator");
+const db = require("../db/queries");
 
 const existsMessage = " is required";
 
@@ -32,6 +37,142 @@ const validateRegister = [
       return value === req.body.password;
     })
     .withMessage("'passwordConfirmation' must match 'password'"),
+];
+
+const validateUserUpdate = [
+  body("username").optional().trim(),
+  body("email").optional().trim(),
+  body("oldPassword").optional().trim(),
+  (req, res, next) => {
+    upload.single("avatar")(req, res, async (err) => {
+      if (err) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          req.fileValidationError = {
+            msg: "File too large. Max 2MB allowed.",
+          };
+        } else {
+          return next(err);
+        }
+      }
+
+      const user = await db.getUserById(+req.params.userId);
+
+      const { username, email, oldPassword, newPassword } = req.body;
+
+      req.isOldPasswordRequired = !!(user.password && newPassword);
+
+      if (username) {
+        const newUsernameUser = await db.getUserByUsername(username);
+        if (newUsernameUser && newUsernameUser.id !== user.id) {
+          req.usernameValidationError = {
+            msg: "Username is taken",
+          };
+        }
+      }
+
+      if (email) {
+        const newEmailUser = await db.getUserByEmail(email);
+        if (newEmailUser && newEmailUser.id !== user.id) {
+          req.emailValidationError = {
+            msg: "Email is already in use",
+          };
+        }
+      }
+
+      if (oldPassword && req.isOldPasswordRequired) {
+        const match = await bcrypt.compare(oldPassword, user.password);
+        if (!match) {
+          req.oldPasswordValidationError = {
+            msg: "'oldPassword' is incorrect",
+          };
+        }
+      }
+
+      return next();
+    });
+  },
+  body("avatar").custom((_, { req }) => {
+    if (req.fileValidationError) {
+      throw new Error(req.fileValidationError.msg);
+    }
+
+    const avatar = req.file;
+    if (!avatar) return true;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(avatar.mimetype)) {
+      throw new Error("Avatar must be an image file");
+    }
+    return true;
+  }),
+  body("username")
+    .optional()
+    .custom((_, { req }) => {
+      if (req.usernameValidationError) {
+        throw new Error(req.usernameValidationError.msg);
+      }
+
+      return true;
+    })
+    .bail()
+    .isAlphanumeric()
+    .withMessage("Username can only contain letters and numbers")
+    .isLength({ min: 5, max: 16 })
+    .withMessage("Username must be between 5 and 16 characters long"),
+  body("email")
+    .optional()
+    .custom((_, { req }) => {
+      if (req.emailValidationError) {
+        throw new Error(req.emailValidationError.msg);
+      }
+
+      return true;
+    })
+    .bail()
+    .toLowerCase()
+    .isEmail()
+    .withMessage("Email must be a valid email address"),
+  body("oldPassword").custom((value, { req }) => {
+    if (req.isOldPasswordRequired && !value) {
+      throw new Error("'oldPassword' is required in order to update password");
+    }
+
+    if (req.oldPasswordValidationError) {
+      throw new Error(req.oldPasswordValidationError.msg);
+    }
+
+    return true;
+  }),
+  body("newPassword")
+    .optional()
+    .trim()
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+  body("passwordConfirmation").optional().trim(),
+  body("passwordConfirmation")
+    .custom((value, { req }) => {
+      if (req.body.newPassword) {
+        return value === req.body.newPassword;
+      }
+      return true;
+    })
+    .withMessage("'passwordConfirmation' must match 'newPassword'"),
+  body("firstName")
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 64 })
+    .withMessage("'firstName' must be between 1 and 64 characters")
+    .bail()
+    .isAlpha()
+    .withMessage("'firstName' must only contain letters"),
+  body("lastName")
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 64 })
+    .withMessage("'lastName' must be between 1 and 64 characters")
+    .bail()
+    .isAlpha()
+    .withMessage("'lastName' must only contain letters"),
 ];
 
 const validatePostEdit = [
@@ -360,6 +501,7 @@ const validateDetails = [
 
 module.exports = {
   validateRegister,
+  validateUserUpdate,
   validatePostCreate,
   validatePostEdit,
   validateCommentCreate,

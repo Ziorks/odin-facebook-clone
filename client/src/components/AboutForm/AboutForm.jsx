@@ -11,6 +11,7 @@ function AboutForm({
   data,
   errMsg,
   loadingMsg,
+  disableSave = false,
 }) {
   const api = useApiPrivate();
   const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +49,6 @@ function AboutForm({
 
   return (
     <>
-      {isLoading && <p>{loadingMsg}</p>}
       {errors && (
         <ul>
           {errors.map((error, i) => (
@@ -59,8 +59,13 @@ function AboutForm({
       <form onSubmit={handleSubmit}>
         {children}
         <div>
-          <button onClick={handleClose}>Cancel</button>
-          <button type="submit">Save</button>
+          <button type="button" onClick={handleClose}>
+            Cancel
+          </button>
+          <button type="submit" disabled={disableSave || isLoading}>
+            Save
+          </button>
+          {isLoading && <span>{loadingMsg || "Saving..."}</span>}
         </div>
       </form>
     </>

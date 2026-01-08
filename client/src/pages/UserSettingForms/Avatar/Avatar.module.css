@@ -1,0 +1,13 @@
+.uploadBtn {
+  display: inline-block;
+  background-color: #ddd;
+  color: black;
+  padding: 4px 8px;
+  border: 1px solid black;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.uploadBtn:hover {
+  background-color: #ccc;
+}

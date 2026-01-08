@@ -1,4 +1,7 @@
 const { validationResult } = require("express-validator");
+const cloudinary = require("../utilities/cloudinary");
+const { extractPublicId } = require("cloudinary-build-url");
+const bcrypt = require("bcryptjs");
 const db = require("../db/queries");
 const {
   validateWork,
@@ -6,6 +9,7 @@ const {
   validateCity,
   validateBasicInfo,
   validateDetails,
+  validateUserUpdate,
 } = require("../utilities/validators");
 const {
   getUser,
@@ -32,6 +36,97 @@ const userGet = [
 
     const friendship = await db.getFriendshipByUserIds(req.user.id, user.id);
     return res.json({ user, friendship });
+  },
+];
+
+const userPut = [
+  getUser,
+  profileEditAuth,
+  validateUserUpdate,
+  async (req, res, next) => {
+    //TODO: This and the validation seem like a mess
+    // perhaps try seperating routes for username,password,avatar,etc..
+    // otherwise just make sure everything works as intended and call it good
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ message: "validation failed", errors: errors.array() });
+    }
+
+    //if picture was sent => upload to cloudinary
+    if (req.file) {
+      const { buffer, mimetype } = req.file;
+      const b64 = Buffer.from(buffer).toString("base64");
+      const dataURI = "data:" + mimetype + ";base64," + b64;
+      const result = await cloudinary.uploader.upload(dataURI, {
+        resource_type: "auto",
+        folder: "facebook_clone_profile_pics",
+      });
+      req.body.avatarURL = result.secure_url;
+      req.body.avatarPublicId = result.public_id;
+    }
+
+    const user = req.paramsUser;
+    const {
+      avatarURL,
+      avatarPublicId,
+      username,
+      email,
+      newPassword,
+      firstName,
+      lastName,
+    } = req.body;
+
+    const doUpdate = async (hashedPassword) => {
+      try {
+        await db.updateUser(user.id, {
+          username,
+          hashedPassword,
+          email,
+          avatar: avatarURL,
+          firstName,
+          lastName,
+        });
+      } catch (err) {
+        //delete new pic if something goes wrong
+        if (avatarPublicId) {
+          try {
+            await cloudinary.uploader.destroy(avatarPublicId);
+          } catch (err) {
+            console.error(
+              `Cloudinary file with public id: '${avatarPublicId}' not deleted. You will need to delete it manually.`
+            );
+            return next(err);
+          }
+        }
+        return next(err);
+      }
+
+      //delete old picture from cloudinary
+      const oldPicPublicId = extractPublicId(user.profile.avatar);
+      if (
+        req.file &&
+        oldPicPublicId !== "messaging_app_profile_pics/icsll72wpxwcku6gb1by"
+      ) {
+        await cloudinary.uploader.destroy(oldPicPublicId);
+      }
+
+      return res.json({ message: "user updated" });
+    };
+
+    if (newPassword) {
+      bcrypt.hash(newPassword, 10, async (err, hashedPassword) => {
+        if (err) {
+          return next(err);
+        }
+
+        doUpdate(hashedPassword);
+      });
+    } else {
+      doUpdate();
+    }
   },
 ];
 
@@ -443,6 +538,7 @@ const detailsPut = [
 module.exports = {
   allUsersGet,
   userGet,
+  userPut,
   aboutOverviewGet,
   aboutWorkAndEducationGet,
   workPost,

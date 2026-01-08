@@ -2,6 +2,7 @@ const { Router } = require("express");
 const {
   allUsersGet,
   userGet,
+  userPut,
   aboutOverviewGet,
   aboutWorkAndEducationGet,
   workPost,
@@ -23,7 +24,7 @@ const {
 const router = Router();
 
 router.get("/", allUsersGet);
-router.get("/:userId", userGet);
+router.route("/:userId").get(userGet).put(userPut);
 
 router.get("/:userId/about_overview", aboutOverviewGet);
 

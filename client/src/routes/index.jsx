@@ -12,6 +12,13 @@ import AboutWorkAndEducation from "../components/AboutWorkAndEducation";
 import AboutPlacesLived from "../components/AboutPlacesLived";
 import AboutContactInfo from "../components/AboutContactInfo";
 import AboutDetails from "../components/AboutDetails";
+import UserSettings from "../pages/UserSettings";
+import UserSettingsModal from "../pages/UserSettingsModal";
+import Username from "../pages/UserSettingForms/Username";
+import Name from "../pages/UserSettingForms/Name";
+import Email from "../pages/UserSettingForms/Email";
+import Avatar from "../pages/UserSettingForms/Avatar";
+import Password from "../pages/UserSettingForms/Password";
 
 const routes = [
   {
@@ -62,6 +69,22 @@ const routes = [
                   },
                 ],
               },
+            ],
+          },
+        ],
+      },
+      {
+        path: "settings",
+        element: <UserSettings />,
+        children: [
+          {
+            element: <UserSettingsModal />,
+            children: [
+              { path: "username", element: <Username /> },
+              { path: "name", element: <Name /> },
+              { path: "email", element: <Email /> },
+              { path: "avatar", element: <Avatar /> },
+              { path: "password", element: <Password /> },
             ],
           },
         ],

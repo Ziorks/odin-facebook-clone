@@ -89,9 +89,23 @@ async function getUserSanitized(userId) {
     select: {
       id: true,
       username: true,
-      profile: { select: { avatar: true } },
+      password: true,
+      email: true,
+      profile: {
+        select: {
+          avatar: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
     },
   });
+
+  if (!user) {
+    return user;
+  }
+
+  user.password = !!user.password;
 
   return user;
 }
@@ -937,19 +951,27 @@ async function createCurrentCity(placesLivedId, { name }) {
 
 //UPDATE QUERIES
 
-async function updateProfile(profileId, { avatar, firstName, lastName } = {}) {
-  const profile = await prisma.profile.update({
-    where: {
-      id: profileId,
-    },
+async function updateUser(
+  userId,
+  { username, hashedPassword, email, avatar, firstName, lastName }
+) {
+  const user = await prisma.user.update({
+    where: { id: userId },
     data: {
-      avatar,
-      firstName,
-      lastName,
+      username,
+      password: hashedPassword,
+      email,
+      profile: {
+        update: {
+          avatar,
+          firstName,
+          lastName,
+        },
+      },
     },
   });
 
-  return profile;
+  return user;
 }
 
 async function updateRefreshToken(tokenId, { revoked }) {
@@ -1215,7 +1237,7 @@ module.exports = {
   createCity,
   createHometown,
   createCurrentCity,
-  updateProfile,
+  updateUser,
   updateRefreshToken,
   updateFriendship,
   updatePost,
