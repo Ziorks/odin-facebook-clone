@@ -1,7 +1,49 @@
 import { useContext } from "react";
 import { Link, useOutletContext, Outlet } from "react-router-dom";
 import AuthContext from "../../contexts/AuthContext";
+import useDataFetch from "../../hooks/useDataFetch";
+import UserThumbnail from "../../components/UserThumbnail";
 // import styles from "./AboutLayout.module.css";
+
+function FriendsPreview() {
+  const { user } = useOutletContext();
+  const { data, isLoading, error } = useDataFetch(
+    `/users/${user.id}/friends?page=1&resultsPerPage=8`,
+  );
+  return (
+    <div>
+      <h2>Friends</h2>
+      {data &&
+        (data.count > 0 ? (
+          <>
+            <p>
+              {data.count} friend{data.count !== 1 && "s"}
+            </p>
+            <ul>
+              {data.friends.map((friendship) => {
+                console.log(friendship);
+
+                const friend =
+                  friendship.user1.id === user.id
+                    ? friendship.user2
+                    : friendship.user1;
+                return (
+                  <li key={friendship.id}>
+                    <UserThumbnail user={friend} />
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        ) : (
+          <p>{user.username}has no friends</p>
+        ))}
+      {isLoading && <p>Loading...</p>}
+      {error && <p>An error occurred</p>}
+      <Link to={"friends"}>See all</Link>
+    </div>
+  );
+}
 
 function AboutLayout() {
   const { user } = useOutletContext();
@@ -31,10 +73,7 @@ function AboutLayout() {
         </nav>
         <Outlet context={{ user }} />
       </div>
-      <div>
-        <h2>Friends</h2>
-        {/* TODO: add sample of users friends and a link to view all their friends */}
-      </div>
+      <FriendsPreview />
     </>
   );
 }

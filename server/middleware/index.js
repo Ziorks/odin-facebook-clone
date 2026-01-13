@@ -96,6 +96,20 @@ const getUser = async (req, res, next) => {
   return next();
 };
 
+const getFriendship = async (req, res, next) => {
+  const { friendshipId } = req.params;
+
+  const friendship = await db.getFriendshipById(+friendshipId);
+  if (!friendship) {
+    return res
+      .status(404)
+      .json({ message: `friendship with id:${friendshipId} not found` });
+  }
+
+  req.friendship = friendship;
+  return next();
+};
+
 const profileEditAuth = async (req, res, next) => {
   const user = req.paramsUser;
 
@@ -147,6 +161,17 @@ const getCity = async (req, res, next) => {
   return next();
 };
 
+const getPaginationQuery = async (req, res, next) => {
+  let { page, resultsPerPage } = req.query;
+
+  page = parseInt(page) || undefined;
+  resultsPerPage = parseInt(resultsPerPage) || undefined;
+
+  req.pagination = { page, resultsPerPage };
+
+  return next();
+};
+
 module.exports = {
   notFoundHandler,
   errorHandler,
@@ -157,8 +182,10 @@ module.exports = {
   commentEditAuth,
   wallExistsCheck,
   getUser,
+  getFriendship,
   profileEditAuth,
   getWork,
   getSchool,
   getCity,
+  getPaginationQuery,
 };

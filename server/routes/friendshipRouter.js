@@ -1,18 +1,20 @@
 const { Router } = require("express");
 const {
   friendsGet,
-  pendingRequestsGet,
+  incomingPendingRequestsGet,
+  outgoingPendingRequestsGet,
   requestPost,
-  requestAcceptPost,
-  friendRemovePost,
+  requestAcceptPut,
+  friendshipDelete,
 } = require("../controllers/friendshipController");
 
 const router = Router();
 
 router.get("/friends", friendsGet); //get current users friends
-router.get("/pending", pendingRequestsGet); //get current users pending friend requests (both sent and recieved)
+router.get("/pending/incoming", incomingPendingRequestsGet); //get current users incoming pending friend requests
+router.get("/pending/outgoing", outgoingPendingRequestsGet); //get current users outgoing pending friend requests
 router.post("/request", requestPost); //create friend request
-router.post("/accept", requestAcceptPost); //accept friend request //TODO:make this a PUT
-router.post("/remove", friendRemovePost); //deny friend request/delete friend //TODO:make this a DELETE
+router.put("/:friendshipId/accept", requestAcceptPut); //accept friend request
+router.delete("/:friendshipId/remove", friendshipDelete); //deny friend request/delete friend
 
 module.exports = router;

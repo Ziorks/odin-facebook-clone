@@ -19,6 +19,7 @@ const {
   contactInfoPut,
   detailsGet,
   detailsPut,
+  friendsGet,
 } = require("../controllers/userController");
 
 const router = Router();
@@ -44,5 +45,7 @@ router
   .put(contactInfoPut);
 
 router.route("/:userId/about_details").get(detailsGet).put(detailsPut);
+
+router.get("/:userId/friends", friendsGet);
 
 module.exports = router;

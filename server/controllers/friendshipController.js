@@ -1,31 +1,34 @@
+const { getFriendship, getPaginationQuery } = require("../middleware");
 const db = require("../db/queries");
 
-const friendsGet = async (req, res) => {
-  //get current users friends
-  const { user } = req;
+const friendsGet = [
+  getPaginationQuery,
+  async (req, res) => {
+    //get current users friends
+    const { page, resultsPerPage } = req.pagination;
 
-  const friendships = await db.getUsersFriends(user.id);
-  const friends = friendships.map((friendship) => {
-    const { user1Id, user1, user2 } = friendship;
-    return user1Id === user.id ? user2 : user1;
-  });
+    const friendships = await db.getUsersFriends(req.user.id, {
+      pending: false,
+      page,
+      resultsPerPage,
+    });
 
-  return res.json({ friends });
+    return res.json(friendships);
+  },
+];
+
+const incomingPendingRequestsGet = async (req, res) => {
+  //get current users incoming pending friend requests
+  const requests = await db.getUsersIncomingFriendRequests(req.user.id);
+
+  return res.json({ requests });
 };
 
-const pendingRequestsGet = async (req, res) => {
-  //get current users pending friend requests (both sent and recieved)
-  const id = req.user.id;
+const outgoingPendingRequestsGet = async (req, res) => {
+  //get current users outgoing pending friend requests
+  const requests = await db.getUsersOutgoingFriendRequests(req.user.id);
 
-  const friendships = await db.getUsersFriends(id, { pending: true });
-  const pendingFriends = friendships.map((friendship) => {
-    const { user2Id, user1, user2 } = friendship;
-    const isSender = user2Id === id;
-    const user = isSender ? user1 : user2;
-    return { user, isSender };
-  });
-
-  return res.json({ pendingFriends });
+  return res.json({ requests });
 };
 
 const requestPost = async (req, res) => {
@@ -51,40 +54,49 @@ const requestPost = async (req, res) => {
   return res.json({ message: "friend request created", friendship });
 };
 
-const requestAcceptPost = async (req, res) => {
-  //accept friend request
-  const { id } = req.body;
+const requestAcceptPut = [
+  getFriendship,
+  async (req, res) => {
+    //accept friend request
+    const { user, friendship } = req;
 
-  let friendship = await db.getFriendshipById(id);
-  if (!friendship.user2Id === id) {
-    return res.status(403).json({
-      message:
-        "you can't accept a friend request which you are not the recipient of",
+    if (friendship.user2Id !== user.id) {
+      return res.status(403).json({
+        message:
+          "you can't accept a friend request which you are not the recipient of",
+      });
+    }
+    const updatedFriendship = await db.updateFriendship(friendship.id, {
+      accepted: true,
     });
-  }
-  friendship = await db.updateFriendship(id, { accepted: true });
-  return res.json({ message: "friendship accepted", friendship });
-};
+    return res.json({
+      message: "friendship accepted",
+      friendship: updatedFriendship,
+    });
+  },
+];
 
-const friendRemovePost = async (req, res) => {
-  //deny friend request/delete friend
-  const { user } = req;
-  const { id } = req.body;
+const friendshipDelete = [
+  getFriendship,
+  async (req, res) => {
+    //deny friend request/delete friend
+    const { user, friendship } = req;
 
-  let friendship = await db.getFriendshipById(id);
-  if (!(friendship.user1Id === user.id || friendship.user2Id === user.id)) {
-    return res
-      .status(403)
-      .json({ message: "you can't remove someone elses friend" });
-  }
-  friendship = await db.deleteFriendship(id);
-  return res.json({ message: "friendship deleted", friendship });
-};
+    if (!(friendship.user1Id === user.id || friendship.user2Id === user.id)) {
+      return res
+        .status(403)
+        .json({ message: "you can't remove someone elses friend" });
+    }
+    await db.deleteFriendship(friendship.id);
+    return res.json({ message: "friendship deleted", friendship });
+  },
+];
 
 module.exports = {
   friendsGet,
-  pendingRequestsGet,
+  incomingPendingRequestsGet,
+  outgoingPendingRequestsGet,
   requestPost,
-  requestAcceptPost,
-  friendRemovePost,
+  requestAcceptPut,
+  friendshipDelete,
 };

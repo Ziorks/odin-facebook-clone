@@ -1,5 +1,5 @@
 import useDataFetch from "../../hooks/useDataFetch";
-import { Link } from "react-router-dom";
+import UserThumbnail from "../../components/UserThumbnail";
 import styles from "./UserSearch.module.css";
 
 function UserSearch() {
@@ -13,11 +13,8 @@ function UserSearch() {
       {data && data.users.length > 0 ? (
         <ul className={styles.users_list}>
           {data.users.map((user) => (
-            <li key={user.id} className={styles.user_card}>
-              <Link to={`/users/${user.id}`}>
-                <img src={user.profile.avatar} />
-                <p> {user.username}</p>
-              </Link>
+            <li key={user.id}>
+              <UserThumbnail user={user} />
             </li>
           ))}
         </ul>

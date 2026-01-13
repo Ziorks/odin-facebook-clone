@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
-import useApiPrivate from "./useApiPrivate";
+import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
-import { useCallback } from "react";
-import { useRef } from "react";
+import useApiPrivate from "./useApiPrivate";
 
 function useDataFetch(path) {
   const [data, setData] = useState(null);
@@ -44,6 +42,8 @@ function useDataFetch(path) {
 
   useEffect(() => {
     fetchData();
+
+    return doAbort;
   }, [fetchData]);
 
   return {

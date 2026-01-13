@@ -1,13 +1,15 @@
 import { useEffect, useRef } from "react";
-import UserThumbnail from "../../components/UserThumbnail";
-import useMyFriendsFetch from "../../hooks/useMyFriendsFetch";
+import { useOutletContext } from "react-router-dom";
+import useUsersFriendsFetch from "../../hooks/useUsersFriendsFetch";
 import useIntersection from "../../hooks/useIntersection";
-// import styles from "./Friends.module.css";
+import UserThumbnail from "../UserThumbnail";
+// import styles from "./UsersFriends.module.css";
 
-function Friends() {
+function UsersFriends() {
+  const { user } = useOutletContext();
   const { ref, isVisible } = useIntersection("100px");
   const { count, friends, isLoading, error, fetchNext, refetch } =
-    useMyFriendsFetch(10);
+    useUsersFriendsFetch(user.id, 10);
   const fetchNextRef = useRef(fetchNext);
 
   useEffect(() => {
@@ -22,7 +24,6 @@ function Friends() {
 
   return (
     <>
-      <h2>My Friends</h2>
       {friends &&
         (count > 0 ? (
           <>
@@ -41,7 +42,7 @@ function Friends() {
             </ul>
           </>
         ) : (
-          <p>You have no friends</p>
+          <p>{user.username} has no friends</p>
         ))}
       {isLoading && <p>Loading...</p>}
       {error && (
@@ -53,4 +54,4 @@ function Friends() {
   );
 }
 
-export default Friends;
+export default UsersFriends;

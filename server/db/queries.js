@@ -166,7 +166,58 @@ async function getFriendshipByUserIds(userId1, userId2) {
   return friendship;
 }
 
-async function getUsersFriends(userId, { pending = false } = {}) {
+async function getUsersFriends(userId, { pending, page, resultsPerPage } = {}) {
+  const userOptions = {
+    select: {
+      username: true,
+      id: true,
+      profile: { select: { avatar: true } },
+    },
+  };
+  const where = {
+    OR: [{ user1Id: userId }, { user2Id: userId }],
+    accepted: pending === undefined ? undefined : !pending,
+  };
+
+  if (page || resultsPerPage) {
+    page = page || 1;
+    resultsPerPage = resultsPerPage || 10;
+
+    const count = await prisma.friendship.count({ where });
+
+    const friends = await prisma.friendship.findMany({
+      skip: (page - 1) * resultsPerPage,
+      take: resultsPerPage,
+      where,
+      include: {
+        user1: userOptions,
+        user2: userOptions,
+      },
+      omit: {
+        user1Id: true,
+        user2Id: true,
+      },
+    });
+
+    return { friends, count };
+  } else {
+    const friends = await prisma.friendship.findMany({
+      where,
+      include: {
+        user1: userOptions,
+        user2: userOptions,
+      },
+      omit: {
+        user1Id: true,
+        user2Id: true,
+      },
+    });
+
+    return { friends, count: friends.length };
+  }
+}
+
+async function getUsersIncomingFriendRequests(userId) {
   const userOptions = {
     select: {
       username: true,
@@ -175,18 +226,49 @@ async function getUsersFriends(userId, { pending = false } = {}) {
     },
   };
 
-  const friends = await prisma.friendship.findMany({
+  const requests = await prisma.friendship.findMany({
     where: {
-      OR: [{ user1Id: userId }, { user2Id: userId }],
-      accepted: !pending,
+      user2Id: userId,
+      accepted: false,
     },
     include: {
       user1: userOptions,
       user2: userOptions,
     },
+    omit: {
+      user1Id: true,
+      user2Id: true,
+    },
   });
 
-  return friends;
+  return requests;
+}
+
+async function getUsersOutgoingFriendRequests(userId) {
+  const userOptions = {
+    select: {
+      username: true,
+      id: true,
+      profile: { select: { avatar: true } },
+    },
+  };
+
+  const requests = await prisma.friendship.findMany({
+    where: {
+      user1Id: userId,
+      accepted: false,
+    },
+    include: {
+      user1: userOptions,
+      user2: userOptions,
+    },
+    omit: {
+      user1Id: true,
+      user2Id: true,
+    },
+  });
+
+  return requests;
 }
 
 async function getPost(postId) {
@@ -1204,6 +1286,8 @@ module.exports = {
   getFriendshipById,
   getFriendshipByUserIds,
   getUsersFriends,
+  getUsersIncomingFriendRequests,
+  getUsersOutgoingFriendRequests,
   getPost,
   getPostComments,
   getComment,

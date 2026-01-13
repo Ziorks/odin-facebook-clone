@@ -1,8 +1,11 @@
 import App from "../App";
 import Error from "../pages/Error";
 import Home from "../pages/Home";
-import Oauth from "../pages/Oauth";
+import FriendsLayout from "../pages/FriendsLayout";
 import Friends from "../pages/Friends";
+import PendingRequestsLayout from "../pages/PendingRequestsLayout";
+import PendingRequestsIncoming from "../pages/PendingRequestsIncoming";
+import PendingRequestsOutgoing from "../pages/PendingRequestsOutgoing";
 import UserSearch from "../pages/UserSearch/UserSearch";
 import UserProfile from "../pages/UserProfile";
 import Wall from "../components/Wall";
@@ -12,6 +15,7 @@ import AboutWorkAndEducation from "../components/AboutWorkAndEducation";
 import AboutPlacesLived from "../components/AboutPlacesLived";
 import AboutContactInfo from "../components/AboutContactInfo";
 import AboutDetails from "../components/AboutDetails";
+import UsersFriends from "../components/UsersFriends";
 import UserSettings from "../pages/UserSettings";
 import UserSettingsModal from "../pages/UserSettingsModal";
 import Username from "../pages/UserSettingForms/Username";
@@ -19,6 +23,7 @@ import Name from "../pages/UserSettingForms/Name";
 import Email from "../pages/UserSettingForms/Email";
 import Avatar from "../pages/UserSettingForms/Avatar";
 import Password from "../pages/UserSettingForms/Password";
+import Oauth from "../pages/Oauth";
 
 const routes = [
   {
@@ -32,7 +37,24 @@ const routes = [
       },
       {
         path: "friends",
-        element: <Friends />,
+        element: <FriendsLayout />,
+        children: [
+          { index: true, element: <Friends /> },
+          {
+            element: <PendingRequestsLayout />,
+            children: [
+              { path: "pending", element: <PendingRequestsIncoming /> },
+              {
+                path: "pending_incoming",
+                element: <PendingRequestsIncoming />,
+              },
+              {
+                path: "pending_outgoing",
+                element: <PendingRequestsOutgoing />,
+              },
+            ],
+          },
+        ],
       },
       {
         path: "users",
@@ -69,6 +91,7 @@ const routes = [
                   },
                 ],
               },
+              { path: "friends", element: <UsersFriends /> },
             ],
           },
         ],

@@ -17,6 +17,7 @@ const {
   getWork,
   getSchool,
   getCity,
+  getPaginationQuery,
 } = require("../middleware");
 
 const allUsersGet = async (req, res) => {
@@ -535,6 +536,23 @@ const detailsPut = [
   },
 ];
 
+const friendsGet = [
+  getUser,
+  getPaginationQuery,
+  async (req, res) => {
+    const { page, resultsPerPage } = req.pagination;
+    const user = req.paramsUser;
+
+    const friendships = await db.getUsersFriends(user.id, {
+      pending: false,
+      page,
+      resultsPerPage,
+    });
+
+    return res.json(friendships);
+  },
+];
+
 module.exports = {
   allUsersGet,
   userGet,
@@ -555,4 +573,5 @@ module.exports = {
   contactInfoPut,
   detailsGet,
   detailsPut,
+  friendsGet,
 };
