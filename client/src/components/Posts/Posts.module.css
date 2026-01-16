@@ -9,3 +9,7 @@
   height: 25px;
   border-radius: 50%;
 }
+
+.commentsList {
+  list-style: none;
+}

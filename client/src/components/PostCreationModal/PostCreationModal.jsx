@@ -4,7 +4,7 @@ import AuthContext from "../../contexts/AuthContext";
 import Modal from "../Modal";
 import styles from "./PostCreationModal.module.css";
 
-function PostCreationModal({ handleClose, wallId, refetch }) {
+function PostCreationModal({ handleClose, wallId, onSuccess }) {
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState(null);
@@ -18,9 +18,8 @@ function PostCreationModal({ handleClose, wallId, refetch }) {
 
     api
       .post("/posts", { content, wallId })
-      .then(() => {
-        refetch();
-        handleClose();
+      .then((resp) => {
+        onSuccess(resp.data.post);
       })
       .catch((err) => {
         setIsLoading(false);

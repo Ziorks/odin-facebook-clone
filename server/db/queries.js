@@ -14,6 +14,102 @@ const prisma = new PrismaClient({
   },
 });
 
+//UTIL FUNCTIONS
+async function attachLikesToPosts(posts) {
+  // Extract post and comment/reply ids
+  const postIds = [];
+  const commentIds = [];
+
+  for (const post of posts) {
+    postIds.push(post.id);
+    if (post.comments.length > 0) {
+      commentIds.push(post.comments[0].id);
+      if (post.comments[0].replies.length === 1) {
+        commentIds.push(post.comments[0].replies[0].id);
+      }
+    }
+  }
+
+  // Fetch likes for posts and any comments/replies
+  const likes = await prisma.like.findMany({
+    where: {
+      OR: [
+        { targetType: "POST", targetId: { in: postIds } },
+        { targetType: "COMMENT", targetId: { in: commentIds } },
+      ],
+    },
+    include: {
+      user: { select: { id: true, username: true } },
+    },
+  });
+
+  // Stitch results together
+
+  // reduce likes to object where key is 'targetType:targetId' and value is array of users
+  const likesByTarget = likes.reduce((acc, like) => {
+    const key = `${like.targetType}:${like.targetId}`;
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    if (acc[key]) {
+      acc[key].push(like.user);
+    }
+    return acc;
+  }, {});
+
+  //  map through posts and get postLikes, comment, commentLikes, reply, and replyLikes
+  const result = posts.map((post) => {
+    const postLikes = likesByTarget[`POST:${post.id}`] ?? [];
+
+    const comment = post.comments[0];
+    const commentLikes = comment
+      ? likesByTarget[`COMMENT:${comment.id}`] ?? []
+      : [];
+
+    const replyCount = comment?._count.replies ?? 0;
+    const reply = comment?.replies[0];
+    const replyLikes = reply ? likesByTarget[`COMMENT:${reply.id}`] ?? [] : [];
+
+    //  assemble post object with added properties
+    delete post.comments;
+    if (comment) {
+      delete comment.replies;
+    }
+
+    return {
+      ...post,
+      _count: {
+        ...post._count,
+        likes: postLikes.length,
+      },
+      likedBy: postLikes,
+      comment: comment
+        ? {
+            ...comment,
+            _count: {
+              ...comment._count,
+              likes: commentLikes.length,
+            },
+            likedBy: commentLikes,
+            reply:
+              replyCount === 1
+                ? {
+                    ...reply,
+                    _count: {
+                      ...reply._count,
+                      likes: replyLikes.length,
+                    },
+                    likedBy: replyLikes,
+                  }
+                : null,
+          }
+        : null,
+    };
+  });
+
+  return result;
+}
+
 //READ QUERIES
 
 async function getUserById(id) {
@@ -489,29 +585,23 @@ async function getLike(userId, targetId, targetType) {
   return like;
 }
 
-async function getWall(wallId) {
-  //TODO: add pagination
-
-  // 1. Fetch posts with given wallId
-  const posts = await prisma.post.findMany({
-    where: {
-      wallId,
+async function getWall(wallId, { page, resultsPerPage } = {}) {
+  const where = {
+    wallId,
+    //TODO: select by privacy here when/if I add that
+  };
+  const userOptions = {
+    select: {
+      id: true,
+      username: true,
+      profile: { select: { avatar: true } },
     },
+  };
+  const queryOptions = {
+    where,
     include: {
-      author: {
-        select: {
-          id: true,
-          username: true,
-          profile: { select: { avatar: true } },
-        },
-      },
-      wall: {
-        select: {
-          id: true,
-          username: true,
-          profile: { select: { avatar: true } },
-        },
-      },
+      author: userOptions,
+      wall: userOptions,
       comments: {
         where: {
           parentId: null,
@@ -521,24 +611,12 @@ async function getWall(wallId) {
         orderBy: { createdAt: "desc" },
         omit: { authorId: true },
         include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              profile: { select: { avatar: true } },
-            },
-          },
+          author: userOptions,
           replies: {
             where: { isDeleted: false },
             take: 1,
             include: {
-              author: {
-                select: {
-                  id: true,
-                  username: true,
-                  profile: { select: { avatar: true } },
-                },
-              },
+              author: userOptions,
               _count: {
                 select: {
                   replies: {
@@ -566,99 +644,22 @@ async function getWall(wallId) {
       wallId: true,
     },
     orderBy: { createdAt: "desc" },
-  });
+  };
 
-  //2. Extract post, comment, and reply ids
-  const postIds = [];
-  const commentIds = [];
-
-  for (const post of posts) {
-    postIds.push(post.id);
-    if (post.comments.length > 0) {
-      commentIds.push(post.comments[0].id);
-      if (post.comments[0].replies.length === 1) {
-        commentIds.push(post.comments[0].replies[0].id);
-      }
-    }
+  let count = undefined;
+  if (page || resultsPerPage) {
+    page = page || 1;
+    resultsPerPage = resultsPerPage || 10;
+    queryOptions.skip = (page - 1) * resultsPerPage;
+    queryOptions.take = resultsPerPage;
+    count = await prisma.post.count({ where });
   }
 
-  //3. Fetch likes for post and any comments/replies
-  const likes = await prisma.like.findMany({
-    where: {
-      OR: [
-        { targetType: "POST", targetId: { in: postIds } },
-        { targetType: "COMMENT", targetId: { in: commentIds } },
-      ],
-    },
-    include: {
-      user: { select: { id: true, username: true } },
-    },
-  });
+  const posts = await prisma.post.findMany(queryOptions);
 
-  //4. Stitch results together
-  //  reduce likes to object where key is 'targetType:targetId' and value is array of users
-  const likesByTarget = likes.reduce((acc, like) => {
-    const key = `${like.targetType}:${like.targetId}`;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    if (acc[key]) {
-      acc[key].push(like.user);
-    }
-    return acc;
-  }, {});
+  const wall = await attachLikesToPosts(posts);
 
-  //  map through posts and get postLikes, comment, commentLikes, reply, and replyLikes
-  const wall = posts.map((post) => {
-    const postLikes = likesByTarget[`POST:${post.id}`] ?? [];
-
-    const comment = post.comments[0];
-    const commentLikes = comment
-      ? likesByTarget[`COMMENT:${comment.id}`] ?? []
-      : [];
-
-    const replyCount = comment?._count.replies ?? 0;
-    const reply = comment?.replies[0];
-    const replyLikes = reply ? likesByTarget[`COMMENT:${reply.id}`] ?? [] : [];
-
-    //  assemble post object with added properties
-    delete post.comments;
-    if (comment) {
-      delete comment.replies;
-    }
-
-    return {
-      ...post,
-      _count: {
-        ...post._count,
-        likes: postLikes.length,
-      },
-      likedBy: postLikes,
-      comment: comment
-        ? {
-            ...comment,
-            _count: {
-              ...comment._count,
-              likes: commentLikes.length,
-            },
-            likedBy: commentLikes,
-            reply:
-              replyCount === 1
-                ? {
-                    ...reply,
-                    _count: {
-                      ...reply._count,
-                      likes: replyLikes.length,
-                    },
-                    likedBy: replyLikes,
-                  }
-                : null,
-          }
-        : null,
-    };
-  });
-
-  return wall;
+  return { wall, count: count === undefined ? wall.length : count };
 }
 
 async function getAboutOverviewByUserId(userId) {
@@ -810,6 +811,82 @@ async function getDetailsByUserId(userId) {
   return details;
 }
 
+async function getUsersFeed(userId, { page, resultsPerPage } = {}) {
+  const where = {
+    //TODO: select by privacy here when/if I add that
+  };
+  const userOptions = {
+    select: {
+      id: true,
+      username: true,
+      profile: { select: { avatar: true } },
+    },
+  };
+  const queryOptions = {
+    where,
+    include: {
+      author: userOptions,
+      wall: userOptions,
+      comments: {
+        where: {
+          parentId: null,
+          isDeleted: false,
+        },
+        take: 1,
+        orderBy: { createdAt: "desc" },
+        omit: { authorId: true },
+        include: {
+          author: userOptions,
+          replies: {
+            where: { isDeleted: false },
+            take: 1,
+            include: {
+              author: userOptions,
+              _count: {
+                select: {
+                  replies: {
+                    where: { isDeleted: false },
+                  },
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              replies: {
+                where: { isDeleted: false },
+              },
+            },
+          },
+        },
+      },
+      _count: {
+        select: { comments: { where: { isDeleted: false, parentId: null } } },
+      },
+    },
+    omit: {
+      authorId: true,
+      wallId: true,
+    },
+    orderBy: { createdAt: "desc" },
+  };
+
+  let count = undefined;
+  if (page || resultsPerPage) {
+    page = page || 1;
+    resultsPerPage = resultsPerPage || 10;
+    queryOptions.skip = (page - 1) * resultsPerPage;
+    queryOptions.take = resultsPerPage;
+    count = await prisma.post.count({ where });
+  }
+
+  const posts = await prisma.post.findMany(queryOptions);
+
+  const feed = await attachLikesToPosts(posts);
+
+  return { feed, count: count === undefined ? feed.length : count };
+}
+
 //CREATE QUERIES
 
 async function createUser(
@@ -892,6 +969,13 @@ async function createFriendship(senderId, recipientId) {
 }
 
 async function createRegularPost(authorId, wallId, content) {
+  const userOptions = {
+    select: {
+      id: true,
+      username: true,
+      profile: { select: { avatar: true } },
+    },
+  };
   const post = await prisma.post.create({
     data: {
       author: { connect: { id: authorId } },
@@ -899,12 +983,27 @@ async function createRegularPost(authorId, wallId, content) {
       content,
       type: "REGULAR",
     },
+    include: {
+      author: userOptions,
+      wall: userOptions,
+    },
+    omit: {
+      authorId: true,
+      wallId: true,
+    },
   });
 
-  return post;
+  return { ...post, _count: { comments: 0, likes: 0 }, likedBy: [] };
 }
 
 async function createProfilePicUpdatePost(wallId, mediaUrl) {
+  const userOptions = {
+    select: {
+      id: true,
+      username: true,
+      profile: { select: { avatar: true } },
+    },
+  };
   const post = await prisma.post.create({
     data: {
       author: { connect: { id: wallId } },
@@ -912,9 +1011,17 @@ async function createProfilePicUpdatePost(wallId, mediaUrl) {
       mediaUrl,
       type: "PROFILE_PIC_UPDATE",
     },
+    include: {
+      author: userOptions,
+      wall: userOptions,
+    },
+    omit: {
+      authorId: true,
+      wallId: true,
+    },
   });
 
-  return post;
+  return { ...post, _count: { comments: 0, likes: 0 }, likedBy: [] };
 }
 
 async function createComment(authorId, postId, content, parentId) {
@@ -1307,6 +1414,7 @@ module.exports = {
   getCity,
   getContactInfoByUserId,
   getDetailsByUserId,
+  getUsersFeed,
   createUser,
   createRefreshToken,
   createFederatedCredentials,

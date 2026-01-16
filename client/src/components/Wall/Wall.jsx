@@ -1,6 +1,7 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import useDataFetch from "../../hooks/useDataFetch";
+import useWallFetch from "../../hooks/useWallFetch";
+import useIntersection from "../../hooks/useIntersection";
 import AuthContext from "../../contexts/AuthContext";
 import PostCreationModal from "../PostCreationModal";
 import PostDetailsModal from "../PostDetailsModal";
@@ -85,37 +86,66 @@ function Wall() {
   const { user } = useOutletContext();
   const wallId = user.id;
   const { auth } = useContext(AuthContext);
-  const { data, isLoading, error, refetch } = useDataFetch(`/wall/${wallId}`);
   const [showPostModal, setShowPostModal] = useState(false);
+  const { ref, isVisible } = useIntersection("100px");
+  const { posts, count, isLoading, error, setPosts, fetchNext, refetch } =
+    useWallFetch(wallId, 10);
+  const fetchNextRef = useRef(fetchNext);
+
+  useEffect(() => {
+    fetchNextRef.current = fetchNext;
+  }, [fetchNext]);
+
+  useEffect(() => {
+    if (isVisible) {
+      fetchNextRef.current();
+    }
+  }, [isVisible]);
+
+  const handleClose = () => setShowPostModal(false);
+  const onSuccess = (post) => {
+    setPosts((prev) => [post, ...prev]);
+    handleClose();
+  };
 
   return (
     <>
       {showPostModal && (
         <PostCreationModal
-          handleClose={() => setShowPostModal(false)}
+          handleClose={handleClose}
           wallId={wallId}
-          refetch={refetch}
+          onSuccess={onSuccess}
         />
       )}
-      {isLoading && <p>Loading posts...</p>}
-      {error && <p>{error}</p>}
-      {data && (
-        <>
-          <div>
-            <button onClick={() => setShowPostModal(true)}>
-              {auth.user.id === wallId
-                ? "What's on your mind"
-                : `Write something to ${user.username}`}
-            </button>
-          </div>
-          {data.wall.length > 0 ? (
-            data.wall.map((wallItem) => (
-              <WallItem key={wallItem.id} wallItem={wallItem} />
-            ))
-          ) : (
-            <p>This user has no posts</p>
-          )}
-        </>
+      <div>
+        <button onClick={() => setShowPostModal(true)}>
+          {auth.user.id === wallId
+            ? "What's on your mind"
+            : `Write something to ${user.username}`}
+        </button>
+      </div>
+      {posts &&
+        (count > 0 ? (
+          <>
+            <ol>
+              {posts.map((post, index) => (
+                <li
+                  ref={index + 1 === posts.length ? ref : undefined}
+                  key={post.id}
+                >
+                  <WallItem wallItem={post} />
+                </li>
+              ))}
+            </ol>
+          </>
+        ) : (
+          <p>There are no posts in your feed</p>
+        ))}
+      {isLoading && <p>Loading...</p>}
+      {error && (
+        <p>
+          An error occured <button onClick={refetch}>Try again</button>
+        </p>
       )}
     </>
   );

@@ -37,8 +37,8 @@ const postPost = [
       });
     }
 
-    await db.createRegularPost(authorId, wallId, content);
-    return res.json({ message: "post created" });
+    const post = await db.createRegularPost(authorId, wallId, content);
+    return res.json({ message: "post created", post });
   },
 ];
 

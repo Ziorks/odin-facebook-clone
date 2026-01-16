@@ -188,7 +188,12 @@ function Comment({
                       onLike={() => setLikes((prev) => prev + 1)}
                       onUnlike={() => setLikes((prev) => prev - 1)}
                     />
-                    <button onClick={() => setShowReplyForm(true)}>
+                    <button
+                      onClick={() => {
+                        setShowReplyForm(true);
+                        //TODO: focus reply form
+                      }}
+                    >
                       Reply
                     </button>
                     {auth.user.id === comment.author.id && (

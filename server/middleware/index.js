@@ -74,10 +74,11 @@ const commentEditAuth = async (req, res, next) => {
 const wallExistsCheck = async (req, res, next) => {
   const { wallId } = req.params;
 
-  const wallExists = await db.getUserById(+wallId);
-  if (!wallExists) {
+  const wallUser = await db.getUserById(+wallId);
+  if (!wallUser) {
     return res.status(404).json({ message: "wall not found" });
   }
+  req.wallUser = wallUser;
 
   return next();
 };

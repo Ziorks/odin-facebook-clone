@@ -21,7 +21,7 @@ function EditForm({ id, content, handleCancel, onSuccess }) {
 
     api
       .put(`/posts/${id}`, { content: formContent })
-      .then(() => onSuccess(formContent))
+      .then(() => onSuccess?.(formContent))
       .catch((err) => {
         setError(err);
       })
@@ -61,7 +61,7 @@ function DeleteModal({ id, handleClose, onSuccess }) {
 
     api
       .delete(`/posts/${id}`)
-      .then(onSuccess)
+      .then(() => onSuccess?.())
       .catch((err) => {
         setError(err);
       })

@@ -1,15 +1,15 @@
 const db = require("../db/queries");
-const { wallExistsCheck, getPaginationQuery } = require("../middleware");
+const { getPaginationQuery } = require("../middleware");
 const { configureLikedByObject } = require("../utilities/helperFunctions");
 
-const wallGet = [
-  wallExistsCheck,
+const feedGet = [
   getPaginationQuery,
   async (req, res) => {
-    const { wallUser } = req;
+    const userId = req.user.id;
     const { page, resultsPerPage } = req.pagination;
-    const wall = await db.getWall(wallUser.id, { page, resultsPerPage });
-    wall.wall.forEach((post) => {
+    const feed = await db.getUsersFeed(userId, { page, resultsPerPage });
+
+    feed.feed.forEach((post) => {
       const userId = req.user.id;
       configureLikedByObject(post, userId);
       if (post.comment) {
@@ -20,10 +20,8 @@ const wallGet = [
       }
     });
 
-    return res.json(wall);
+    return res.json(feed);
   },
 ];
 
-module.exports = {
-  wallGet,
-};
+module.exports = { feedGet };

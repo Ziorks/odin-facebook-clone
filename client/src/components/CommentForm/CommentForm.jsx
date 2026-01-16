@@ -4,7 +4,7 @@ import AuthContext from "../../contexts/AuthContext";
 import Comment from "../Comment";
 // import styles from "./CommentForm.module.css";
 
-function CommentForm({ postId, parentComment = null }) {
+function CommentForm({ postId, parentComment = null, setInputRef }) {
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState(null);
@@ -69,6 +69,7 @@ function CommentForm({ postId, parentComment = null }) {
           )}
           <form onSubmit={handleCommentSubmit}>
             <textarea
+              ref={setInputRef}
               placeholder={
                 parentComment
                   ? `Reply to ${parentComment.author.username}`

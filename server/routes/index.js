@@ -7,6 +7,7 @@ const commentRouter = require("../routes/commentRouter");
 const likeRouter = require("../routes/likeRouter");
 const userRouter = require("./userRouter");
 const wallRouter = require("./wallRouter");
+const feedRouter = require("./feedRouter");
 const { jwtAuth } = require("../middleware");
 
 const router = Router();
@@ -20,7 +21,9 @@ router.use("/users", userRouter);
 router.use("/posts", postRouter);
 router.use("/comments", commentRouter);
 router.use("/likes", likeRouter);
+router.use("/feed", feedRouter);
 router.use("/wall", wallRouter);
+//TODO: remove this
 router.get("/test", (req, res) => {
   res.json({ message: "you've reached the protected route!" });
 });

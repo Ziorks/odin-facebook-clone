@@ -32,7 +32,7 @@ const userGet = [
     const user = req.paramsUser;
 
     if (req.user.id === user.id) {
-      return res.json({ user });
+      return res.json({ user, friendship: null });
     }
 
     const friendship = await db.getFriendshipByUserIds(req.user.id, user.id);

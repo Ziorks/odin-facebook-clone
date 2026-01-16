@@ -13,6 +13,7 @@ function PostDetailsModal({
   onDelete,
   handleClose,
 }) {
+  //TODO: this should be infinite scroll
   const { data, isLoading, error } = useDataFetch(`/posts/${post.id}/comments`);
 
   return (

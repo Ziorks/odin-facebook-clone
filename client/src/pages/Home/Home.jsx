@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import AuthContext from "../../contexts/AuthContext";
 import useApiPrivate from "../../hooks/useApiPrivate";
-import { Link } from "react-router-dom";
+import Feed from "../../components/Feed/Feed";
 // import styles from "./Home.module.css";
 
 function Home() {
@@ -11,6 +11,7 @@ function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  //TODO: move this
   const handleLogout = () => {
     setIsLoading(true);
     api
@@ -26,6 +27,7 @@ function Home() {
       });
   };
 
+  //TODO: remove this
   const handleApiTest = () => {
     setData(null);
     setError(null);
@@ -51,6 +53,7 @@ function Home() {
       {isLoading && <p>Loading...</p>}
       {data && <p>api response: {data}</p>}
       {error && <p>{error}</p>}
+      <Feed />
     </>
   );
 }
