@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useCallback, useContext, useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { AiOutlineLike } from "react-icons/ai";
 import AuthContext from "../../contexts/AuthContext";
@@ -34,7 +34,7 @@ function EditForm({ id, content, handleCancel, onSuccess }) {
 
     api
       .put(`/comments/${id}`, { content: formContent })
-      .then(() => onSuccess(formContent))
+      .then((resp) => onSuccess?.(resp.data.comment))
       .catch((err) => {
         setError(err);
       })
@@ -74,7 +74,7 @@ function DeleteModal({ id, handleClose, onSuccess }) {
 
     api
       .put(`/comments/${id}/delete`)
-      .then(onSuccess)
+      .then((resp) => onSuccess?.(resp.data.comment))
       .catch((err) => {
         setError(err);
       })
@@ -102,23 +102,37 @@ function DeleteModal({ id, handleClose, onSuccess }) {
 
 function Comment({
   children,
-  comment,
+  comment: commentObj,
   pending = false,
   disableReplies = false,
 }) {
-  const [showReplyForm, setShowReplyForm] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [content, setContent] = useState(comment.content);
-  const [likes, setLikes] = useState(comment._count?.likes);
-  const [isDeleted, setIsDeleted] = useState(comment.isDeleted);
-  const [replies, setReplies] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const { auth } = useContext(AuthContext);
   const api = useApiPrivate();
 
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [comment, setComment] = useState(commentObj);
+  const [replies, setReplies] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const replyFormRef = useRef();
+  const setReplyFormRef = useCallback((node) => {
+    replyFormRef.current = node;
+  }, []);
+
+  useEffect(() => {
+    focusReplyForm();
+  }, [showReplyForm]);
+
+  const likeCount = comment._count?.likes;
   const replyCount = comment._count?.replies;
+
+  const focusReplyForm = () => {
+    if (!replyFormRef.current) return;
+    replyFormRef.current.focus();
+  };
 
   const handleGetReplies = () => {
     setError(null);
@@ -128,7 +142,6 @@ function Comment({
       .get(`/comments/${comment.id}/replies`)
       .then((resp) => {
         setReplies(resp.data.replies);
-        setShowReplyForm(true);
       })
       .catch((err) => {
         setError(err);
@@ -138,16 +151,14 @@ function Comment({
       });
   };
 
-  if (isDeleted && replyCount < 1) return;
-
   return (
     <>
       {showDeleteModal && (
         <DeleteModal
           id={comment.id}
           handleClose={() => setShowDeleteModal(false)}
-          onSuccess={() => {
-            setIsDeleted(true);
+          onSuccess={(comment) => {
+            setComment(comment);
             setShowDeleteModal(false);
           }}
         />
@@ -162,60 +173,79 @@ function Comment({
         {showEditForm ? (
           <EditForm
             id={comment.id}
-            content={content}
+            content={comment.content}
             handleCancel={() => setShowEditForm(false)}
-            onSuccess={(content) => {
-              setContent(content);
+            onSuccess={(comment) => {
+              setComment(comment);
               setShowEditForm(false);
             }}
           />
         ) : (
           <>
-            <p>{isDeleted ? "[deleted]" : content}</p>
-            {!isDeleted && (
-              <div>
-                <span>
-                  {pending
-                    ? "Posting..."
-                    : formatDistanceToNowShort(comment.createdAt)}
-                </span>
-                {!pending && (
-                  <>
+            <p>{comment.content}</p>
+            <div>
+              <span>
+                {pending
+                  ? "Posting..."
+                  : formatDistanceToNowShort(comment.createdAt)}
+              </span>
+              {!pending && (
+                <>
+                  {!comment.isDeleted && (
                     <LikeButton
                       targetId={comment.id}
                       targetType={"COMMENT"}
                       liked={comment.likedByMe}
-                      onLike={() => setLikes((prev) => prev + 1)}
-                      onUnlike={() => setLikes((prev) => prev - 1)}
+                      onLike={() =>
+                        setComment((prev) => ({
+                          ...prev,
+                          _count: {
+                            ...prev._count,
+                            likes: prev._count.likes + 1,
+                          },
+                        }))
+                      }
+                      onUnlike={() =>
+                        setComment((prev) => ({
+                          ...prev,
+                          _count: {
+                            ...prev._count,
+                            likes: prev._count.likes - 1,
+                          },
+                        }))
+                      }
                     />
-                    <button
-                      onClick={() => {
+                  )}
+                  <button
+                    onClick={() => {
+                      if (showReplyForm) {
+                        focusReplyForm();
+                      } else {
                         setShowReplyForm(true);
-                        //TODO: focus reply form
-                      }}
-                    >
-                      Reply
-                    </button>
-                    {auth.user.id === comment.author.id && (
-                      <>
-                        <button onClick={() => setShowEditForm(true)}>
-                          Edit
-                        </button>
-                        <button onClick={() => setShowDeleteModal(true)}>
-                          Delete
-                        </button>
-                      </>
-                    )}
-                    {likes > 0 && (
-                      <span>
-                        {likes}
-                        <AiOutlineLike />
-                      </span>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
+                      }
+                    }}
+                  >
+                    Reply
+                  </button>
+                  {auth.user.id === comment.author.id && !comment.isDeleted && (
+                    <>
+                      <button onClick={() => setShowEditForm(true)}>
+                        Edit
+                      </button>
+                      <button onClick={() => setShowDeleteModal(true)}>
+                        Delete
+                      </button>
+                    </>
+                  )}
+                  {likeCount > 0 && (
+                    <span>
+                      {likeCount}
+                      <AiOutlineLike />
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
             {(!disableReplies || pending) &&
               (replies ? (
                 <ReplyChain replies={replies} />
@@ -233,8 +263,12 @@ function Comment({
           </>
         )}
         {children}
-        {showReplyForm && (
-          <CommentForm postId={comment.postId} parentComment={comment} />
+        {(showReplyForm || replies) && (
+          <CommentForm
+            postId={comment.postId}
+            parentComment={comment}
+            setInputRef={setReplyFormRef}
+          />
         )}
       </div>
     </>

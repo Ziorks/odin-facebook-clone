@@ -1,11 +1,11 @@
 const { validationResult } = require("express-validator");
 const db = require("../db/queries");
 const { getPost, postEditAuth } = require("../middleware");
+const { formatComment } = require("../utilities/helperFunctions");
 const {
   validatePostCreate,
   validatePostEdit,
 } = require("../utilities/validators");
-const { configureLikedByObject } = require("../utilities/helperFunctions");
 
 const postPost = [
   validatePostCreate,
@@ -90,7 +90,7 @@ const postCommentsGet = [
 
     const comments = await db.getPostComments(postId);
     comments.forEach((comment) => {
-      configureLikedByObject(comment, req.user.id);
+      formatComment(comment, req.user.id);
     });
 
     return res.json({ comments });

@@ -211,9 +211,7 @@ function PostModal({
   }, []);
   const focusRef = (ref) => {
     if (!ref.current) return;
-
     ref.current.focus();
-    ref.current.scrollTo();
   };
 
   return (

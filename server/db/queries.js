@@ -14,7 +14,49 @@ const prisma = new PrismaClient({
   },
 });
 
+const commentOptions = {
+  include: {
+    author: {
+      select: {
+        id: true,
+        username: true,
+        profile: { select: { avatar: true } },
+      },
+    },
+    _count: { select: { replies: true } },
+  },
+  omit: { authorId: true },
+};
+
 //UTIL FUNCTIONS
+async function attachLikesToComments(comments = []) {
+  const commentIds = comments.map((comment) => comment.id);
+
+  const likes = await prisma.like.findMany({
+    where: { targetType: "COMMENT", targetId: { in: commentIds } },
+    include: { user: { select: { id: true, username: true } } },
+  });
+
+  const likesByComment = likes.reduce((acc, like) => {
+    const key = like.targetId;
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push(like.user);
+    return acc;
+  }, {});
+
+  return comments.map((comment) => {
+    const likes = likesByComment[comment.id] ?? [];
+
+    return {
+      ...comment,
+      _count: { ...comment._count, likes: likes.length },
+      likedBy: likes,
+    };
+  });
+}
+
 async function attachLikesToPosts(posts) {
   // Extract post and comment/reply ids
   const postIds = [];
@@ -63,12 +105,14 @@ async function attachLikesToPosts(posts) {
 
     const comment = post.comments[0];
     const commentLikes = comment
-      ? likesByTarget[`COMMENT:${comment.id}`] ?? []
+      ? (likesByTarget[`COMMENT:${comment.id}`] ?? [])
       : [];
 
     const replyCount = comment?._count.replies ?? 0;
     const reply = comment?.replies[0];
-    const replyLikes = reply ? likesByTarget[`COMMENT:${reply.id}`] ?? [] : [];
+    const replyLikes = reply
+      ? (likesByTarget[`COMMENT:${reply.id}`] ?? [])
+      : [];
 
     //  assemble post object with added properties
     delete post.comments;
@@ -369,7 +413,7 @@ async function getUsersOutgoingFriendRequests(userId) {
 
 async function getPost(postId) {
   //TODO: get first 5-10 comments, then let app request more
-  const [post, likeCount, likedBy] = await prisma.$transaction([
+  const [post, likedBy] = await prisma.$transaction([
     prisma.post.findUnique({
       where: {
         id: postId,
@@ -391,25 +435,14 @@ async function getPost(postId) {
         },
         comments: {
           where: { parentId: null },
-          include: {
-            author: {
-              select: {
-                id: true,
-                username: true,
-                profile: { select: { avatar: true } },
-              },
-            },
-            _count: { select: { replies: { where: { isDeleted: false } } } },
-          },
-          omit: { authorId: true },
+          ...commentOptions,
         },
         _count: {
-          select: { comments: { where: { isDeleted: false, parentId: null } } },
+          select: { comments: { where: { parentId: null } } },
         },
       },
       omit: { authorId: true, wallId: true },
     }),
-    prisma.like.count({ where: { targetType: "POST", targetId: postId } }),
     prisma.like.findMany({
       where: { targetType: "POST", targetId: postId },
       select: { user: { select: { id: true, username: true } } },
@@ -420,155 +453,65 @@ async function getPost(postId) {
     return null;
   }
 
-  const commentIds = post.comments.map((comment) => comment.id);
+  const commentsWithLikes = await attachLikesToComments(post.comments);
 
-  const likes = await prisma.like.findMany({
-    where: { targetType: "COMMENT", targetId: { in: commentIds } },
-    include: { user: { select: { id: true, username: true } } },
-  });
-
-  const likesByComment = likes.reduce((acc, like) => {
-    const key = like.targetId;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(like.user);
-    return acc;
-  }, {});
-
-  const commentsWithLikes = post.comments.map((comment) => {
-    const likes = likesByComment[comment.id] ?? [];
-
-    return {
-      ...comment,
-      _count: { ...comment._count, likes: likes.length },
-      likedBy: likes,
-    };
-  });
-
-  const result = {
+  return {
     ...post,
     comments: commentsWithLikes,
-    _count: { ...post._count, likes: likeCount },
-    likedBy: likedBy.map((user) => user.user),
+    _count: { ...post._count, likes: likedBy.length },
+    likedBy: likedBy.map((like) => like.user),
   };
-
-  return result;
 }
 
 async function getPostComments(postId) {
-  const comments = await prisma.comment.findMany({
+  const rawComments = await prisma.comment.findMany({
     where: {
       postId,
       parentId: null,
     },
-    include: {
-      author: {
-        select: {
-          id: true,
-          username: true,
-          profile: { select: { avatar: true } },
-        },
-      },
-      _count: { select: { replies: { where: { isDeleted: false } } } },
-    },
-    omit: { authorId: true },
     orderBy: { createdAt: "desc" },
+    ...commentOptions,
   });
 
-  const commentIds = comments.map((comment) => comment.id);
+  const comments = await attachLikesToComments(rawComments);
 
-  const likes = await prisma.like.findMany({
-    where: { targetType: "COMMENT", targetId: { in: commentIds } },
-    include: { user: { select: { id: true, username: true } } },
-  });
-
-  const likesByComment = likes.reduce((acc, like) => {
-    const key = like.targetId;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(like.user);
-    return acc;
-  }, {});
-
-  const result = comments.map((comment) => {
-    const likes = likesByComment[comment.id] ?? [];
-
-    return {
-      ...comment,
-      _count: { ...comment._count, likes: likes.length },
-      likedBy: likes,
-    };
-  });
-
-  return result;
+  return comments;
 }
 
 async function getComment(commentId) {
-  const comment = await prisma.comment.findUnique({
-    where: { id: commentId },
-    include: {
-      author: {
-        select: {
-          id: true,
-          username: true,
-          profile: { select: { avatar: true } },
-        },
-      },
-      _count: { select: { replies: { where: { isDeleted: false } } } },
-    },
-    omit: { authorId: true },
-  });
+  const [comment, likedBy] = await prisma.$transaction([
+    prisma.comment.findUnique({
+      where: { id: commentId },
+      ...commentOptions,
+    }),
+    prisma.like.findMany({
+      where: { targetType: "COMMENT", targetId: commentId },
+      select: { user: { select: { id: true, username: true } } },
+    }),
+  ]);
 
-  return comment;
+  if (!comment) {
+    return null;
+  }
+
+  return {
+    ...comment,
+    _count: { ...comment._count, likes: likedBy.length },
+    likedBy: likedBy.map((like) => like.user),
+  };
 }
 
 async function getCommentReplies(commentId) {
-  const replies = await prisma.comment.findMany({
+  const rawReplies = await prisma.comment.findMany({
     where: {
       parentId: commentId,
     },
-    include: {
-      author: {
-        select: {
-          id: true,
-          username: true,
-          profile: { select: { avatar: true } },
-        },
-      },
-      _count: { select: { replies: { where: { isDeleted: false } } } },
-    },
-    omit: { authorId: true },
+    ...commentOptions,
   });
 
-  const replyIds = replies.map((reply) => reply.id);
+  const replies = await attachLikesToComments(rawReplies);
 
-  const likes = await prisma.like.findMany({
-    where: { targetType: "COMMENT", targetId: { in: replyIds } },
-    include: { user: { select: { id: true, username: true } } },
-  });
-
-  const likesByReply = likes.reduce((acc, like) => {
-    const key = like.targetId;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(like.user);
-    return acc;
-  }, {});
-
-  const result = replies.map((reply) => {
-    const likes = likesByReply[reply.id] ?? [];
-
-    return {
-      ...reply,
-      _count: { ...reply._count, likes: likes.length },
-      likedBy: likes,
-    };
-  });
-
-  return result;
+  return replies;
 }
 
 async function getLike(userId, targetId, targetType) {
@@ -615,28 +558,17 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
           replies: {
             where: { isDeleted: false },
             take: 1,
-            include: {
-              author: userOptions,
-              _count: {
-                select: {
-                  replies: {
-                    where: { isDeleted: false },
-                  },
-                },
-              },
-            },
+            ...commentOptions,
           },
           _count: {
             select: {
-              replies: {
-                where: { isDeleted: false },
-              },
+              replies: true,
             },
           },
         },
       },
       _count: {
-        select: { comments: { where: { isDeleted: false, parentId: null } } },
+        select: { comments: { where: { parentId: null } } },
       },
     },
     omit: {
@@ -814,6 +746,7 @@ async function getDetailsByUserId(userId) {
 async function getUsersFeed(userId, { page, resultsPerPage } = {}) {
   const where = {
     //TODO: select by privacy here when/if I add that
+    //userId parameter is for filtering friends only posts
   };
   const userOptions = {
     select: {
@@ -840,28 +773,17 @@ async function getUsersFeed(userId, { page, resultsPerPage } = {}) {
           replies: {
             where: { isDeleted: false },
             take: 1,
-            include: {
-              author: userOptions,
-              _count: {
-                select: {
-                  replies: {
-                    where: { isDeleted: false },
-                  },
-                },
-              },
-            },
+            ...commentOptions,
           },
           _count: {
             select: {
-              replies: {
-                where: { isDeleted: false },
-              },
+              replies: true,
             },
           },
         },
       },
       _count: {
-        select: { comments: { where: { isDeleted: false, parentId: null } } },
+        select: { comments: { where: { parentId: null } } },
       },
     },
     omit: {
@@ -893,7 +815,7 @@ async function createUser(
   username,
   hashedPassword,
   email,
-  { avatar, firstName, lastName } = {}
+  { avatar, firstName, lastName } = {},
 ) {
   const user = await prisma.user.create({
     data: {
@@ -921,7 +843,7 @@ async function createRefreshToken(
   hashedToken,
   userId,
   rememberDevice,
-  expiresAt
+  expiresAt,
 ) {
   const refreshToken = await prisma.refreshToken.create({
     data: {
@@ -1034,23 +956,10 @@ async function createComment(authorId, postId, content, parentId) {
       content,
       parent,
     },
-    include: {
-      author: {
-        select: {
-          username: true,
-          id: true,
-          profile: { select: { avatar: true } },
-        },
-      },
-    },
-    omit: { authorId: true },
+    ...commentOptions,
   });
 
-  comment._count = { likes: 0, replies: 0 };
-  comment.likedByMe = false;
-  comment.likedBySample = [];
-
-  return comment;
+  return { ...comment, _count: { likes: 0, replies: 0 }, likedBy: [] };
 }
 
 async function createLike(userId, targetId, targetType) {
@@ -1067,7 +976,7 @@ async function createLike(userId, targetId, targetType) {
 
 async function createWork(
   workAndEducationId,
-  { company, position, location, description, currentJob, startYear, endYear }
+  { company, position, location, description, currentJob, startYear, endYear },
 ) {
   const work = await prisma.work.create({
     data: {
@@ -1087,7 +996,7 @@ async function createWork(
 
 async function createSchool(
   workAndEducationId,
-  { name, description, degree, startYear, endYear, graduated }
+  { name, description, degree, startYear, endYear, graduated },
 ) {
   const school = await prisma.school.create({
     data: {
@@ -1142,7 +1051,7 @@ async function createCurrentCity(placesLivedId, { name }) {
 
 async function updateUser(
   userId,
-  { username, hashedPassword, email, avatar, firstName, lastName }
+  { username, hashedPassword, email, avatar, firstName, lastName },
 ) {
   const user = await prisma.user.update({
     where: { id: userId },
@@ -1200,17 +1109,32 @@ async function updatePost(postId, { content }) {
 }
 
 async function updateComment(commentId, { content }) {
-  const comment = await prisma.comment.update({
-    where: { id: commentId },
-    data: { content },
-  });
+  const [comment, likedBy] = await prisma.$transaction([
+    prisma.comment.update({
+      where: { id: commentId },
+      data: { content },
+      ...commentOptions,
+    }),
+    prisma.like.findMany({
+      where: { targetType: "COMMENT", targetId: commentId },
+      select: { user: { select: { id: true, username: true } } },
+    }),
+  ]);
 
-  return comment;
+  if (!comment) {
+    return null;
+  }
+
+  return {
+    ...comment,
+    _count: { ...comment._count, likes: likedBy.length },
+    likedBy: likedBy.map((like) => like.user),
+  };
 }
 
 async function updateWork(
   workId,
-  { company, position, location, description, currentJob, startYear, endYear }
+  { company, position, location, description, currentJob, startYear, endYear },
 ) {
   const work = await prisma.work.update({
     where: { id: workId },
@@ -1230,7 +1154,7 @@ async function updateWork(
 
 async function updateSchool(
   schoolId,
-  { name, description, degree, startYear, endYear, graduated }
+  { name, description, degree, startYear, endYear, graduated },
 ) {
   const school = await prisma.school.update({
     where: { id: schoolId },
@@ -1261,7 +1185,7 @@ async function updateCity(cityId, { name, yearMoved }) {
 
 async function updateContactInfo(
   contactInfoId,
-  { phoneNumbers, emails, websites, socialLinks, gender, birthday, languages }
+  { phoneNumbers, emails, websites, socialLinks, gender, birthday, languages },
 ) {
   const { day, month, year } = birthday ?? {};
 
@@ -1283,7 +1207,7 @@ async function updateContactInfo(
 
 async function updateDetails(
   detailsId,
-  { aboutMe, quotes, music, books, tv, movies, sports, hobbies }
+  { aboutMe, quotes, music, books, tv, movies, sports, hobbies },
 ) {
   const details = await prisma.details.update({
     where: { id: detailsId },
@@ -1339,10 +1263,13 @@ async function deleteLike(likeId) {
 }
 
 async function softDeleteComment(commentId) {
-  const comment = await prisma.comment.update({
+  const rawComment = await prisma.comment.update({
     where: { id: commentId },
     data: { isDeleted: true },
+    ...commentOptions,
   });
+
+  const [comment] = await attachLikesToComments([rawComment]);
 
   return comment;
 }
@@ -1375,7 +1302,7 @@ async function resetDatabase() {
   const tableNames = Object.values(Prisma.ModelName);
   for (const tableName of tableNames) {
     await prisma.$queryRawUnsafe(
-      `TRUNCATE TABLE "${tableName}" RESTART IDENTITY CASCADE`
+      `TRUNCATE TABLE "${tableName}" RESTART IDENTITY CASCADE`,
     );
   }
 }

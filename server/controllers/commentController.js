@@ -1,11 +1,11 @@
 const { validationResult } = require("express-validator");
 const db = require("../db/queries");
 const { getComment, commentEditAuth } = require("../middleware");
+const { formatComment } = require("../utilities/helperFunctions");
 const {
   validateCommentCreate,
   validateCommentEdit,
 } = require("../utilities/validators");
-const { configureLikedByObject } = require("../utilities/helperFunctions");
 
 const commentPost = [
   validateCommentCreate,
@@ -21,41 +21,9 @@ const commentPost = [
     const authorId = req.user.id;
     const { postId, content, parentId } = req.body;
 
-    const isPostIdValid = await db.getPost(postId);
-    if (!isPostIdValid) {
-      return res.status(400).json({
-        message: "validation failed",
-        errors: [
-          {
-            type: "field",
-            value: postId,
-            msg: "postId is not a valid post id",
-            path: "postId",
-            location: "body",
-          },
-        ],
-      });
-    }
-
-    if (parentId) {
-      const isParentIdValid = await db.getComment(parentId);
-      if (!isParentIdValid) {
-        return res.status(400).json({
-          message: "validation failed",
-          errors: [
-            {
-              type: "field",
-              value: parentId,
-              msg: "parentId is not a valid comment id",
-              path: "parentId",
-              location: "body",
-            },
-          ],
-        });
-      }
-    }
-
     const comment = await db.createComment(authorId, postId, content, parentId);
+    formatComment(comment, req.user.id);
+
     return res.json({ message: "comment created", comment });
   },
 ];
@@ -74,9 +42,11 @@ const commentEditPut = [
     }
 
     const { content } = req.body;
-    await db.updateComment(req.comment.id, { content });
+    const comment = await db.updateComment(req.comment.id, { content });
 
-    return res.json({ message: "comment edited" });
+    formatComment(comment, req.user.id);
+
+    return res.json({ message: "comment edited", comment });
   },
 ];
 
@@ -86,7 +56,7 @@ const commentRepliesGet = [
     const replies = await db.getCommentReplies(req.comment.id);
 
     replies.forEach((reply) => {
-      configureLikedByObject(reply, req.user.id);
+      formatComment(reply, req.user.id);
     });
 
     return res.json({ replies });
@@ -98,9 +68,10 @@ const commentDeletePut = [
   commentEditAuth,
   async (req, res) => {
     //Soft delete a comment
-    await db.softDeleteComment(req.comment.id);
+    const comment = await db.softDeleteComment(req.comment.id);
+    formatComment(comment, req.user.id);
 
-    return res.json({ message: "comment deleted" });
+    return res.json({ message: "comment deleted", comment });
   },
 ];
 

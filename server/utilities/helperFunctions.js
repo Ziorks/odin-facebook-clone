@@ -56,7 +56,7 @@ const getRefreshTokenCookieOptions = ({ rememberDevice = false } = {}) => {
 function configureLikedByObject(object, currentUserId) {
   if (!object.likedBy || !Array.isArray(object.likedBy)) {
     console.error(
-      "Object passed to configureLikedByObject needs to have likedBy array property"
+      "ERROR: Object passed to configureLikedByObject needs to have likedBy array property"
     );
     return;
   }
@@ -72,10 +72,18 @@ function configureLikedByObject(object, currentUserId) {
   delete object.likedBy;
 }
 
+function formatComment(comment, currentUserId) {
+  configureLikedByObject(comment, currentUserId);
+  if (comment.isDeleted) {
+    comment.content = "[deleted comment]";
+  }
+}
+
 module.exports = {
   generateAccessToken,
   generateRefreshToken,
   getTokenRecord,
   getRefreshTokenCookieOptions,
   configureLikedByObject,
+  formatComment,
 };

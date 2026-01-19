@@ -204,18 +204,56 @@ const validateCommentEdit = [
 ];
 
 const validateCommentCreate = [
+  body("postId").toInt(),
+  body("parentId").toInt(),
+  async (req, res, next) => {
+    const { postId, parentId } = req.body;
+
+    if (postId) {
+      const isPostIdValid = await db.getPost(postId);
+      if (!isPostIdValid) {
+        req.postIdValidationError = { msg: "postId is not a valid post id" };
+      }
+    }
+
+    if (parentId) {
+      const isParentIdValid = await db.getComment(parentId);
+      if (!isParentIdValid) {
+        req.parentIdValidationError = {
+          msg: "parentId is not a valid comment id",
+        };
+      }
+    }
+
+    return next();
+  },
   ...validateCommentEdit,
   body("postId")
     .exists()
     .withMessage("'postId'" + existsMessage)
+    .bail()
     .isInt()
-    .withMessage("PostId must be an integer"),
+    .withMessage("PostId must be an integer")
+    .bail()
+    .custom((_, { req }) => {
+      if (req.postIdValidationError) {
+        throw new Error(req.postIdValidationError.msg);
+      }
+
+      return true;
+    }),
   body("parentId")
     .optional({ values: "null" })
     .isInt()
     .withMessage("ParentId must be an integer or null")
-    .toInt(),
-  ,
+    .bail()
+    .custom((_, { req }) => {
+      if (req.parentIdValidationError) {
+        throw new Error(req.parentIdValidationError.msg);
+      }
+
+      return true;
+    }),
 ];
 
 const validateLike = [
@@ -366,8 +404,8 @@ const validateBasicInfo = [
       arr
         .map((string) => (typeof string === "string" ? string.trim() : string))
         .filter((string) =>
-          typeof string === "string" ? string.length > 0 : true
-        )
+          typeof string === "string" ? string.length > 0 : true,
+        ),
     ),
   body("phoneNumbers.*")
     .isString()
@@ -384,8 +422,8 @@ const validateBasicInfo = [
       arr
         .map((string) => (typeof string === "string" ? string.trim() : string))
         .filter((string) =>
-          typeof string === "string" ? string.length > 0 : true
-        )
+          typeof string === "string" ? string.length > 0 : true,
+        ),
     ),
   body("emails.*")
     .isEmail()
@@ -402,8 +440,8 @@ const validateBasicInfo = [
       arr
         .map((string) => (typeof string === "string" ? string.trim() : string))
         .filter((string) =>
-          typeof string === "string" ? string.length > 0 : true
-        )
+          typeof string === "string" ? string.length > 0 : true,
+        ),
     ),
   body("websites.*")
     .isURL()
@@ -420,8 +458,8 @@ const validateBasicInfo = [
       arr
         .map((string) => (typeof string === "string" ? string.trim() : string))
         .filter((string) =>
-          typeof string === "string" ? string.length > 0 : true
-        )
+          typeof string === "string" ? string.length > 0 : true,
+        ),
     ),
   body("socialLinks.*")
     .isURL()
@@ -465,8 +503,8 @@ const validateBasicInfo = [
       arr
         .map((string) => (typeof string === "string" ? string.trim() : string))
         .filter((string) =>
-          typeof string === "string" ? string.length > 0 : true
-        )
+          typeof string === "string" ? string.length > 0 : true,
+        ),
     ),
   body("languages.*")
     .isString()
