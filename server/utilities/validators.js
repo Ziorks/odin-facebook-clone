@@ -205,7 +205,7 @@ const validateCommentEdit = [
 
 const validateCommentCreate = [
   body("postId").toInt(),
-  body("parentId").toInt(),
+  body("parentId").optional({ values: "null" }).toInt(),
   async (req, res, next) => {
     const { postId, parentId } = req.body;
 
