@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import axios from "axios";
 import useApiPrivate from "./useApiPrivate";
 
@@ -10,6 +10,7 @@ function useRepliesFetch(commentId, resultsPerPage) {
   const [error, setError] = useState(false);
   const api = useApiPrivate();
   const abortRef = useRef(null);
+  const hasMore = page * resultsPerPage < count;
 
   const doAbort = () => {
     if (abortRef.current) {
@@ -50,8 +51,16 @@ function useRepliesFetch(commentId, resultsPerPage) {
       });
   }, [api, page, commentId, resultsPerPage]);
 
+  useEffect(() => {
+    if (replies) return;
+
+    fetchData();
+
+    return doAbort;
+  }, [replies, fetchData]);
+
   const fetchNext = () => {
-    if (isLoading) return;
+    if (!hasMore || isLoading) return;
 
     fetchData();
   };
@@ -59,6 +68,7 @@ function useRepliesFetch(commentId, resultsPerPage) {
   return {
     page,
     count,
+    hasMore,
     replies,
     isLoading,
     error,

@@ -10,15 +10,30 @@ import CommentForm from "../CommentForm";
 import Modal from "../Modal";
 import styles from "./Comment.module.css";
 
-function ReplyChain({ replies }) {
+function ReplyChain({ commentId }) {
+  const { replies, hasMore, isLoading, error, fetchNext } = useRepliesFetch(
+    commentId,
+    10,
+  );
   return (
-    <ol className={styles.replyChain}>
-      {replies.map((reply) => (
-        <li key={reply.id}>
-          <Comment comment={reply} />
-        </li>
-      ))}
-    </ol>
+    <>
+      {replies && (
+        <ol className={styles.replyChain}>
+          {replies.map((reply) => (
+            <li key={reply.id}>
+              <Comment comment={reply} />
+            </li>
+          ))}
+        </ol>
+      )}
+      {hasMore && <button onClick={fetchNext}>View more</button>}
+      {isLoading && <p>Loading replies...</p>}
+      {error && (
+        <p>
+          An error occurred <button onClick={fetchNext}>Try again</button>
+        </p>
+      )}
+    </>
   );
 }
 
@@ -111,12 +126,9 @@ function Comment({
 
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [comment, setComment] = useState(commentObj);
-  const { replies, isLoading, error, fetchNext } = useRepliesFetch(
-    comment.id,
-    10,
-  );
 
   const replyFormRef = useRef();
   const setReplyFormRef = useCallback((node) => {
@@ -232,29 +244,22 @@ function Comment({
             </div>
             {(!disableReplies || pending) && (
               <>
-                {replies && <ReplyChain replies={replies} />}
-                {replyCount > (replies?.length ?? 0) && (
-                  <div>
-                    <button onClick={fetchNext}>
-                      {replies
-                        ? "View more"
-                        : `View ${replyCount > 1 ? "all " : ""}${replyCount} repl${replyCount === 1 ? "y" : "ies"}`}
-                    </button>
-                  </div>
-                )}
-                {isLoading && <p>Loading replies...</p>}
-                {error && (
-                  <p>
-                    An error occurred{" "}
-                    <button onClick={fetchNext}>Try again</button>
-                  </p>
-                )}
+                {replyCount > 0 &&
+                  (showReplies ? (
+                    <ReplyChain commentId={comment.id} />
+                  ) : (
+                    <div>
+                      <button onClick={() => setShowReplies(true)}>
+                        {`View ${replyCount > 1 ? "all " : ""}${replyCount} repl${replyCount === 1 ? "y" : "ies"}`}
+                      </button>
+                    </div>
+                  ))}
               </>
             )}
           </>
         )}
         {children}
-        {(showReplyForm || replies) && (
+        {(showReplyForm || showReplies) && (
           <CommentForm
             postId={comment.postId}
             parentComment={comment}
