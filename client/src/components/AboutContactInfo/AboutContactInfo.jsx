@@ -33,7 +33,7 @@ function MultiStringForm({
       data={{ [fieldName]: values }}
       errMsg={errMsg}
       loadingMsg={loadingMsg}
-      disableSave={!changesMade.current}
+      disableSave={!changesMade}
     >
       {values.map((value, i) => {
         const id = `${fieldName}_${i}`;
