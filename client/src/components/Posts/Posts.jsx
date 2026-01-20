@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { AiOutlineLike } from "react-icons/ai";
 import { format } from "date-fns";
 import useApiPrivate from "../../hooks/useApiPrivate";
-import useDataFetch from "../../hooks/useDataFetch";
 import useIntersection from "../../hooks/useIntersection";
+import useCommentsFetch from "../../hooks/useCommentsFetch";
 import AuthContext from "../../contexts/AuthContext";
 import Modal from "../Modal";
 import Comment from "../Comment";
@@ -92,18 +92,31 @@ function DeleteModal({ id, handleClose, onSuccess }) {
 }
 
 function Comments({ postId, setRef }) {
-  //TODO: this should be infinite scroll
-  const { data, isLoading, error } = useDataFetch(`/posts/${postId}/comments`);
+  const { comments, count, isLoading, error, fetchNext, refetch } =
+    useCommentsFetch(postId, 10);
+  const { ref: visibleRef, isVisible } = useIntersection("100px");
+  const fetchNextRef = useRef(fetchNext);
+
+  useEffect(() => {
+    fetchNextRef.current = fetchNext;
+  }, [fetchNext]);
+
+  useEffect(() => {
+    if (isVisible) {
+      fetchNextRef.current();
+    }
+  }, [isVisible]);
 
   return (
     <>
-      {isLoading && <p>Loading comments...</p>}
-      {error && <p>{error}</p>}
-      {data &&
-        (data.comments.length > 0 ? (
+      {comments &&
+        (count > 0 ? (
           <ol className={styles.commentsList} ref={setRef}>
-            {data.comments.map((comment) => (
-              <li key={comment.id}>
+            {comments.map((comment, index) => (
+              <li
+                key={comment.id}
+                ref={index + 1 === comments.length ? visibleRef : undefined}
+              >
                 <Comment comment={comment} />
               </li>
             ))}
@@ -111,6 +124,12 @@ function Comments({ postId, setRef }) {
         ) : (
           <p>No comments yet</p>
         ))}
+      {isLoading && <p>Loading comments...</p>}
+      {error && (
+        <p>
+          An error occured <button onClick={refetch}>Try again</button>
+        </p>
+      )}
     </>
   );
 }

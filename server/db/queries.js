@@ -381,19 +381,30 @@ async function getPost(postId) {
   };
 }
 
-async function getPostComments(postId) {
-  const rawComments = await prisma.comment.findMany({
-    where: {
-      postId,
-      parentId: null,
-    },
+async function getPostComments(postId, { page, resultsPerPage } = {}) {
+  const where = {
+    postId,
+    parentId: null,
+  };
+  const queryOptions = {
+    where,
     orderBy: { createdAt: "desc" },
     ...commentOptions,
-  });
+  };
 
+  let count = undefined;
+  if (page || resultsPerPage) {
+    page = page || 1;
+    resultsPerPage = resultsPerPage || 10;
+    queryOptions.skip = (page - 1) * resultsPerPage;
+    queryOptions.take = resultsPerPage;
+    count = await prisma.comment.count({ where });
+  }
+
+  const rawComments = await prisma.comment.findMany(queryOptions);
   const comments = await attachLikesToComments(rawComments);
 
-  return comments;
+  return { comments, count: count === undefined ? comments.length : count };
 }
 
 async function getComment(commentId) {
