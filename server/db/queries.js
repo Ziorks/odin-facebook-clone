@@ -29,15 +29,20 @@ const commentOptions = {
 };
 
 //UTIL FUNCTIONS
-async function attachLikesToComments(comments = []) {
-  const commentIds = comments.map((comment) => comment.id);
+async function attachLikesToObj(objArr, type) {
+  if (!(type === "COMMENT" || type === "POST")) {
+    console.error(
+      'type argument provided to attachLikesToObj must be on of the following: ["COMMENT", "POST"]',
+    );
+  }
+  const ids = objArr.map((obj) => obj.id);
 
   const likes = await prisma.like.findMany({
-    where: { targetType: "COMMENT", targetId: { in: commentIds } },
+    where: { targetType: type, targetId: { in: ids } },
     include: { user: { select: { id: true, username: true } } },
   });
 
-  const likesByComment = likes.reduce((acc, like) => {
+  const likesByObj = likes.reduce((acc, like) => {
     const key = like.targetId;
     if (!acc[key]) {
       acc[key] = [];
@@ -46,111 +51,24 @@ async function attachLikesToComments(comments = []) {
     return acc;
   }, {});
 
-  return comments.map((comment) => {
-    const likes = likesByComment[comment.id] ?? [];
+  return objArr.map((obj) => {
+    const likes = likesByObj[obj.id] ?? [];
 
     return {
-      ...comment,
-      _count: { ...comment._count, likes: likes.length },
+      ...obj,
+      _count: { ...obj._count, likes: likes.length },
       likedBy: likes,
     };
   });
 }
 
-async function attachLikesToPosts(posts) {
-  // Extract post and comment/reply ids
-  const postIds = [];
-  const commentIds = [];
+async function attachLikesToComments(comments = []) {
+  const result = await attachLikesToObj(comments, "COMMENT");
+  return result;
+}
 
-  for (const post of posts) {
-    postIds.push(post.id);
-    if (post.comments.length > 0) {
-      commentIds.push(post.comments[0].id);
-      if (post.comments[0].replies.length === 1) {
-        commentIds.push(post.comments[0].replies[0].id);
-      }
-    }
-  }
-
-  // Fetch likes for posts and any comments/replies
-  const likes = await prisma.like.findMany({
-    where: {
-      OR: [
-        { targetType: "POST", targetId: { in: postIds } },
-        { targetType: "COMMENT", targetId: { in: commentIds } },
-      ],
-    },
-    include: {
-      user: { select: { id: true, username: true } },
-    },
-  });
-
-  // Stitch results together
-
-  // reduce likes to object where key is 'targetType:targetId' and value is array of users
-  const likesByTarget = likes.reduce((acc, like) => {
-    const key = `${like.targetType}:${like.targetId}`;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    if (acc[key]) {
-      acc[key].push(like.user);
-    }
-    return acc;
-  }, {});
-
-  //  map through posts and get postLikes, comment, commentLikes, reply, and replyLikes
-  const result = posts.map((post) => {
-    const postLikes = likesByTarget[`POST:${post.id}`] ?? [];
-
-    const comment = post.comments[0];
-    const commentLikes = comment
-      ? (likesByTarget[`COMMENT:${comment.id}`] ?? [])
-      : [];
-
-    const replyCount = comment?._count.replies ?? 0;
-    const reply = comment?.replies[0];
-    const replyLikes = reply
-      ? (likesByTarget[`COMMENT:${reply.id}`] ?? [])
-      : [];
-
-    //  assemble post object with added properties
-    delete post.comments;
-    if (comment) {
-      delete comment.replies;
-    }
-
-    return {
-      ...post,
-      _count: {
-        ...post._count,
-        likes: postLikes.length,
-      },
-      likedBy: postLikes,
-      comment: comment
-        ? {
-            ...comment,
-            _count: {
-              ...comment._count,
-              likes: commentLikes.length,
-            },
-            likedBy: commentLikes,
-            reply:
-              replyCount === 1
-                ? {
-                    ...reply,
-                    _count: {
-                      ...reply._count,
-                      likes: replyLikes.length,
-                    },
-                    likedBy: replyLikes,
-                  }
-                : null,
-          }
-        : null,
-    };
-  });
-
+async function attachLikesToPosts(posts = []) {
+  const result = await attachLikesToObj(posts, "POST");
   return result;
 }
 
@@ -578,6 +496,7 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
     orderBy: { createdAt: "desc" },
   };
 
+  //pagination setup
   let count = undefined;
   if (page || resultsPerPage) {
     page = page || 1;
@@ -587,9 +506,53 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
     count = await prisma.post.count({ where });
   }
 
+  //posts query
   const posts = await prisma.post.findMany(queryOptions);
 
-  const wall = await attachLikesToPosts(posts);
+  //get all comments/replies from posts
+  const comments = posts.reduce((prev, post) => {
+    if (post.comments.length > 0) {
+      const comment = post.comments[0];
+      prev.push(comment);
+      if (comment.replies.length > 0) {
+        prev.push(comment.replies[0]);
+      }
+    }
+    return prev;
+  }, []);
+
+  //get likes for posts and comments/replies
+  const [postsWithLikes, commentsWithLikes] = await Promise.all([
+    attachLikesToPosts(posts),
+    attachLikesToComments(comments),
+  ]);
+
+  //create object for fast lookup of post's comment/reply
+  const commentsByPost = commentsWithLikes.reduce((prev, comment) => {
+    const { postId } = comment;
+    prev[postId] = prev[postId] ?? {};
+    if (comment.parentId) {
+      prev[postId].reply = comment;
+    } else {
+      prev[postId].comment = comment;
+    }
+    return prev;
+  }, {});
+
+  //reconstruct posts with new comments/replies
+  const wall = postsWithLikes.map((post) => {
+    const comment = commentsByPost[post.id]?.comment;
+    if (comment) {
+      delete comment.replies;
+      comment.reply = commentsByPost[post.id].reply ?? null;
+    }
+    delete post.comments;
+
+    return {
+      ...post,
+      comment: comment ?? null,
+    };
+  });
 
   return { wall, count: count === undefined ? wall.length : count };
 }
@@ -760,28 +723,6 @@ async function getUsersFeed(userId, { page, resultsPerPage } = {}) {
     include: {
       author: userOptions,
       wall: userOptions,
-      comments: {
-        where: {
-          parentId: null,
-          isDeleted: false,
-        },
-        take: 1,
-        orderBy: { createdAt: "desc" },
-        omit: { authorId: true },
-        include: {
-          author: userOptions,
-          replies: {
-            where: { isDeleted: false },
-            take: 1,
-            ...commentOptions,
-          },
-          _count: {
-            select: {
-              replies: true,
-            },
-          },
-        },
-      },
       _count: {
         select: { comments: { where: { parentId: null } } },
       },
