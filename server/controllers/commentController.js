@@ -1,6 +1,10 @@
 const { validationResult } = require("express-validator");
 const db = require("../db/queries");
-const { getComment, commentEditAuth } = require("../middleware");
+const {
+  getComment,
+  commentEditAuth,
+  getPaginationQuery,
+} = require("../middleware");
 const { formatComment } = require("../utilities/helperFunctions");
 const {
   validateCommentCreate,
@@ -52,14 +56,20 @@ const commentEditPut = [
 
 const commentRepliesGet = [
   getComment,
+  getPaginationQuery,
   async (req, res) => {
-    const replies = await db.getCommentReplies(req.comment.id);
+    const { comment } = req;
+    const { page, resultsPerPage } = req.pagination;
+    const replies = await db.getCommentReplies(comment.id, {
+      page,
+      resultsPerPage,
+    });
 
-    replies.forEach((reply) => {
+    replies.replies.forEach((reply) => {
       formatComment(reply, req.user.id);
     });
 
-    return res.json({ replies });
+    return res.json(replies);
   },
 ];
 

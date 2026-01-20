@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { AiOutlineLike } from "react-icons/ai";
 import AuthContext from "../../contexts/AuthContext";
 import useApiPrivate from "../../hooks/useApiPrivate";
+import useRepliesFetch from "../../hooks/useRepliesFetch";
 import { formatDistanceToNowShort } from "../../utils/helperFunctions";
 import LikeButton from "../LikeButton";
 import CommentForm from "../CommentForm";
@@ -107,15 +108,15 @@ function Comment({
   disableReplies = false,
 }) {
   const { auth } = useContext(AuthContext);
-  const api = useApiPrivate();
 
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [comment, setComment] = useState(commentObj);
-  const [replies, setReplies] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { replies, isLoading, error, fetchNext } = useRepliesFetch(
+    comment.id,
+    10,
+  );
 
   const replyFormRef = useRef();
   const setReplyFormRef = useCallback((node) => {
@@ -132,23 +133,6 @@ function Comment({
   const focusReplyForm = () => {
     if (!replyFormRef.current) return;
     replyFormRef.current.focus();
-  };
-
-  const handleGetReplies = () => {
-    setError(null);
-    setIsLoading(true);
-
-    api
-      .get(`/comments/${comment.id}/replies`)
-      .then((resp) => {
-        setReplies(resp.data.replies);
-      })
-      .catch((err) => {
-        setError(err);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
   };
 
   return (
@@ -246,20 +230,27 @@ function Comment({
                 </>
               )}
             </div>
-            {(!disableReplies || pending) &&
-              (replies ? (
-                <ReplyChain replies={replies} />
-              ) : (
-                replyCount > 0 && (
+            {(!disableReplies || pending) && (
+              <>
+                {replies && <ReplyChain replies={replies} />}
+                {replyCount > (replies?.length ?? 0) && (
                   <div>
-                    <button onClick={handleGetReplies}>
-                      {`View ${replyCount} repl${replyCount === 1 ? "y" : "ies"}`}
+                    <button onClick={fetchNext}>
+                      {replies
+                        ? "View more"
+                        : `View ${replyCount > 1 ? "all " : ""}${replyCount} repl${replyCount === 1 ? "y" : "ies"}`}
                     </button>
-                    {isLoading && <p>Loading replies...</p>}
-                    {error && <p>{error}</p>}
                   </div>
-                )
-              ))}
+                )}
+                {isLoading && <p>Loading replies...</p>}
+                {error && (
+                  <p>
+                    An error occurred{" "}
+                    <button onClick={fetchNext}>Try again</button>
+                  </p>
+                )}
+              </>
+            )}
           </>
         )}
         {children}

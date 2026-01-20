@@ -430,17 +430,28 @@ async function getComment(commentId) {
   };
 }
 
-async function getCommentReplies(commentId) {
-  const rawReplies = await prisma.comment.findMany({
-    where: {
-      parentId: commentId,
-    },
+async function getCommentReplies(commentId, { page, resultsPerPage } = {}) {
+  const where = {
+    parentId: commentId,
+  };
+  const queryOptions = {
+    where,
     ...commentOptions,
-  });
+  };
 
+  let count = undefined;
+  if (page || resultsPerPage) {
+    page = page || 1;
+    resultsPerPage = resultsPerPage || 10;
+    queryOptions.skip = (page - 1) * resultsPerPage;
+    queryOptions.take = resultsPerPage;
+    count = await prisma.comment.count({ where });
+  }
+
+  const rawReplies = await prisma.comment.findMany(queryOptions);
   const replies = await attachLikesToComments(rawReplies);
 
-  return replies;
+  return { replies, count: count === undefined ? replies.length : count };
 }
 
 async function getLike(userId, targetId, targetType) {
