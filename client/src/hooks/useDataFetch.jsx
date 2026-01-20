@@ -22,6 +22,7 @@ function useDataFetch(path) {
     const controller = new AbortController();
     abortRef.current = () => controller.abort();
 
+    setData(null);
     setError(false);
     setIsLoading(true);
 
