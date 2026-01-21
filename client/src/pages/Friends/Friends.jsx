@@ -1,13 +1,21 @@
-import { useEffect, useRef } from "react";
-import UserThumbnail from "../../components/UserThumbnail";
-import useMyFriendsFetch from "../../hooks/useMyFriendsFetch";
+import { useEffect, useRef, useContext } from "react";
+import AuthContext from "../../contexts/AuthContext";
+import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import useIntersection from "../../hooks/useIntersection";
+import { getFriendFromFriendship } from "../../utils/helperFunctions";
+import UserThumbnail from "../../components/UserThumbnail";
 // import styles from "./Friends.module.css";
 
 function Friends() {
+  const { auth } = useContext(AuthContext);
   const { ref, isVisible } = useIntersection("100px");
-  const { count, friends, isLoading, error, fetchNext, refetch } =
-    useMyFriendsFetch(10);
+  const {
+    data: friendships,
+    count,
+    isLoading,
+    error,
+    fetchNext,
+  } = useDataFetchPaginated(`/friendship/friends`, 10);
   const fetchNextRef = useRef(fetchNext);
 
   useEffect(() => {
@@ -23,21 +31,27 @@ function Friends() {
   return (
     <>
       <h2>My Friends</h2>
-      {friends &&
+      {friendships &&
         (count > 0 ? (
           <>
             <p>
               {count} friend{count !== 1 && "s"}
             </p>
             <ul>
-              {friends.map((friendship, index) => (
-                <li
-                  ref={index + 1 === friends.length ? ref : undefined}
-                  key={friendship.id}
-                >
-                  <UserThumbnail user={friendship.friend} />
-                </li>
-              ))}
+              {friendships.map((friendship, index) => {
+                const friend = getFriendFromFriendship(
+                  friendship,
+                  auth.user.id,
+                );
+                return (
+                  <li
+                    key={friendship.id}
+                    ref={index + 1 === friendships.length ? ref : undefined}
+                  >
+                    <UserThumbnail user={friend} />
+                  </li>
+                );
+              })}
             </ul>
           </>
         ) : (
@@ -46,7 +60,7 @@ function Friends() {
       {isLoading && <p>Loading...</p>}
       {error && (
         <p>
-          An error occured <button onClick={refetch}>Try again</button>
+          An error occured <button onClick={fetchNext}>Try again</button>
         </p>
       )}
     </>

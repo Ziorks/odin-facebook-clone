@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import AuthContext from "../../contexts/AuthContext";
-import useWallFetch from "../../hooks/useWallFetch";
+import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import PostCreationModal from "../PostCreationModal";
 import Posts from "../Posts";
 // import styles from "./Wall.module.css";
@@ -11,8 +11,14 @@ function Wall() {
   const { user } = useOutletContext();
   const wallId = user.id;
   const [showPostModal, setShowPostModal] = useState(false);
-  const { posts, count, isLoading, error, setPosts, fetchNext, refetch } =
-    useWallFetch(wallId, 10);
+  const {
+    data: posts,
+    count,
+    isLoading,
+    error,
+    setData: setPosts,
+    fetchNext,
+  } = useDataFetchPaginated(`/wall/${wallId}`, 10);
 
   const handleClose = () => setShowPostModal(false);
   const onSuccess = (post) => {
@@ -50,7 +56,7 @@ function Wall() {
       {isLoading && <p>Loading...</p>}
       {error && (
         <p>
-          An error occured <button onClick={refetch}>Try again</button>
+          An error occured <button onClick={fetchNext}>Try again</button>
         </p>
       )}
     </>

@@ -4,7 +4,7 @@ import { AiOutlineLike } from "react-icons/ai";
 import { format } from "date-fns";
 import useApiPrivate from "../../hooks/useApiPrivate";
 import useIntersection from "../../hooks/useIntersection";
-import useCommentsFetch from "../../hooks/useCommentsFetch";
+import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import AuthContext from "../../contexts/AuthContext";
 import Modal from "../Modal";
 import Comment from "../Comment";
@@ -92,8 +92,13 @@ function DeleteModal({ id, handleClose, onSuccess }) {
 }
 
 function Comments({ postId, setRef }) {
-  const { comments, count, isLoading, error, fetchNext, refetch } =
-    useCommentsFetch(postId, 10);
+  const {
+    data: comments,
+    count,
+    isLoading,
+    error,
+    fetchNext,
+  } = useDataFetchPaginated(`/posts/${postId}/comments`, 10);
   const { ref: visibleRef, isVisible } = useIntersection("100px");
   const fetchNextRef = useRef(fetchNext);
 
@@ -127,7 +132,7 @@ function Comments({ postId, setRef }) {
       {isLoading && <p>Loading comments...</p>}
       {error && (
         <p>
-          An error occured <button onClick={refetch}>Try again</button>
+          An error occured <button onClick={fetchNext}>Try again</button>
         </p>
       )}
     </>

@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import AuthContext from "../../contexts/AuthContext";
-import useFeedFetch from "../../hooks/useFeedFetch";
+import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import PostCreationModal from "../PostCreationModal";
 import Posts from "../Posts/Posts";
 // import styles from "./Feed.module.css";
@@ -8,8 +8,14 @@ import Posts from "../Posts/Posts";
 function Feed() {
   const { auth } = useContext(AuthContext);
   const [showPostModal, setShowPostModal] = useState(false);
-  const { posts, count, isLoading, error, setPosts, fetchNext, refetch } =
-    useFeedFetch(10);
+  const {
+    data: posts,
+    isLoading,
+    error,
+    count,
+    setData: setPosts,
+    fetchNext,
+  } = useDataFetchPaginated("/feed", 10);
 
   const handleClose = () => setShowPostModal(false);
   const onSuccess = (post) => {
@@ -40,7 +46,7 @@ function Feed() {
       {isLoading && <p>Loading...</p>}
       {error && (
         <p>
-          An error occured <button onClick={refetch}>Try again</button>
+          An error occured <button onClick={fetchNext}>Try again</button>
         </p>
       )}
     </>

@@ -1,32 +1,33 @@
 import { useContext } from "react";
 import { Link, useOutletContext, Outlet } from "react-router-dom";
 import AuthContext from "../../contexts/AuthContext";
-import useDataFetch from "../../hooks/useDataFetch";
+import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
+import { getFriendFromFriendship } from "../../utils/helperFunctions";
 import UserThumbnail from "../../components/UserThumbnail";
 // import styles from "./AboutLayout.module.css";
 
 function FriendsPreview() {
   const { user } = useOutletContext();
-  const { data, isLoading, error } = useDataFetch(
-    `/users/${user.id}/friends?page=1&resultsPerPage=8`,
-  );
+  const {
+    data: friendships,
+    count,
+    isLoading,
+    error,
+    fetchNext,
+  } = useDataFetchPaginated(`/users/${user.id}/friends`, 8);
+
   return (
     <div>
       <h2>Friends</h2>
-      {data &&
-        (data.count > 0 ? (
+      {friendships &&
+        (count > 0 ? (
           <>
             <p>
-              {data.count} friend{data.count !== 1 && "s"}
+              {count} friend{count !== 1 && "s"}
             </p>
             <ul>
-              {data.friends.map((friendship) => {
-                console.log(friendship);
-
-                const friend =
-                  friendship.user1.id === user.id
-                    ? friendship.user2
-                    : friendship.user1;
+              {friendships.map((friendship) => {
+                const friend = getFriendFromFriendship(friendship, user.id);
                 return (
                   <li key={friendship.id}>
                     <UserThumbnail user={friend} />
@@ -36,10 +37,14 @@ function FriendsPreview() {
             </ul>
           </>
         ) : (
-          <p>{user.username}has no friends</p>
+          <p>{user.username} has no friends</p>
         ))}
       {isLoading && <p>Loading...</p>}
-      {error && <p>An error occurred</p>}
+      {error && (
+        <p>
+          An error occurred <button onClick={fetchNext}>Try again</button>
+        </p>
+      )}
       <Link to={"friends"}>See all</Link>
     </div>
   );

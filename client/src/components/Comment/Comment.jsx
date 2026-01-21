@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { AiOutlineLike } from "react-icons/ai";
 import AuthContext from "../../contexts/AuthContext";
 import useApiPrivate from "../../hooks/useApiPrivate";
-import useRepliesFetch from "../../hooks/useRepliesFetch";
+import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import { formatDistanceToNowShort } from "../../utils/helperFunctions";
 import LikeButton from "../LikeButton";
 import CommentForm from "../CommentForm";
@@ -11,10 +11,13 @@ import Modal from "../Modal";
 import styles from "./Comment.module.css";
 
 function ReplyChain({ commentId }) {
-  const { replies, hasMore, isLoading, error, fetchNext } = useRepliesFetch(
-    commentId,
-    10,
-  );
+  const {
+    data: replies,
+    hasMore,
+    isLoading,
+    error,
+    fetchNext,
+  } = useDataFetchPaginated(`/comments/${commentId}/replies`, 10);
   return (
     <>
       {replies && (

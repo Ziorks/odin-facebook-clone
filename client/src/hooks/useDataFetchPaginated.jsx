@@ -2,10 +2,10 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import axios from "axios";
 import useApiPrivate from "./useApiPrivate";
 
-function useRepliesFetch(commentId, resultsPerPage) {
+function useDataFetchPaginated(path, resultsPerPage) {
   const [page, setPage] = useState(0);
   const [count, setCount] = useState(0);
-  const [replies, setReplies] = useState(null);
+  const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(false);
   const api = useApiPrivate();
@@ -29,15 +29,12 @@ function useRepliesFetch(commentId, resultsPerPage) {
     setIsLoading(true);
 
     api
-      .get(
-        `/comments/${commentId}/replies?page=${page + 1}&resultsPerPage=${resultsPerPage}`,
-        {
-          signal: controller.signal,
-        },
-      )
+      .get(`${path}?page=${page + 1}&resultsPerPage=${resultsPerPage}`, {
+        signal: controller.signal,
+      })
       .then((resp) => {
-        const { replies, count } = resp.data;
-        setReplies((prev) => (prev ? [...prev, ...replies] : replies));
+        const { results, count } = resp.data;
+        setData((prev) => (prev ? [...prev, ...results] : results));
         setCount(count);
         setPage((prev) => prev + 1);
       })
@@ -49,31 +46,32 @@ function useRepliesFetch(commentId, resultsPerPage) {
         setIsLoading(false);
         abortRef.current = null;
       });
-  }, [api, page, commentId, resultsPerPage]);
+  }, [api, page, path, resultsPerPage]);
 
   useEffect(() => {
-    if (replies) return;
+    if (data) return;
 
     fetchData();
 
     return doAbort;
-  }, [replies, fetchData]);
+  }, [data, fetchData]);
 
   const fetchNext = () => {
-    if (!hasMore || isLoading) return;
+    if ((data && !hasMore) || isLoading) return;
 
     fetchData();
   };
 
   return {
+    data,
+    isLoading,
+    error,
     page,
     count,
     hasMore,
-    replies,
-    isLoading,
-    error,
+    setData,
     fetchNext,
   };
 }
 
-export default useRepliesFetch;
+export default useDataFetchPaginated;
