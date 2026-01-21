@@ -2,13 +2,12 @@ import { useEffect, useRef, useContext } from "react";
 import AuthContext from "../../contexts/AuthContext";
 import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import useIntersection from "../../hooks/useIntersection";
-import { getFriendFromFriendship } from "../../utils/helperFunctions";
-import UserThumbnail from "../../components/UserThumbnail";
+import FriendList from "../../components/FriendList/FriendList";
 // import styles from "./Friends.module.css";
 
 function Friends() {
   const { auth } = useContext(AuthContext);
-  const { ref, isVisible } = useIntersection("100px");
+  const { ref: visibleRef, isVisible } = useIntersection("100px");
   const {
     data: friendships,
     count,
@@ -24,6 +23,8 @@ function Friends() {
 
   useEffect(() => {
     if (isVisible) {
+      console.log("visible");
+
       fetchNextRef.current();
     }
   }, [isVisible]);
@@ -37,22 +38,11 @@ function Friends() {
             <p>
               {count} friend{count !== 1 && "s"}
             </p>
-            <ul>
-              {friendships.map((friendship, index) => {
-                const friend = getFriendFromFriendship(
-                  friendship,
-                  auth.user.id,
-                );
-                return (
-                  <li
-                    key={friendship.id}
-                    ref={index + 1 === friendships.length ? ref : undefined}
-                  >
-                    <UserThumbnail user={friend} />
-                  </li>
-                );
-              })}
-            </ul>
+            <FriendList
+              friendships={friendships}
+              currentUserId={auth.user.id}
+              setLastItemRef={visibleRef}
+            />
           </>
         ) : (
           <p>You have no friends</p>

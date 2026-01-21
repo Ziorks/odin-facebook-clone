@@ -2,13 +2,12 @@ import { useEffect, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
 import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import useIntersection from "../../hooks/useIntersection";
-import UserThumbnail from "../UserThumbnail";
-import { getFriendFromFriendship } from "../../utils/helperFunctions";
+import FriendList from "../FriendList/FriendList";
 // import styles from "./UsersFriends.module.css";
 
 function UsersFriends() {
   const { user } = useOutletContext();
-  const { ref, isVisible } = useIntersection("100px");
+  const { ref: visibleRef, isVisible } = useIntersection("100px");
   const {
     data: friendships,
     count,
@@ -36,19 +35,11 @@ function UsersFriends() {
             <p>
               {count} friend{count !== 1 && "s"}
             </p>
-            <ul>
-              {friendships.map((friendship, index) => {
-                const friend = getFriendFromFriendship(friendship, user.id);
-                return (
-                  <li
-                    key={friendship.id}
-                    ref={index + 1 === friendships.length ? ref : undefined}
-                  >
-                    <UserThumbnail user={friend} />
-                  </li>
-                );
-              })}
-            </ul>
+            <FriendList
+              friendships={friendships}
+              currentUserId={user.id}
+              setLastItemRef={visibleRef}
+            />
           </>
         ) : (
           <p>{user.username} has no friends</p>

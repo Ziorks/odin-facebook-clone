@@ -14,9 +14,3 @@ export function capitalizeFirstLetters(string) {
     .map((word) => word[0].toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 }
-
-export function getFriendFromFriendship(friendship, currentUserId) {
-  return friendship.user1.id === currentUserId
-    ? friendship.user2
-    : friendship.user1;
-}

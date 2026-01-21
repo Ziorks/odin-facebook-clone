@@ -2,8 +2,7 @@ import { useContext } from "react";
 import { Link, useOutletContext, Outlet } from "react-router-dom";
 import AuthContext from "../../contexts/AuthContext";
 import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
-import { getFriendFromFriendship } from "../../utils/helperFunctions";
-import UserThumbnail from "../../components/UserThumbnail";
+import FriendList from "../../components/FriendList/FriendList";
 // import styles from "./AboutLayout.module.css";
 
 function FriendsPreview() {
@@ -25,16 +24,7 @@ function FriendsPreview() {
             <p>
               {count} friend{count !== 1 && "s"}
             </p>
-            <ul>
-              {friendships.map((friendship) => {
-                const friend = getFriendFromFriendship(friendship, user.id);
-                return (
-                  <li key={friendship.id}>
-                    <UserThumbnail user={friend} />
-                  </li>
-                );
-              })}
-            </ul>
+            <FriendList friendships={friendships} currentUserId={user.id} />
           </>
         ) : (
           <p>{user.username} has no friends</p>
