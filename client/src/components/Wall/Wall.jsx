@@ -9,7 +9,6 @@ import Posts from "../Posts";
 function Wall() {
   const { auth } = useContext(AuthContext);
   const { user } = useOutletContext();
-  const wallId = user.id;
   const [showPostModal, setShowPostModal] = useState(false);
   const {
     data: posts,
@@ -18,7 +17,7 @@ function Wall() {
     error,
     setData: setPosts,
     fetchNext,
-  } = useDataFetchPaginated(`/wall/${wallId}`, 10);
+  } = useDataFetchPaginated(`/users/${user.id}/wall`, 10);
 
   const handleClose = () => setShowPostModal(false);
   const onSuccess = (post) => {
@@ -26,14 +25,14 @@ function Wall() {
     handleClose();
   };
 
-  const isCurrentUser = auth.user.id === wallId;
+  const isCurrentUser = auth.user.id === user.id;
 
   return (
     <>
       {showPostModal && (
         <PostCreationModal
           handleClose={handleClose}
-          wallId={wallId}
+          wallId={user.id}
           onSuccess={onSuccess}
         />
       )}

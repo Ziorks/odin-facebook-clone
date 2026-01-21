@@ -20,6 +20,7 @@ const {
   detailsGet,
   detailsPut,
   friendsGet,
+  wallGet,
 } = require("../controllers/userController");
 
 const router = Router();
@@ -47,5 +48,7 @@ router
 router.route("/:userId/about_details").get(detailsGet).put(detailsPut);
 
 router.get("/:userId/friends", friendsGet);
+
+router.get("/:userId/wall", wallGet);
 
 module.exports = router;

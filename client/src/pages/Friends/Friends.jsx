@@ -23,8 +23,6 @@ function Friends() {
 
   useEffect(() => {
     if (isVisible) {
-      console.log("visible");
-
       fetchNextRef.current();
     }
   }, [isVisible]);

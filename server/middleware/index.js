@@ -71,18 +71,6 @@ const commentEditAuth = async (req, res, next) => {
   return next();
 };
 
-const wallExistsCheck = async (req, res, next) => {
-  const { wallId } = req.params;
-
-  const wallUser = await db.getUserById(+wallId);
-  if (!wallUser) {
-    return res.status(404).json({ message: "wall not found" });
-  }
-  req.wallUser = wallUser;
-
-  return next();
-};
-
 const getUser = async (req, res, next) => {
   const { userId } = req.params;
 
@@ -181,7 +169,6 @@ module.exports = {
   postEditAuth,
   getComment,
   commentEditAuth,
-  wallExistsCheck,
   getUser,
   getFriendship,
   profileEditAuth,

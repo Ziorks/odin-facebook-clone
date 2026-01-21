@@ -3,6 +3,7 @@ const cloudinary = require("../utilities/cloudinary");
 const { extractPublicId } = require("cloudinary-build-url");
 const bcrypt = require("bcryptjs");
 const db = require("../db/queries");
+const { configureLikedByObject } = require("../utilities/helperFunctions");
 const {
   validateWork,
   validateSchool,
@@ -553,6 +554,28 @@ const friendsGet = [
   },
 ];
 
+const wallGet = [
+  getUser,
+  getPaginationQuery,
+  async (req, res) => {
+    const wallUser = req.paramsUser;
+    const { page, resultsPerPage } = req.pagination;
+    const wall = await db.getWall(wallUser.id, { page, resultsPerPage });
+    wall.results.forEach((post) => {
+      const userId = req.user.id;
+      configureLikedByObject(post, userId);
+      if (post.comment) {
+        configureLikedByObject(post.comment, userId);
+        if (post.comment.reply) {
+          configureLikedByObject(post.comment.reply, userId);
+        }
+      }
+    });
+
+    return res.json(wall);
+  },
+];
+
 module.exports = {
   allUsersGet,
   userGet,
@@ -574,4 +597,5 @@ module.exports = {
   detailsGet,
   detailsPut,
   friendsGet,
+  wallGet,
 };
