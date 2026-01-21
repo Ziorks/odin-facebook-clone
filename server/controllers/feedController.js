@@ -9,7 +9,7 @@ const feedGet = [
     const { page, resultsPerPage } = req.pagination;
     const feed = await db.getUsersFeed(userId, { page, resultsPerPage });
 
-    feed.feed.forEach((post) => {
+    feed.results.forEach((post) => {
       const userId = req.user.id;
       configureLikedByObject(post, userId);
       if (post.comment) {

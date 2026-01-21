@@ -97,7 +97,7 @@ const userPut = [
             await cloudinary.uploader.destroy(avatarPublicId);
           } catch (err) {
             console.error(
-              `Cloudinary file with public id: '${avatarPublicId}' not deleted. You will need to delete it manually.`
+              `Cloudinary file with public id: '${avatarPublicId}' not deleted. You will need to delete it manually.`,
             );
             return next(err);
           }

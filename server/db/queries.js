@@ -225,6 +225,10 @@ async function getFriendshipByUserIds(userId1, userId2) {
 }
 
 async function getUsersFriends(userId, { pending, page, resultsPerPage } = {}) {
+  const where = {
+    OR: [{ user1Id: userId }, { user2Id: userId }],
+    accepted: pending === undefined ? undefined : !pending,
+  };
   const userOptions = {
     select: {
       username: true,
@@ -232,47 +236,30 @@ async function getUsersFriends(userId, { pending, page, resultsPerPage } = {}) {
       profile: { select: { avatar: true } },
     },
   };
-  const where = {
-    OR: [{ user1Id: userId }, { user2Id: userId }],
-    accepted: pending === undefined ? undefined : !pending,
+  const queryOptions = {
+    where,
+    include: {
+      user1: userOptions,
+      user2: userOptions,
+    },
+    omit: {
+      user1Id: true,
+      user2Id: true,
+    },
   };
 
+  let count = undefined;
   if (page || resultsPerPage) {
     page = page || 1;
     resultsPerPage = resultsPerPage || 10;
-
-    const count = await prisma.friendship.count({ where });
-
-    const friends = await prisma.friendship.findMany({
-      skip: (page - 1) * resultsPerPage,
-      take: resultsPerPage,
-      where,
-      include: {
-        user1: userOptions,
-        user2: userOptions,
-      },
-      omit: {
-        user1Id: true,
-        user2Id: true,
-      },
-    });
-
-    return { friends, count };
-  } else {
-    const friends = await prisma.friendship.findMany({
-      where,
-      include: {
-        user1: userOptions,
-        user2: userOptions,
-      },
-      omit: {
-        user1Id: true,
-        user2Id: true,
-      },
-    });
-
-    return { friends, count: friends.length };
+    queryOptions.skip = (page - 1) * resultsPerPage;
+    queryOptions.take = resultsPerPage;
+    count = await prisma.friendship.count({ where });
   }
+
+  const results = await prisma.friendship.findMany(queryOptions);
+
+  return { results, count: count === undefined ? results.length : count };
 }
 
 async function getUsersIncomingFriendRequests(userId) {
@@ -401,10 +388,10 @@ async function getPostComments(postId, { page, resultsPerPage } = {}) {
     count = await prisma.comment.count({ where });
   }
 
-  const rawComments = await prisma.comment.findMany(queryOptions);
-  const comments = await attachLikesToComments(rawComments);
+  const comments = await prisma.comment.findMany(queryOptions);
+  const results = await attachLikesToComments(comments);
 
-  return { comments, count: count === undefined ? comments.length : count };
+  return { results, count: count === undefined ? results.length : count };
 }
 
 async function getComment(commentId) {
@@ -448,10 +435,10 @@ async function getCommentReplies(commentId, { page, resultsPerPage } = {}) {
     count = await prisma.comment.count({ where });
   }
 
-  const rawReplies = await prisma.comment.findMany(queryOptions);
-  const replies = await attachLikesToComments(rawReplies);
+  const replies = await prisma.comment.findMany(queryOptions);
+  const results = await attachLikesToComments(replies);
 
-  return { replies, count: count === undefined ? replies.length : count };
+  return { results, count: count === undefined ? results.length : count };
 }
 
 async function getLike(userId, targetId, targetType) {
@@ -562,7 +549,7 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
   }, {});
 
   //reconstruct posts with new comments/replies
-  const wall = postsWithLikes.map((post) => {
+  const results = postsWithLikes.map((post) => {
     const comment = commentsByPost[post.id]?.comment;
     if (comment) {
       delete comment.replies;
@@ -576,7 +563,7 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
     };
   });
 
-  return { wall, count: count === undefined ? wall.length : count };
+  return { results, count: count === undefined ? results.length : count };
 }
 
 async function getAboutOverviewByUserId(userId) {
@@ -766,10 +753,9 @@ async function getUsersFeed(userId, { page, resultsPerPage } = {}) {
   }
 
   const posts = await prisma.post.findMany(queryOptions);
+  const results = await attachLikesToPosts(posts);
 
-  const feed = await attachLikesToPosts(posts);
-
-  return { feed, count: count === undefined ? feed.length : count };
+  return { results, count: count === undefined ? results.length : count };
 }
 
 //CREATE QUERIES

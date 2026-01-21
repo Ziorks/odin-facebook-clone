@@ -91,7 +91,7 @@ const postCommentsGet = [
     const { page, resultsPerPage } = req.pagination;
 
     const comments = await db.getPostComments(postId, { page, resultsPerPage });
-    comments.comments.forEach((comment) => {
+    comments.results.forEach((comment) => {
       formatComment(comment, req.user.id);
     });
 

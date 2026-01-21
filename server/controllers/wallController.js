@@ -9,7 +9,7 @@ const wallGet = [
     const { wallUser } = req;
     const { page, resultsPerPage } = req.pagination;
     const wall = await db.getWall(wallUser.id, { page, resultsPerPage });
-    wall.wall.forEach((post) => {
+    wall.results.forEach((post) => {
       const userId = req.user.id;
       configureLikedByObject(post, userId);
       if (post.comment) {

@@ -65,7 +65,7 @@ const commentRepliesGet = [
       resultsPerPage,
     });
 
-    replies.replies.forEach((reply) => {
+    replies.results.forEach((reply) => {
       formatComment(reply, req.user.id);
     });
 
