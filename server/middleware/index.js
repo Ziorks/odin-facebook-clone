@@ -1,6 +1,9 @@
 const passport = require("passport");
 const db = require("../db/queries");
-const { configureLikedByObject } = require("../utilities/helperFunctions");
+const {
+  configureLikedByObject,
+  formatComment,
+} = require("../utilities/helperFunctions");
 
 const notFoundHandler = (req, res) => {
   return res.sendStatus(404);
@@ -19,15 +22,18 @@ const jwtAuth = passport.authenticate("jwt", { session: false });
 const getPost = async (req, res, next) => {
   const { postId } = req.params;
 
-  const post = await db.getPost(+postId);
+  const post = await db.getPost(+postId, { includeTopComment: true });
   if (!post) {
     return res.status(404).json({ message: "post not found" });
   }
 
   configureLikedByObject(post, req.user.id);
-  post.comments.forEach((comment) => {
-    configureLikedByObject(comment, req.user.id);
-  });
+  if (post.comment) {
+    formatComment(post.comment, req.user.id);
+    if (post.comment.reply) {
+      formatComment(post.comment.reply, req.user.id);
+    }
+  }
 
   req.post = post;
   return next();
@@ -54,6 +60,7 @@ const getComment = async (req, res, next) => {
     return res.status(404).json({ message: "comment not found" });
   }
 
+  formatComment(comment);
   req.comment = comment;
   return next();
 };

@@ -1,22 +1,18 @@
-import { useState } from "react";
-import useApiPrivate from "../../hooks/useApiPrivate";
-
+import useApiPrivate from "../../../../hooks/useApiPrivate";
 // import styles from "./LikeButton.module.css";
 
 function LikeButton({
   targetId,
   targetType,
-  liked,
+  isLiked,
   onLike = () => {},
   onUnlike = () => {},
 }) {
-  const [isLiked, setIsLiked] = useState(liked);
   const api = useApiPrivate();
 
   const handleLike = () => {
     api.post("/likes", { targetId, targetType }).then(() => {
       onLike();
-      setIsLiked(true);
     });
   };
 
@@ -25,7 +21,6 @@ function LikeButton({
       .delete(`/likes?targetId=${targetId}&targetType=${targetType}`)
       .then(() => {
         onUnlike();
-        setIsLiked(false);
       });
   };
 

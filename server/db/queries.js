@@ -14,18 +14,57 @@ const prisma = new PrismaClient({
   },
 });
 
+const userOptions = {
+  select: {
+    id: true,
+    username: true,
+    profile: { select: { avatar: true } },
+  },
+};
+
 const commentOptions = {
   include: {
-    author: {
-      select: {
-        id: true,
-        username: true,
-        profile: { select: { avatar: true } },
-      },
-    },
+    author: userOptions,
     _count: { select: { replies: true } },
   },
   omit: { authorId: true },
+};
+
+const postOptions = {
+  include: {
+    author: userOptions,
+    wall: userOptions,
+    _count: {
+      select: { comments: { where: { parentId: null } } },
+    },
+  },
+  omit: {
+    authorId: true,
+    wallId: true,
+  },
+};
+
+const topCommentOptions = {
+  where: {
+    parentId: null,
+    isDeleted: false,
+  },
+  take: 1,
+  orderBy: { createdAt: "desc" },
+  omit: { authorId: true },
+  include: {
+    author: userOptions,
+    replies: {
+      where: { isDeleted: false },
+      take: 1,
+      ...commentOptions,
+    },
+    _count: {
+      select: {
+        replies: true,
+      },
+    },
+  },
 };
 
 //UTIL FUNCTIONS
@@ -229,13 +268,6 @@ async function getUsersFriends(userId, { pending, page, resultsPerPage } = {}) {
     OR: [{ user1Id: userId }, { user2Id: userId }],
     accepted: pending === undefined ? undefined : !pending,
   };
-  const userOptions = {
-    select: {
-      username: true,
-      id: true,
-      profile: { select: { avatar: true } },
-    },
-  };
   const queryOptions = {
     where,
     include: {
@@ -263,14 +295,6 @@ async function getUsersFriends(userId, { pending, page, resultsPerPage } = {}) {
 }
 
 async function getUsersIncomingFriendRequests(userId) {
-  const userOptions = {
-    select: {
-      username: true,
-      id: true,
-      profile: { select: { avatar: true } },
-    },
-  };
-
   const requests = await prisma.friendship.findMany({
     where: {
       user2Id: userId,
@@ -290,14 +314,6 @@ async function getUsersIncomingFriendRequests(userId) {
 }
 
 async function getUsersOutgoingFriendRequests(userId) {
-  const userOptions = {
-    select: {
-      username: true,
-      id: true,
-      profile: { select: { avatar: true } },
-    },
-  };
-
   const requests = await prisma.friendship.findMany({
     where: {
       user1Id: userId,
@@ -316,38 +332,16 @@ async function getUsersOutgoingFriendRequests(userId) {
   return requests;
 }
 
-async function getPost(postId) {
-  //TODO: get first 5-10 comments, then let app request more
+async function getPost(postId, { includeTopComment } = {}) {
+  const queryOptions = {
+    where: { id: postId },
+    ...postOptions,
+  };
+  if (includeTopComment) {
+    queryOptions.include.comments = topCommentOptions;
+  }
   const [post, likedBy] = await prisma.$transaction([
-    prisma.post.findUnique({
-      where: {
-        id: postId,
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            profile: { select: { avatar: true } },
-          },
-        },
-        wall: {
-          select: {
-            id: true,
-            username: true,
-            profile: { select: { avatar: true } },
-          },
-        },
-        comments: {
-          where: { parentId: null },
-          ...commentOptions,
-        },
-        _count: {
-          select: { comments: { where: { parentId: null } } },
-        },
-      },
-      omit: { authorId: true, wallId: true },
-    }),
+    prisma.post.findUnique(queryOptions),
     prisma.like.findMany({
       where: { targetType: "POST", targetId: postId },
       select: { user: { select: { id: true, username: true } } },
@@ -358,11 +352,26 @@ async function getPost(postId) {
     return null;
   }
 
-  const commentsWithLikes = await attachLikesToComments(post.comments);
+  let comment = null;
+
+  if (post.comments?.length > 0) {
+    const comments = [];
+    const rawComment = post.comments[0];
+    comments.push(rawComment);
+    if (rawComment.replies.length > 0) {
+      comments.push(rawComment.replies[0]);
+    }
+    const commentsWithLikes = await attachLikesToComments(comments);
+    comment = commentsWithLikes[0];
+    comment.reply =
+      commentsWithLikes.length === 2 ? commentsWithLikes[1] : null;
+    delete comment.replies;
+    delete post.comments;
+  }
 
   return {
     ...post,
-    comments: commentsWithLikes,
+    comment,
     _count: { ...post._count, likes: likedBy.length },
     likedBy: likedBy.map((like) => like.user),
   };
@@ -460,50 +469,12 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
     wallId,
     //TODO: select by privacy here when/if I add that
   };
-  const userOptions = {
-    select: {
-      id: true,
-      username: true,
-      profile: { select: { avatar: true } },
-    },
-  };
   const queryOptions = {
     where,
-    include: {
-      author: userOptions,
-      wall: userOptions,
-      comments: {
-        where: {
-          parentId: null,
-          isDeleted: false,
-        },
-        take: 1,
-        orderBy: { createdAt: "desc" },
-        omit: { authorId: true },
-        include: {
-          author: userOptions,
-          replies: {
-            where: { isDeleted: false },
-            take: 1,
-            ...commentOptions,
-          },
-          _count: {
-            select: {
-              replies: true,
-            },
-          },
-        },
-      },
-      _count: {
-        select: { comments: { where: { parentId: null } } },
-      },
-    },
-    omit: {
-      authorId: true,
-      wallId: true,
-    },
+    ...postOptions,
     orderBy: { createdAt: "desc" },
   };
+  queryOptions.include.comments = topCommentOptions;
 
   //pagination setup
   let count = undefined;
@@ -720,26 +691,10 @@ async function getUsersFeed(userId, { page, resultsPerPage } = {}) {
     //TODO: select by privacy here when/if I add that
     //userId parameter is for filtering friends only posts
   };
-  const userOptions = {
-    select: {
-      id: true,
-      username: true,
-      profile: { select: { avatar: true } },
-    },
-  };
+
   const queryOptions = {
     where,
-    include: {
-      author: userOptions,
-      wall: userOptions,
-      _count: {
-        select: { comments: { where: { parentId: null } } },
-      },
-    },
-    omit: {
-      authorId: true,
-      wallId: true,
-    },
+    ...postOptions,
     orderBy: { createdAt: "desc" },
   };
 
@@ -840,13 +795,6 @@ async function createFriendship(senderId, recipientId) {
 }
 
 async function createRegularPost(authorId, wallId, content) {
-  const userOptions = {
-    select: {
-      id: true,
-      username: true,
-      profile: { select: { avatar: true } },
-    },
-  };
   const post = await prisma.post.create({
     data: {
       author: { connect: { id: authorId } },
@@ -868,13 +816,6 @@ async function createRegularPost(authorId, wallId, content) {
 }
 
 async function createProfilePicUpdatePost(wallId, mediaUrl) {
-  const userOptions = {
-    select: {
-      id: true,
-      username: true,
-      profile: { select: { avatar: true } },
-    },
-  };
   const post = await prisma.post.create({
     data: {
       author: { connect: { id: wallId } },

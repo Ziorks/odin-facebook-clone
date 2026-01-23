@@ -41,6 +41,7 @@ const likePost = [
 const likeDelete = async (req, res) => {
   //Delete a like
   //TODO: consider making the targetId a param
+  // or just make the likeId the param and provide the likeId in things that have likes
   const { targetId, targetType } = req.query;
 
   const like = await db.getLike(req.user.id, +targetId, targetType);

@@ -1,13 +1,14 @@
 import { useCallback, useContext, useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { AiOutlineLike } from "react-icons/ai";
-import AuthContext from "../../contexts/AuthContext";
-import useApiPrivate from "../../hooks/useApiPrivate";
-import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
-import { formatDistanceToNowShort } from "../../utils/helperFunctions";
+import AuthContext from "../../../../contexts/AuthContext";
+import PostContext from "../../../../contexts/PostContext";
+import useApiPrivate from "../../../../hooks/useApiPrivate";
+import useDataFetchPaginated from "../../../../hooks/useDataFetchPaginated";
+import { formatDistanceToNowShort } from "../../../../utils/helperFunctions";
+import Modal from "../../../Modal";
 import LikeButton from "../LikeButton";
 import CommentForm from "../CommentForm";
-import Modal from "../Modal";
 import styles from "./Comment.module.css";
 
 function ReplyChain({ commentId }) {
@@ -41,6 +42,7 @@ function ReplyChain({ commentId }) {
 }
 
 function EditForm({ id, content, handleCancel, onSuccess }) {
+  const { onCommentChange } = useContext(PostContext);
   const [formContent, setFormContent] = useState(content);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -53,7 +55,11 @@ function EditForm({ id, content, handleCancel, onSuccess }) {
 
     api
       .put(`/comments/${id}`, { content: formContent })
-      .then((resp) => onSuccess?.(resp.data.comment))
+      .then((resp) => {
+        const comment = resp.data.comment;
+        onSuccess?.(comment);
+        onCommentChange(comment);
+      })
       .catch((err) => {
         setError(err);
       })
@@ -83,6 +89,7 @@ function EditForm({ id, content, handleCancel, onSuccess }) {
 }
 
 function DeleteModal({ id, handleClose, onSuccess }) {
+  const { onCommentChange } = useContext(PostContext);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const api = useApiPrivate();
@@ -93,7 +100,11 @@ function DeleteModal({ id, handleClose, onSuccess }) {
 
     api
       .put(`/comments/${id}/delete`)
-      .then((resp) => onSuccess?.(resp.data.comment))
+      .then((resp) => {
+        const comment = resp.data.comment;
+        onSuccess?.(comment);
+        onCommentChange(comment);
+      })
       .catch((err) => {
         setError(err);
       })
@@ -126,12 +137,13 @@ function Comment({
   disableReplies = false,
 }) {
   const { auth } = useContext(AuthContext);
+  const { onCommentChange } = useContext(PostContext);
 
+  const [comment, setComment] = useState(commentObj);
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [comment, setComment] = useState(commentObj);
 
   const replyFormRef = useRef();
   const setReplyFormRef = useCallback((node) => {
@@ -142,12 +154,44 @@ function Comment({
     focusReplyForm();
   }, [showReplyForm]);
 
+  useEffect(() => {
+    setComment(commentObj);
+  }, [commentObj]);
+
   const likeCount = comment._count?.likes;
   const replyCount = comment._count?.replies;
 
   const focusReplyForm = () => {
     if (!replyFormRef.current) return;
     replyFormRef.current.focus();
+  };
+
+  const onLike = () => {
+    setComment((prev) => ({
+      ...prev,
+      _count: {
+        ...prev._count,
+        likes: prev._count.likes + 1,
+      },
+      likedBySample: [
+        { id: auth.user.id, username: auth.user.username },
+        ...prev.likedBySample,
+      ],
+      likedByMe: true,
+    }));
+    onCommentChange(comment);
+  };
+  const onUnLike = () => {
+    setComment((prev) => ({
+      ...prev,
+      _count: {
+        ...prev._count,
+        likes: prev._count.likes - 1,
+      },
+      likedBySample: prev.likedBySample.slice(1),
+      likedByMe: false,
+    }));
+    onCommentChange(comment);
   };
 
   return (
@@ -194,25 +238,9 @@ function Comment({
                     <LikeButton
                       targetId={comment.id}
                       targetType={"COMMENT"}
-                      liked={comment.likedByMe}
-                      onLike={() =>
-                        setComment((prev) => ({
-                          ...prev,
-                          _count: {
-                            ...prev._count,
-                            likes: prev._count.likes + 1,
-                          },
-                        }))
-                      }
-                      onUnlike={() =>
-                        setComment((prev) => ({
-                          ...prev,
-                          _count: {
-                            ...prev._count,
-                            likes: prev._count.likes - 1,
-                          },
-                        }))
-                      }
+                      isLiked={comment.likedByMe}
+                      onLike={onLike}
+                      onUnlike={onUnLike}
                     />
                   )}
                   <button

@@ -32,6 +32,13 @@ const commentPost = [
   },
 ];
 
+const commentGet = [
+  getComment,
+  (req, res) => {
+    return res.json({ comment: req.comment });
+  },
+];
+
 const commentEditPut = [
   getComment,
   commentEditAuth,
@@ -87,6 +94,7 @@ const commentDeletePut = [
 
 module.exports = {
   commentPost,
+  commentGet,
   commentEditPut,
   commentRepliesGet,
   commentDeletePut,
