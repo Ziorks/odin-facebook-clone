@@ -6,7 +6,7 @@ import Comment from "../Comment";
 // import styles from "./CommentForm.module.css";
 
 function CommentForm({ parentComment = null, setInputRef, onSuccess }) {
-  const { post, onPostChange } = useContext(PostContext);
+  const { post, onPostComment } = useContext(PostContext);
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState(null);
@@ -26,10 +26,9 @@ function CommentForm({ parentComment = null, setInputRef, onSuccess }) {
         parentId: parentComment?.id || null,
       })
       .then((resp) => {
-        const comment = resp.data.comment;
-        setPostedComment(comment);
+        setPostedComment(resp.data.comment);
         onSuccess?.();
-        onPostChange();
+        if (!parentComment) onPostComment();
       })
       .catch((err) => {
         console.error("comment creation error", err);

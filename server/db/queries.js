@@ -67,48 +67,29 @@ const topCommentOptions = {
   },
 };
 
+const likeOptions = {
+  include: {
+    user: userOptions,
+  },
+  omit: { userId: true },
+};
+
 //UTIL FUNCTIONS
-async function attachLikesToObj(objArr, type) {
-  if (!(type === "COMMENT" || type === "POST")) {
-    console.error(
-      'type argument provided to attachLikesToObj must be on of the following: ["COMMENT", "POST"]',
-    );
-  }
-  const ids = objArr.map((obj) => obj.id);
 
-  const likes = await prisma.like.findMany({
-    where: { targetType: type, targetId: { in: ids } },
-    include: { user: { select: { id: true, username: true } } },
+async function attachLikesCountToComment(comment) {
+  const likesCount = await prisma.like.count({
+    where: { targetType: "COMMENT", targetId: comment.id },
   });
-
-  const likesByObj = likes.reduce((acc, like) => {
-    const key = like.targetId;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(like.user);
-    return acc;
-  }, {});
-
-  return objArr.map((obj) => {
-    const likes = likesByObj[obj.id] ?? [];
-
-    return {
-      ...obj,
-      _count: { ...obj._count, likes: likes.length },
-      likedBy: likes,
-    };
-  });
+  comment._count.likes = likesCount;
+  return comment;
 }
 
-async function attachLikesToComments(comments = []) {
-  const result = await attachLikesToObj(comments, "COMMENT");
-  return result;
-}
-
-async function attachLikesToPosts(posts = []) {
-  const result = await attachLikesToObj(posts, "POST");
-  return result;
+async function attachLikesCountToPost(post) {
+  const likesCount = await prisma.like.count({
+    where: { targetType: "POST", targetId: post.id },
+  });
+  post._count.likes = likesCount;
+  return post;
 }
 
 //READ QUERIES
@@ -340,40 +321,34 @@ async function getPost(postId, { includeTopComment } = {}) {
   if (includeTopComment) {
     queryOptions.include.comments = topCommentOptions;
   }
-  const [post, likedBy] = await prisma.$transaction([
-    prisma.post.findUnique(queryOptions),
-    prisma.like.findMany({
-      where: { targetType: "POST", targetId: postId },
-      select: { user: { select: { id: true, username: true } } },
-    }),
-  ]);
+  const post = await prisma.post.findUnique(queryOptions);
 
   if (!post) {
     return null;
   }
 
-  let comment = null;
+  await attachLikesCountToPost(post);
 
+  let topComment = null;
   if (post.comments?.length > 0) {
     const comments = [];
-    const rawComment = post.comments[0];
-    comments.push(rawComment);
-    if (rawComment.replies.length > 0) {
-      comments.push(rawComment.replies[0]);
+    const comment = post.comments[0];
+    comments.push(comment);
+    if (comment.replies.length > 0) {
+      comments.push(comment.replies[0]);
     }
-    const commentsWithLikes = await attachLikesToComments(comments);
-    comment = commentsWithLikes[0];
-    comment.reply =
-      commentsWithLikes.length === 2 ? commentsWithLikes[1] : null;
-    delete comment.replies;
-    delete post.comments;
+    await Promise.all(
+      comments.map(async (comment) => attachLikesCountToComment(comment)),
+    );
+    topComment = comments[0];
+    topComment.reply = comments.length === 2 ? comments[1] : null;
+    delete topComment.replies;
   }
+  delete post.comments;
 
   return {
     ...post,
-    comment,
-    _count: { ...post._count, likes: likedBy.length },
-    likedBy: likedBy.map((like) => like.user),
+    topComment,
   };
 }
 
@@ -398,32 +373,46 @@ async function getPostComments(postId, { page, resultsPerPage } = {}) {
   }
 
   const comments = await prisma.comment.findMany(queryOptions);
-  const results = await attachLikesToComments(comments);
+  await Promise.all(
+    comments.map(async (comment) => attachLikesCountToComment(comment)),
+  );
 
-  return { results, count: count === undefined ? results.length : count };
+  return {
+    results: comments,
+    count: count === undefined ? comments.length : count,
+  };
+}
+
+async function getPostLikes(postId, { page, resultsPerPage } = {}) {
+  const where = { targetId: postId, targetType: "POST" };
+  const queryOptions = { where, ...likeOptions };
+
+  let count = undefined;
+  if (page || resultsPerPage) {
+    page = page || 1;
+    resultsPerPage = resultsPerPage || 10;
+    queryOptions.skip = (page - 1) * resultsPerPage;
+    queryOptions.take = resultsPerPage;
+    count = await prisma.like.count({ where });
+  }
+
+  const likes = await prisma.like.findMany(queryOptions);
+
+  return { results: likes, count: count === undefined ? likes.length : count };
 }
 
 async function getComment(commentId) {
-  const [comment, likedBy] = await prisma.$transaction([
-    prisma.comment.findUnique({
-      where: { id: commentId },
-      ...commentOptions,
-    }),
-    prisma.like.findMany({
-      where: { targetType: "COMMENT", targetId: commentId },
-      select: { user: { select: { id: true, username: true } } },
-    }),
-  ]);
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    ...commentOptions,
+  });
 
   if (!comment) {
     return null;
   }
 
-  return {
-    ...comment,
-    _count: { ...comment._count, likes: likedBy.length },
-    likedBy: likedBy.map((like) => like.user),
-  };
+  await attachLikesCountToComment(comment);
+  return comment;
 }
 
 async function getCommentReplies(commentId, { page, resultsPerPage } = {}) {
@@ -445,12 +434,46 @@ async function getCommentReplies(commentId, { page, resultsPerPage } = {}) {
   }
 
   const replies = await prisma.comment.findMany(queryOptions);
-  const results = await attachLikesToComments(replies);
+  await Promise.all(
+    replies.map(async (reply) => attachLikesCountToComment(reply)),
+  );
 
-  return { results, count: count === undefined ? results.length : count };
+  return {
+    results: replies,
+    count: count === undefined ? replies.length : count,
+  };
 }
 
-async function getLike(userId, targetId, targetType) {
+async function getCommentLikes(commentId, { page, resultsPerPage } = {}) {
+  const where = { targetId: commentId, targetType: "COMMENT" };
+  const queryOptions = { where, ...likeOptions };
+
+  let count = undefined;
+  if (page || resultsPerPage) {
+    page = page || 1;
+    resultsPerPage = resultsPerPage || 10;
+    queryOptions.skip = (page - 1) * resultsPerPage;
+    queryOptions.take = resultsPerPage;
+    count = await prisma.like.count({ where });
+  }
+
+  const likes = await prisma.like.findMany(queryOptions);
+
+  return { results: likes, count: count === undefined ? likes.length : count };
+}
+
+async function getLike(likeId) {
+  const like = await prisma.like.findUnique({
+    where: {
+      id: likeId,
+    },
+    ...likeOptions,
+  });
+
+  return like;
+}
+
+async function getLikeByUserAndTarget(userId, targetId, targetType) {
   const like = await prisma.like.findUnique({
     where: {
       userId_targetId_targetType: {
@@ -459,6 +482,7 @@ async function getLike(userId, targetId, targetType) {
         targetType,
       },
     },
+    ...likeOptions,
   });
 
   return like;
@@ -501,14 +525,14 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
     return prev;
   }, []);
 
-  //get likes for posts and comments/replies
-  const [postsWithLikes, commentsWithLikes] = await Promise.all([
-    attachLikesToPosts(posts),
-    attachLikesToComments(comments),
+  //get likes count for posts and comments/replies
+  await Promise.all([
+    ...posts.map(async (post) => attachLikesCountToPost(post)),
+    ...comments.map(async (comment) => attachLikesCountToComment(comment)),
   ]);
 
   //create object for fast lookup of post's comment/reply
-  const commentsByPost = commentsWithLikes.reduce((prev, comment) => {
+  const commentsByPost = comments.reduce((prev, comment) => {
     const { postId } = comment;
     prev[postId] = prev[postId] ?? {};
     if (comment.parentId) {
@@ -520,21 +544,17 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
   }, {});
 
   //reconstruct posts with new comments/replies
-  const results = postsWithLikes.map((post) => {
-    const comment = commentsByPost[post.id]?.comment;
-    if (comment) {
-      delete comment.replies;
-      comment.reply = commentsByPost[post.id].reply ?? null;
+  posts.forEach((post) => {
+    const topComment = commentsByPost[post.id]?.comment;
+    if (topComment) {
+      delete topComment.replies;
+      topComment.reply = commentsByPost[post.id].reply ?? null;
     }
     delete post.comments;
-
-    return {
-      ...post,
-      comment: comment ?? null,
-    };
+    post.topComment = topComment ?? null;
   });
 
-  return { results, count: count === undefined ? results.length : count };
+  return { results: posts, count: count === undefined ? posts.length : count };
 }
 
 async function getAboutOverviewByUserId(userId) {
@@ -708,9 +728,12 @@ async function getUsersFeed(userId, { page, resultsPerPage } = {}) {
   }
 
   const posts = await prisma.post.findMany(queryOptions);
-  const results = await attachLikesToPosts(posts);
+  await Promise.all(posts.map(async (post) => attachLikesCountToPost(post)));
 
-  return { results, count: count === undefined ? results.length : count };
+  return {
+    results: posts,
+    count: count === undefined ? posts.length : count,
+  };
 }
 
 //CREATE QUERIES
@@ -811,8 +834,9 @@ async function createRegularPost(authorId, wallId, content) {
       wallId: true,
     },
   });
+  post._count = { comments: 0, likes: 0 };
 
-  return { ...post, _count: { comments: 0, likes: 0 }, likedBy: [] };
+  return post;
 }
 
 async function createProfilePicUpdatePost(wallId, mediaUrl) {
@@ -832,8 +856,9 @@ async function createProfilePicUpdatePost(wallId, mediaUrl) {
       wallId: true,
     },
   });
+  post._count = { comments: 0, likes: 0 };
 
-  return { ...post, _count: { comments: 0, likes: 0 }, likedBy: [] };
+  return post;
 }
 
 async function createComment(authorId, postId, content, parentId) {
@@ -848,8 +873,9 @@ async function createComment(authorId, postId, content, parentId) {
     },
     ...commentOptions,
   });
+  comment._count = { likes: 0, replies: 0 };
 
-  return { ...comment, _count: { likes: 0, replies: 0 }, likedBy: [] };
+  return comment;
 }
 
 async function createLike(userId, targetId, targetType) {
@@ -859,6 +885,7 @@ async function createLike(userId, targetId, targetType) {
       targetId,
       targetType,
     },
+    ...likeOptions,
   });
 
   return like;
@@ -993,33 +1020,26 @@ async function updatePost(postId, { content }) {
   const post = await prisma.post.update({
     where: { id: postId },
     data: { content },
+    ...postOptions,
   });
+  await attachLikesCountToPost(post);
 
   return post;
 }
 
 async function updateComment(commentId, { content }) {
-  const [comment, likedBy] = await prisma.$transaction([
-    prisma.comment.update({
-      where: { id: commentId },
-      data: { content },
-      ...commentOptions,
-    }),
-    prisma.like.findMany({
-      where: { targetType: "COMMENT", targetId: commentId },
-      select: { user: { select: { id: true, username: true } } },
-    }),
-  ]);
+  const comment = await prisma.comment.update({
+    where: { id: commentId },
+    data: { content },
+    ...commentOptions,
+  });
 
   if (!comment) {
     return null;
   }
+  await attachLikesCountToComment(comment);
 
-  return {
-    ...comment,
-    _count: { ...comment._count, likes: likedBy.length },
-    likedBy: likedBy.map((like) => like.user),
-  };
+  return comment;
 }
 
 async function updateWork(
@@ -1139,7 +1159,9 @@ async function deleteFriendship(id) {
 async function deletePost(postId) {
   const post = await prisma.post.delete({
     where: { id: postId },
+    ...postOptions,
   });
+  await attachLikesCountToPost(post);
 
   return post;
 }
@@ -1147,19 +1169,19 @@ async function deletePost(postId) {
 async function deleteLike(likeId) {
   const like = await prisma.like.delete({
     where: { id: likeId },
+    ...likeOptions,
   });
 
   return like;
 }
 
 async function softDeleteComment(commentId) {
-  const rawComment = await prisma.comment.update({
+  const comment = await prisma.comment.update({
     where: { id: commentId },
     data: { isDeleted: true },
     ...commentOptions,
   });
-
-  const [comment] = await attachLikesToComments([rawComment]);
+  await attachLikesCountToComment(comment);
 
   return comment;
 }
@@ -1214,9 +1236,12 @@ module.exports = {
   getUsersOutgoingFriendRequests,
   getPost,
   getPostComments,
+  getPostLikes,
   getComment,
   getCommentReplies,
+  getCommentLikes,
   getLike,
+  getLikeByUserAndTarget,
   getWall,
   getAboutOverviewByUserId,
   getWorkAndEducationByUserId,

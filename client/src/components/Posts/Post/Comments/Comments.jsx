@@ -14,7 +14,7 @@ function Comments({ setCommentListRef, setCommentFormRef }) {
     isLoading,
     error,
     fetchNext,
-  } = useDataFetchPaginated(`/posts/${post.id}/comments`, 10);
+  } = useDataFetchPaginated(`/posts/${post.id}/comments`);
   const { ref: visibleRef, isVisible } = useIntersection("100px");
   const fetchNextRef = useRef(fetchNext);
 

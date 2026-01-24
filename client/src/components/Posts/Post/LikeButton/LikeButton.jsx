@@ -1,35 +1,43 @@
+import { useState } from "react";
 import useApiPrivate from "../../../../hooks/useApiPrivate";
 // import styles from "./LikeButton.module.css";
 
-function LikeButton({
-  targetId,
-  targetType,
-  isLiked,
-  onLike = () => {},
-  onUnlike = () => {},
-}) {
+function LikeButton({ like, likePath, onSuccess }) {
+  const [isLoading, setIsLoading] = useState(false);
   const api = useApiPrivate();
 
   const handleLike = () => {
-    api.post("/likes", { targetId, targetType }).then(() => {
-      onLike();
-    });
+    setIsLoading(true);
+
+    api
+      .post(likePath)
+      .then((resp) => {
+        onSuccess?.(resp.data.like);
+      })
+      .finally(() => setIsLoading(false));
   };
 
   const handleUnlike = () => {
+    setIsLoading(true);
+
     api
-      .delete(`/likes?targetId=${targetId}&targetType=${targetType}`)
+      .delete(`/likes/${like.id}`)
       .then(() => {
-        onUnlike();
-      });
+        onSuccess?.(null);
+      })
+      .finally(() => setIsLoading(false));
   };
 
   return (
     <>
-      {isLiked ? (
-        <button onClick={handleUnlike}>Unlike</button>
+      {like ? (
+        <button onClick={handleUnlike} disabled={isLoading}>
+          Unlike
+        </button>
       ) : (
-        <button onClick={handleLike}>Like</button>
+        <button onClick={handleLike} disabled={isLoading}>
+          Like
+        </button>
       )}
     </>
   );

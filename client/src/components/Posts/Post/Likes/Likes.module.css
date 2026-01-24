@@ -1,0 +1,22 @@
+.hoverContainer {
+  position: relative;
+  display: inline-block;
+}
+.samplePopup {
+  position: absolute;
+  width: max-content;
+  font-size: 10px;
+  text-align: left;
+  background-color: white;
+  opacity: 0.9;
+  color: black;
+  padding: 6px;
+  border-radius: 5px;
+  z-index: 1;
+  bottom: 100%;
+}
+
+.modalList,
+.sampleList {
+  list-style: none;
+}

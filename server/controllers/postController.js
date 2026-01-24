@@ -1,11 +1,11 @@
 const { validationResult } = require("express-validator");
 const db = require("../db/queries");
 const { getPost, postEditAuth, getPaginationQuery } = require("../middleware");
-const { formatComment } = require("../utilities/helperFunctions");
 const {
   validatePostCreate,
   validatePostEdit,
 } = require("../utilities/validators");
+const { formatComment } = require("../utilities/helperFunctions");
 
 const postPost = [
   validatePostCreate,
@@ -38,6 +38,8 @@ const postPost = [
     }
 
     const post = await db.createRegularPost(authorId, wallId, content);
+    post.myLike = null;
+
     return res.json({ message: "post created", post });
   },
 ];
@@ -63,11 +65,12 @@ const postPut = [
         .json({ message: "validation failed", errors: errors.array() });
     }
 
-    const postId = req.post.id;
     const { content } = req.body;
 
-    await db.updatePost(postId, { content });
-    return res.json({ message: "post edited" });
+    const post = await db.updatePost(req.post.id, { content });
+    post.myLike = req.post.myLike;
+
+    return res.json({ message: "post edited", post });
   },
 ];
 
@@ -76,10 +79,10 @@ const postDelete = [
   postEditAuth,
   async (req, res) => {
     //Delete a post
-    const postId = req.post.id;
+    const post = await db.deletePost(req.post.id);
+    post.myLike = req.post.myLike;
 
-    await db.deletePost(postId);
-    return res.json({ message: "post deleted" });
+    return res.json({ message: "post deleted", post });
   },
 ];
 
@@ -91,12 +94,51 @@ const postCommentsGet = [
     const { page, resultsPerPage } = req.pagination;
 
     const comments = await db.getPostComments(postId, { page, resultsPerPage });
-    comments.results.forEach((comment) => {
-      formatComment(comment, req.user.id);
-    });
+    await Promise.all(
+      comments.results.map(async (comment) =>
+        formatComment(comment, req.user.id),
+      ),
+    );
 
     return res.json(comments);
   },
 ];
 
-module.exports = { postPost, postGet, postPut, postDelete, postCommentsGet };
+const postLikePost = [
+  getPost,
+  async (req, res) => {
+    const { post } = req;
+
+    if (post.myLike) {
+      return res
+        .status(400)
+        .json({ message: "you have already liked this post" });
+    }
+
+    const like = await db.createLike(req.user.id, post.id, "POST");
+
+    return res.json({ message: "post like created", like });
+  },
+];
+
+const postLikesGet = [
+  getPost,
+  getPaginationQuery,
+  async (req, res) => {
+    const { page, resultsPerPage } = req.pagination;
+
+    const likes = await db.getPostLikes(req.post.id, { page, resultsPerPage });
+
+    return res.json(likes);
+  },
+];
+
+module.exports = {
+  postPost,
+  postGet,
+  postPut,
+  postDelete,
+  postCommentsGet,
+  postLikePost,
+  postLikesGet,
+};

@@ -3,7 +3,7 @@ const cloudinary = require("../utilities/cloudinary");
 const { extractPublicId } = require("cloudinary-build-url");
 const bcrypt = require("bcryptjs");
 const db = require("../db/queries");
-const { configureLikedByObject } = require("../utilities/helperFunctions");
+const { attachMyLikesToPost } = require("../utilities/helperFunctions");
 const {
   validateWork,
   validateSchool,
@@ -22,6 +22,7 @@ const {
 } = require("../middleware");
 
 const allUsersGet = async (req, res) => {
+  //TODO: add pagination
   const users = await db.getAllUsers();
 
   return res.json({ users });
@@ -560,17 +561,11 @@ const wallGet = [
   async (req, res) => {
     const wallUser = req.paramsUser;
     const { page, resultsPerPage } = req.pagination;
+
     const wall = await db.getWall(wallUser.id, { page, resultsPerPage });
-    wall.results.forEach((post) => {
-      const userId = req.user.id;
-      configureLikedByObject(post, userId);
-      if (post.comment) {
-        configureLikedByObject(post.comment, userId);
-        if (post.comment.reply) {
-          configureLikedByObject(post.comment.reply, userId);
-        }
-      }
-    });
+    await Promise.all(
+      wall.results.map(async (post) => attachMyLikesToPost(post, req.user.id)),
+    );
 
     return res.json(wall);
   },

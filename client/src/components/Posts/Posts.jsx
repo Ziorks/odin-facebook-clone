@@ -3,8 +3,8 @@ import useIntersection from "../../hooks/useIntersection";
 import Post from "./Post";
 // import styles from "./Posts.module.css";
 
-function Posts({ posts, fetchNext }) {
-  const { ref, isVisible } = useIntersection("100px");
+function Posts({ posts, removePost, disableCommentForms = false, fetchNext }) {
+  const { ref, isVisible } = useIntersection("50px");
   const fetchNextRef = useRef(fetchNext);
 
   useEffect(() => {
@@ -20,8 +20,12 @@ function Posts({ posts, fetchNext }) {
   return (
     <ol>
       {posts.map((post, index) => (
-        <li ref={index + 1 === posts.length ? ref : undefined} key={post.id}>
-          <Post post={post} />
+        <li key={post.id} ref={index + 1 === posts.length ? ref : undefined}>
+          <Post
+            post={post}
+            removePost={removePost}
+            disableCommentForm={disableCommentForms}
+          />
         </li>
       ))}
     </ol>

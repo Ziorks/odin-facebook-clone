@@ -14,7 +14,7 @@ function UsersFriends() {
     isLoading,
     error,
     fetchNext,
-  } = useDataFetchPaginated(`/users/${user.id}/friends`, 10);
+  } = useDataFetchPaginated(`/users/${user.id}/friends`);
   const fetchNextRef = useRef(fetchNext);
 
   useEffect(() => {

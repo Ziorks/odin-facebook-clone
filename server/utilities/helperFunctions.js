@@ -20,7 +20,7 @@ async function generateRefreshToken(userId, { rememberDevice = false } = {}) {
     hashedToken,
     userId,
     rememberDevice,
-    new Date(Date.now() + REFRESH_TOKEN_EXPIRY_TIME)
+    new Date(Date.now() + REFRESH_TOKEN_EXPIRY_TIME),
   );
 
   return combinedToken;
@@ -53,30 +53,24 @@ const getRefreshTokenCookieOptions = ({ rememberDevice = false } = {}) => {
   };
 };
 
-function configureLikedByObject(object, currentUserId) {
-  if (!object.likedBy || !Array.isArray(object.likedBy)) {
-    console.error(
-      "ERROR: Object passed to configureLikedByObject needs to have likedBy array property"
-    );
-    return;
-  }
-  const likedByMe = object.likedBy.findIndex(
-    (like) => like.id === currentUserId
-  );
-  if (likedByMe !== -1) {
-    //move me to index 0
-    object.likedBy.unshift(object.likedBy.splice(likedByMe, 1)[0]);
-  }
-  object.likedBySample = object.likedBy.slice(0, 20);
-  object.likedByMe = likedByMe !== -1;
-  delete object.likedBy;
+async function formatComment(comment, userId) {
+  const myLike = await db.getLikeByUserAndTarget(userId, comment.id, "COMMENT");
+  comment.myLike = myLike || null;
+  if (comment.isDeleted) comment.content = "[deleted comment]";
 }
 
-function formatComment(comment, currentUserId) {
-  configureLikedByObject(comment, currentUserId);
-  if (comment.isDeleted) {
-    comment.content = "[deleted comment]";
-  }
+async function attachMyLikesToPost(post, userId) {
+  const [postLike] = await Promise.all([
+    db.getLikeByUserAndTarget(userId, post.id, "POST"),
+    post.topComment
+      ? formatComment(post.topComment, userId)
+      : Promise.resolve(),
+    post.topComment?.reply
+      ? formatComment(post.topComment.reply, userId)
+      : Promise.resolve(),
+  ]);
+
+  post.myLike = postLike || null;
 }
 
 module.exports = {
@@ -84,6 +78,6 @@ module.exports = {
   generateRefreshToken,
   getTokenRecord,
   getRefreshTokenCookieOptions,
-  configureLikedByObject,
   formatComment,
+  attachMyLikesToPost,
 };

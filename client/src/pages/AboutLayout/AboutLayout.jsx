@@ -13,7 +13,7 @@ function FriendsPreview() {
     isLoading,
     error,
     fetchNext,
-  } = useDataFetchPaginated(`/users/${user.id}/friends`, 8);
+  } = useDataFetchPaginated(`/users/${user.id}/friends`, { resultsPerPage: 8 });
 
   return (
     <div>

@@ -256,21 +256,6 @@ const validateCommentCreate = [
     }),
 ];
 
-const validateLike = [
-  body("targetId")
-    .exists()
-    .withMessage("'targetId'" + existsMessage)
-    .isInt()
-    .withMessage("TargetId must be an integer")
-    .toInt(),
-  body("targetType")
-    .exists()
-    .withMessage("'targetType'" + existsMessage)
-    .trim()
-    .isIn(["POST", "COMMENT"])
-    .withMessage("TargetType must be either 'POST' or 'COMMENT'"),
-];
-
 const validateWork = [
   body("company")
     .exists()
@@ -544,7 +529,6 @@ module.exports = {
   validatePostEdit,
   validateCommentCreate,
   validateCommentEdit,
-  validateLike,
   validateWork,
   validateSchool,
   validateCity,

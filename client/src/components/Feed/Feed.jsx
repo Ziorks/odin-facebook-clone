@@ -10,17 +10,23 @@ function Feed() {
   const [showPostModal, setShowPostModal] = useState(false);
   const {
     data: posts,
+    setData: setPosts,
+    count,
     isLoading,
     error,
-    count,
-    setData: setPosts,
     fetchNext,
-  } = useDataFetchPaginated("/feed", 10);
+  } = useDataFetchPaginated("/feed", {
+    dataLengthLimit: 30,
+  });
 
   const handleClose = () => setShowPostModal(false);
   const onSuccess = (post) => {
     setPosts((prev) => [post, ...prev]);
     handleClose();
+  };
+  const removePost = (postId) => {
+    if (!Array.isArray(posts)) return;
+    setPosts((prev) => prev.filter((post) => post.id !== postId));
   };
 
   return (
@@ -39,7 +45,12 @@ function Feed() {
       </div>
       {posts &&
         (count > 0 ? (
-          <Posts posts={posts} fetchNext={fetchNext} />
+          <Posts
+            posts={posts}
+            removePost={removePost}
+            disableCommentForms={true}
+            fetchNext={fetchNext}
+          />
         ) : (
           <p>There are no posts in your feed</p>
         ))}

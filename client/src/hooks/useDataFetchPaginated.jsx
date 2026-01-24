@@ -2,7 +2,14 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import axios from "axios";
 import useApiPrivate from "./useApiPrivate";
 
-function useDataFetchPaginated(path, resultsPerPage) {
+function useDataFetchPaginated(
+  path,
+  {
+    resultsPerPage = 10,
+    disableFetchOnMount = false,
+    dataLengthLimit = 0,
+  } = {},
+) {
   const [page, setPage] = useState(0);
   const [count, setCount] = useState(0);
   const [data, setData] = useState(null);
@@ -34,7 +41,13 @@ function useDataFetchPaginated(path, resultsPerPage) {
       })
       .then((resp) => {
         const { results, count } = resp.data;
-        setData((prev) => (prev ? [...prev, ...results] : results));
+        setData((prev) => {
+          const newData = prev ? [...prev, ...results] : results;
+          if (!dataLengthLimit) return newData;
+          return newData.length > dataLengthLimit
+            ? newData.slice(newData.length - dataLengthLimit)
+            : newData;
+        });
         setCount(count);
         setPage((prev) => prev + 1);
       })
@@ -46,20 +59,28 @@ function useDataFetchPaginated(path, resultsPerPage) {
         setIsLoading(false);
         abortRef.current = null;
       });
-  }, [api, page, path, resultsPerPage]);
+  }, [api, page, path, resultsPerPage, dataLengthLimit]);
 
   useEffect(() => {
-    if (data) return;
+    if (data || disableFetchOnMount) return;
 
     fetchData();
 
     return doAbort;
-  }, [data, fetchData]);
+  }, [data, disableFetchOnMount, fetchData]);
 
   const fetchNext = () => {
     if ((data && !hasMore) || isLoading) return;
 
     fetchData();
+  };
+
+  const reset = () => {
+    setPage(0);
+    setCount(0);
+    setData(null);
+    setIsLoading(false);
+    setError(null);
   };
 
   return {
@@ -71,6 +92,7 @@ function useDataFetchPaginated(path, resultsPerPage) {
     hasMore,
     setData,
     fetchNext,
+    reset,
   };
 }
 

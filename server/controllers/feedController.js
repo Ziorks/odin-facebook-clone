@@ -1,24 +1,17 @@
 const db = require("../db/queries");
 const { getPaginationQuery } = require("../middleware");
-const { configureLikedByObject } = require("../utilities/helperFunctions");
+const { attachMyLikesToPost } = require("../utilities/helperFunctions");
 
 const feedGet = [
   getPaginationQuery,
   async (req, res) => {
     const userId = req.user.id;
     const { page, resultsPerPage } = req.pagination;
-    const feed = await db.getUsersFeed(userId, { page, resultsPerPage });
 
-    feed.results.forEach((post) => {
-      const userId = req.user.id;
-      configureLikedByObject(post, userId);
-      if (post.comment) {
-        configureLikedByObject(post.comment, userId);
-        if (post.comment.reply) {
-          configureLikedByObject(post.comment.reply, userId);
-        }
-      }
-    });
+    const feed = await db.getUsersFeed(userId, { page, resultsPerPage });
+    await Promise.all(
+      feed.results.map(async (post) => attachMyLikesToPost(post, req.user.id)),
+    );
 
     return res.json(feed);
   },

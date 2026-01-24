@@ -1,12 +1,12 @@
 import { useCallback, useContext, useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { AiOutlineLike } from "react-icons/ai";
 import AuthContext from "../../../../contexts/AuthContext";
 import PostContext from "../../../../contexts/PostContext";
 import useApiPrivate from "../../../../hooks/useApiPrivate";
 import useDataFetchPaginated from "../../../../hooks/useDataFetchPaginated";
 import { formatDistanceToNowShort } from "../../../../utils/helperFunctions";
 import Modal from "../../../Modal";
+import Likes from "../Likes";
 import LikeButton from "../LikeButton";
 import CommentForm from "../CommentForm";
 import styles from "./Comment.module.css";
@@ -18,7 +18,7 @@ function ReplyChain({ commentId }) {
     isLoading,
     error,
     fetchNext,
-  } = useDataFetchPaginated(`/comments/${commentId}/replies`, 10);
+  } = useDataFetchPaginated(`/comments/${commentId}/replies`);
   return (
     <>
       {replies && (
@@ -42,7 +42,6 @@ function ReplyChain({ commentId }) {
 }
 
 function EditForm({ id, content, handleCancel, onSuccess }) {
-  const { onCommentChange } = useContext(PostContext);
   const [formContent, setFormContent] = useState(content);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -56,9 +55,7 @@ function EditForm({ id, content, handleCancel, onSuccess }) {
     api
       .put(`/comments/${id}`, { content: formContent })
       .then((resp) => {
-        const comment = resp.data.comment;
-        onSuccess?.(comment);
-        onCommentChange(comment);
+        onSuccess?.(resp.data.comment);
       })
       .catch((err) => {
         setError(err);
@@ -89,7 +86,6 @@ function EditForm({ id, content, handleCancel, onSuccess }) {
 }
 
 function DeleteModal({ id, handleClose, onSuccess }) {
-  const { onCommentChange } = useContext(PostContext);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const api = useApiPrivate();
@@ -101,9 +97,7 @@ function DeleteModal({ id, handleClose, onSuccess }) {
     api
       .put(`/comments/${id}/delete`)
       .then((resp) => {
-        const comment = resp.data.comment;
-        onSuccess?.(comment);
-        onCommentChange(comment);
+        onSuccess?.(resp.data.comment);
       })
       .catch((err) => {
         setError(err);
@@ -158,7 +152,6 @@ function Comment({
     setComment(commentObj);
   }, [commentObj]);
 
-  const likeCount = comment._count?.likes;
   const replyCount = comment._count?.replies;
 
   const focusReplyForm = () => {
@@ -166,32 +159,29 @@ function Comment({
     replyFormRef.current.focus();
   };
 
-  const onLike = () => {
-    setComment((prev) => ({
-      ...prev,
-      _count: {
-        ...prev._count,
-        likes: prev._count.likes + 1,
-      },
-      likedBySample: [
-        { id: auth.user.id, username: auth.user.username },
-        ...prev.likedBySample,
-      ],
-      likedByMe: true,
-    }));
+  const onDeleteSuccess = (comment) => {
+    setComment(comment);
     onCommentChange(comment);
+    setShowDeleteModal(false);
   };
-  const onUnLike = () => {
-    setComment((prev) => ({
-      ...prev,
-      _count: {
-        ...prev._count,
-        likes: prev._count.likes - 1,
-      },
-      likedBySample: prev.likedBySample.slice(1),
-      likedByMe: false,
-    }));
+
+  const onEditSuccess = (comment) => {
+    setComment(comment);
     onCommentChange(comment);
+    setShowEditForm(false);
+  };
+
+  const onLikeSuccess = (like) => {
+    const newComment = {
+      ...comment,
+      _count: {
+        ...comment._count,
+        likes: comment._count.likes + (like ? 1 : -1),
+      },
+      myLike: like,
+    };
+    setComment(newComment);
+    onCommentChange(newComment);
   };
 
   return (
@@ -200,10 +190,7 @@ function Comment({
         <DeleteModal
           id={comment.id}
           handleClose={() => setShowDeleteModal(false)}
-          onSuccess={(comment) => {
-            setComment(comment);
-            setShowDeleteModal(false);
-          }}
+          onSuccess={onDeleteSuccess}
         />
       )}
       <div className={styles.container}>
@@ -218,10 +205,7 @@ function Comment({
             id={comment.id}
             content={comment.content}
             handleCancel={() => setShowEditForm(false)}
-            onSuccess={(comment) => {
-              setComment(comment);
-              setShowEditForm(false);
-            }}
+            onSuccess={onEditSuccess}
           />
         ) : (
           <>
@@ -236,11 +220,9 @@ function Comment({
                 <>
                   {!comment.isDeleted && (
                     <LikeButton
-                      targetId={comment.id}
-                      targetType={"COMMENT"}
-                      isLiked={comment.likedByMe}
-                      onLike={onLike}
-                      onUnlike={onUnLike}
+                      like={comment.myLike}
+                      likePath={`comments/${comment.id}/like`}
+                      onSuccess={onLikeSuccess}
                     />
                   )}
                   <button
@@ -264,12 +246,11 @@ function Comment({
                       </button>
                     </>
                   )}
-                  {likeCount > 0 && (
-                    <span>
-                      {likeCount}
-                      <AiOutlineLike />
-                    </span>
-                  )}
+                  <Likes
+                    nLikes={comment._count.likes}
+                    myLike={comment.myLike}
+                    path={`/comments/${comment.id}/likes`}
+                  />
                 </>
               )}
             </div>

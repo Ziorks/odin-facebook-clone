@@ -1,6 +1,5 @@
 import { useCallback, useContext, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { AiOutlineLike } from "react-icons/ai";
 import { format } from "date-fns";
 import AuthContext from "../../../contexts/AuthContext";
 import PostContext from "../../../contexts/PostContext";
@@ -11,9 +10,10 @@ import Comment from "./Comment";
 import Comments from "./Comments";
 import CommentForm from "./CommentForm";
 import styles from "./Post.module.css";
+import Likes from "./Likes/Likes";
 
 function EditForm({ handleClose }) {
-  const { post, onPostChange } = useContext(PostContext);
+  const { post, onPostEdit } = useContext(PostContext);
   const [formContent, setFormContent] = useState(post.content);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -26,9 +26,9 @@ function EditForm({ handleClose }) {
 
     api
       .put(`/posts/${post.id}`, { content: formContent })
-      .then(() => {
+      .then((resp) => {
         handleClose();
-        onPostChange();
+        onPostEdit(resp.data.post);
       })
       .catch((err) => {
         setError(err);
@@ -59,7 +59,7 @@ function EditForm({ handleClose }) {
 }
 
 function DeleteModal() {
-  const { post, setPost, toggleDeleteModal } = useContext(PostContext);
+  const { post, onPostDelete, toggleDeleteModal } = useContext(PostContext);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const api = useApiPrivate();
@@ -70,7 +70,7 @@ function DeleteModal() {
 
     api
       .delete(`/posts/${post.id}`)
-      .then(() => setPost(null))
+      .then(onPostDelete)
       .catch((err) => {
         setError(err);
       })
@@ -98,11 +98,15 @@ function DeleteModal() {
 
 function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
   const { auth } = useContext(AuthContext);
-  const { post, onPostChange, toggleDeleteModal } = useContext(PostContext);
+  const { post, onPostLikeChange, toggleDeleteModal } = useContext(PostContext);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showLikesModal, setShowLikesModal] = useState(false);
 
   return (
     <>
+      {showLikesModal && (
+        <LikesModal handleClose={() => setShowLikesModal(false)} />
+      )}
       <div>
         <Link to={`/users/${post.author.id}`}>
           <img src={post.author.profile.avatar} className={styles.avatar} />
@@ -125,12 +129,11 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
         <>
           <p>{post.content}</p>
           <div>
-            {post._count.likes > 0 && (
-              <span>
-                {post._count.likes}
-                <AiOutlineLike />
-              </span>
-            )}
+            <Likes
+              nLikes={post._count.likes}
+              myLike={post.myLike}
+              path={`/posts/${post.id}/likes`}
+            />
             {post._count.comments > 0 && (
               <button onClick={handleNCommentsBtnClick}>
                 {`${post._count.comments} comment${post._count.comments > 1 ? "s" : ""}`}
@@ -139,11 +142,9 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
           </div>
           <div>
             <LikeButton
-              targetId={post.id}
-              isLiked={post.likedByMe}
-              targetType={"POST"}
-              onLike={onPostChange}
-              onUnlike={onPostChange}
+              like={post.myLike}
+              likePath={`/posts/${post.id}/like`}
+              onSuccess={onPostLikeChange}
             />
             <button onClick={handleCommentBtnClick}>Comment</button>
             {auth.user.id === post.author.id && (
@@ -188,41 +189,43 @@ function PostModal() {
   );
 }
 
-function Post({ post: postObj }) {
+function Post({ post: postObj, removePost, disableCommentForm }) {
   const [post, setPost] = useState(postObj);
+  const [topComment, setTopComment] = useState(postObj.topComment);
   const [showPostDetails, setShowPostDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const api = useApiPrivate();
 
   if (!post) return;
 
-  //TODO: possibly disable buttons from doing anything while loading post/comment (functionally, not visually)
-  const onPostChange = () => {
-    api.get(`/posts/${post.id}`).then((resp) => {
-      setPost((prev) => ({ ...resp.data.post, comment: prev.comment }));
-    });
+  const onPostLikeChange = (like) =>
+    setPost((prev) => ({
+      ...prev,
+      _count: {
+        ...prev._count,
+        likes: prev._count.likes + (like ? 1 : -1),
+      },
+      myLike: like,
+    }));
+  const onPostComment = () => {
+    setPost((prev) => ({
+      ...prev,
+      _count: { ...prev._count, comments: prev._count.comments + 1 },
+    }));
+  };
+  const onPostEdit = (post) => {
+    setPost(post);
+  };
+  const onPostDelete = () => {
+    removePost?.(post.id);
   };
 
   const onCommentChange = (comment) => {
-    if (
-      comment.id === post.comment?.id ||
-      comment.id === post.comment?.reply?.id
-    ) {
-      api.get(`/comments/${comment.id}`).then((resp) => {
-        const fetchedComment = resp.data.comment;
-        delete fetchedComment.replies;
-        if (comment.id === post.comment?.id) {
-          setPost((prev) => ({
-            ...prev,
-            comment: { ...fetchedComment, reply: prev.comment.reply },
-          }));
-        } else {
-          setPost((prev) => ({
-            ...prev,
-            comment: { ...prev.comment, reply: fetchedComment },
-          }));
-        }
-      });
+    if (comment.id === topComment?.id) {
+      setTopComment((prev) => ({ ...comment, reply: prev.reply }));
+    }
+
+    if (comment.id === topComment?.reply?.id) {
+      setTopComment((prev) => ({ ...prev, reply: comment }));
     }
   };
 
@@ -238,7 +241,10 @@ function Post({ post: postObj }) {
       value={{
         post,
         setPost,
-        onPostChange,
+        onPostLikeChange,
+        onPostComment,
+        onPostEdit,
+        onPostDelete,
         onCommentChange,
         toggleDetailsModal,
         toggleDeleteModal,
@@ -260,19 +266,19 @@ function Post({ post: postObj }) {
           handleNCommentsBtnClick={toggleDetailsModal}
           handleCommentBtnClick={toggleDetailsModal}
         />
-        {post.comment && (
+        {topComment && (
           <>
             {post._count.comments > 1 && (
               <button onClick={toggleDetailsModal}>View more comments</button>
             )}
-            <Comment comment={post.comment} disableReplies={true}>
-              {post.comment.reply ? (
-                <Comment comment={post.comment.reply} disableReplies={true} />
+            <Comment comment={topComment} disableReplies={true}>
+              {topComment.reply ? (
+                <Comment comment={topComment.reply} disableReplies={true} />
               ) : (
-                post.comment._count.replies > 1 && (
+                topComment._count.replies > 1 && (
                   <div>
                     <button onClick={toggleDetailsModal}>
-                      {`View ${post.comment._count.replies} replies`}
+                      {`View ${topComment._count.replies} replies`}
                     </button>
                   </div>
                 )
@@ -280,7 +286,7 @@ function Post({ post: postObj }) {
             </Comment>
           </>
         )}
-        <CommentForm />
+        {!disableCommentForm && <CommentForm />}
       </div>
     </PostContext.Provider>
   );

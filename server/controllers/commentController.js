@@ -5,11 +5,11 @@ const {
   commentEditAuth,
   getPaginationQuery,
 } = require("../middleware");
-const { formatComment } = require("../utilities/helperFunctions");
 const {
   validateCommentCreate,
   validateCommentEdit,
 } = require("../utilities/validators");
+const { formatComment } = require("../utilities/helperFunctions");
 
 const commentPost = [
   validateCommentCreate,
@@ -26,7 +26,7 @@ const commentPost = [
     const { postId, content, parentId } = req.body;
 
     const comment = await db.createComment(authorId, postId, content, parentId);
-    formatComment(comment, req.user.id);
+    await formatComment(comment, req.user.id);
 
     return res.json({ message: "comment created", comment });
   },
@@ -54,8 +54,7 @@ const commentEditPut = [
 
     const { content } = req.body;
     const comment = await db.updateComment(req.comment.id, { content });
-
-    formatComment(comment, req.user.id);
+    await formatComment(comment, req.user.id);
 
     return res.json({ message: "comment edited", comment });
   },
@@ -67,14 +66,16 @@ const commentRepliesGet = [
   async (req, res) => {
     const { comment } = req;
     const { page, resultsPerPage } = req.pagination;
+
     const replies = await db.getCommentReplies(comment.id, {
       page,
       resultsPerPage,
     });
-
-    replies.results.forEach((reply) => {
-      formatComment(reply, req.user.id);
-    });
+    await Promise.all(
+      replies.results.map(async (reply) => {
+        formatComment(reply, req.user.id);
+      }),
+    );
 
     return res.json(replies);
   },
@@ -86,9 +87,46 @@ const commentDeletePut = [
   async (req, res) => {
     //Soft delete a comment
     const comment = await db.softDeleteComment(req.comment.id);
-    formatComment(comment, req.user.id);
+    await formatComment(comment, req.user.id);
 
     return res.json({ message: "comment deleted", comment });
+  },
+];
+
+const commentLikePost = [
+  getComment,
+  async (req, res) => {
+    const { comment } = req;
+
+    if (comment.myLike) {
+      return res
+        .status(400)
+        .json({ message: "you have already liked this comment" });
+    }
+    if (comment.isDeleted) {
+      return res
+        .status(400)
+        .json({ message: "you can not like a deleted comment" });
+    }
+
+    const like = await db.createLike(req.user.id, comment.id, "COMMENT");
+
+    return res.json({ message: "comment like created", like });
+  },
+];
+
+const commentLikesGet = [
+  getComment,
+  getPaginationQuery,
+  async (req, res) => {
+    const { page, resultsPerPage } = req.pagination;
+
+    const likes = await db.getCommentLikes(req.comment.id, {
+      page,
+      resultsPerPage,
+    });
+
+    return res.json(likes);
   },
 ];
 
@@ -98,4 +136,6 @@ module.exports = {
   commentEditPut,
   commentRepliesGet,
   commentDeletePut,
+  commentLikePost,
+  commentLikesGet,
 };

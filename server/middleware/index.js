@@ -1,8 +1,8 @@
 const passport = require("passport");
 const db = require("../db/queries");
 const {
-  configureLikedByObject,
   formatComment,
+  attachMyLikesToPost,
 } = require("../utilities/helperFunctions");
 
 const notFoundHandler = (req, res) => {
@@ -27,15 +27,9 @@ const getPost = async (req, res, next) => {
     return res.status(404).json({ message: "post not found" });
   }
 
-  configureLikedByObject(post, req.user.id);
-  if (post.comment) {
-    formatComment(post.comment, req.user.id);
-    if (post.comment.reply) {
-      formatComment(post.comment.reply, req.user.id);
-    }
-  }
-
+  await attachMyLikesToPost(post, req.user.id);
   req.post = post;
+
   return next();
 };
 
@@ -60,8 +54,9 @@ const getComment = async (req, res, next) => {
     return res.status(404).json({ message: "comment not found" });
   }
 
-  formatComment(comment);
+  await formatComment(comment, req.user.id);
   req.comment = comment;
+
   return next();
 };
 

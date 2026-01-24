@@ -12,17 +12,21 @@ function Wall() {
   const [showPostModal, setShowPostModal] = useState(false);
   const {
     data: posts,
+    setData: setPosts,
     count,
     isLoading,
     error,
-    setData: setPosts,
     fetchNext,
-  } = useDataFetchPaginated(`/users/${user.id}/wall`, 10);
+  } = useDataFetchPaginated(`/users/${user.id}/wall`, { dataLengthLimit: 30 });
 
   const handleClose = () => setShowPostModal(false);
   const onSuccess = (post) => {
     setPosts((prev) => [post, ...prev]);
     handleClose();
+  };
+  const removePost = (postId) => {
+    if (!Array.isArray(posts)) return;
+    setPosts((prev) => prev.filter((post) => post.id !== postId));
   };
 
   const isCurrentUser = auth.user.id === user.id;
@@ -45,7 +49,7 @@ function Wall() {
       </div>
       {posts &&
         (count > 0 ? (
-          <Posts posts={posts} fetchNext={fetchNext} />
+          <Posts posts={posts} removePost={removePost} fetchNext={fetchNext} />
         ) : (
           <p>
             There are no posts on{" "}
