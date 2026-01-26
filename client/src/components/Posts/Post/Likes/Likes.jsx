@@ -44,29 +44,24 @@ function LikesModal({ handleClose, myLike, useLikes }) {
   return (
     <Modal handleClose={handleClose}>
       <h2>Likes</h2>
-      {likes &&
-        (likes.length > 0 || myLike ? (
-          <>
-            <ul className={styles.modalList}>
-              {myLike && (
-                <li>
-                  <UserThumbnail user={myLike.user} />
-                </li>
-              )}
-              {likes.length > 0 &&
-                likes.map((like, index) => (
-                  <li
-                    key={like.id}
-                    ref={index + 1 === likes.length ? ref : undefined}
-                  >
-                    <UserThumbnail user={like.user} />
-                  </li>
-                ))}
-            </ul>
-          </>
-        ) : (
-          <p>This post has no likes</p>
-        ))}
+      {likes && (
+        <ul className={styles.modalList}>
+          {myLike && (
+            <li>
+              <UserThumbnail user={myLike.user} />
+            </li>
+          )}
+          {likes.length > 0 &&
+            likes.map((like, index) => (
+              <li
+                key={like.id}
+                ref={index + 1 === likes.length ? ref : undefined}
+              >
+                <UserThumbnail user={like.user} />
+              </li>
+            ))}
+        </ul>
+      )}
       {isLoading && <p>Loading...</p>}
       {error && (
         <p>
@@ -105,21 +100,18 @@ function LikesSample({ nLikes, myLike, useLikesSample }) {
 
   return (
     <div className={styles.samplePopup}>
-      {likesSample &&
-        (likesSample.length > 0 || myLike ? (
-          <>
-            <ul className={styles.sampleList}>
-              {myLike && <li>{myLike.user.username}</li>}
-              {likesSample.length > 0 &&
-                likesSample.map((like) => (
-                  <li key={like.id}>{like.user.username}</li>
-                ))}
-            </ul>
-            {nMoreLikes > 0 && <p>and {nMoreLikes} more... </p>}
-          </>
-        ) : (
-          <p>No likes</p>
-        ))}
+      {likesSample && (
+        <>
+          <ul className={styles.sampleList}>
+            {myLike && <li>{myLike.user.username}</li>}
+            {likesSample.length > 0 &&
+              likesSample.map((like) => (
+                <li key={like.id}>{like.user.username}</li>
+              ))}
+          </ul>
+          {nMoreLikes > 0 && <p>and {nMoreLikes} more... </p>}
+        </>
+      )}
       {isLoading && <p>Loading...</p>}
       {error && <p>An error occurred.</p>}
     </div>
