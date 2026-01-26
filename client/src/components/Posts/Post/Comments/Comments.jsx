@@ -1,22 +1,21 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import PostContext from "../../../../contexts/PostContext";
-import useDataFetchPaginated from "../../../../hooks/useDataFetchPaginated";
 import useIntersection from "../../../../hooks/useIntersection";
 import Comment from "../Comment";
 import CommentForm from "../CommentForm";
 import styles from "./Comments.module.css";
 
 function Comments({ setCommentListRef, setCommentFormRef }) {
-  const { post } = useContext(PostContext);
+  const { useComments } = useContext(PostContext);
   const [isCommentPosted, setIsCommentPosted] = useState(false);
-  const {
-    data: comments,
-    isLoading,
-    error,
-    fetchNext,
-  } = useDataFetchPaginated(`/posts/${post.id}/comments`);
+  const { data: comments, isLoading, error, fetchNext } = useComments;
   const { ref: visibleRef, isVisible } = useIntersection("100px");
   const fetchNextRef = useRef(fetchNext);
+
+  useEffect(() => {
+    if (comments !== null) return;
+    fetchNextRef.current();
+  }, [comments]);
 
   useEffect(() => {
     fetchNextRef.current = fetchNext;

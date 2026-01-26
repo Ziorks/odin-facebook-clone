@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import AuthContext from "../../../contexts/AuthContext";
 import PostContext from "../../../contexts/PostContext";
 import useApiPrivate from "../../../hooks/useApiPrivate";
+import useDataFetchPaginated from "../../../hooks/useDataFetchPaginated";
 import Modal from "../../Modal";
 import LikeButton from "./LikeButton";
 import Comment from "./Comment";
@@ -194,6 +195,9 @@ function Post({ post: postObj, removePost, disableCommentForm }) {
   const [topComment, setTopComment] = useState(postObj.topComment);
   const [showPostDetails, setShowPostDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const useComments = useDataFetchPaginated(`/posts/${post.id}/comments`, {
+    disableFetchOnMount: true,
+  });
 
   if (!post) return;
 
@@ -248,6 +252,7 @@ function Post({ post: postObj, removePost, disableCommentForm }) {
         onCommentChange,
         toggleDetailsModal,
         toggleDeleteModal,
+        useComments,
       }}
     >
       {showPostDetails && <PostModal />}
