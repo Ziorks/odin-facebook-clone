@@ -24,6 +24,7 @@ import Email from "../pages/UserSettingForms/Email";
 import Avatar from "../pages/UserSettingForms/Avatar";
 import Password from "../pages/UserSettingForms/Password";
 import Oauth from "../pages/Oauth";
+import Logout from "../pages/Logout";
 
 const routes = [
   {
@@ -117,6 +118,10 @@ const routes = [
   {
     path: "/oauth",
     element: <Oauth />,
+  },
+  {
+    path: "/logout",
+    element: <Logout />,
   },
 ];
 

@@ -151,7 +151,7 @@ const googleCallbackGet = [
     try {
       const token = await db.createOauthToken(user.id);
       return res.redirect(
-        `${process.env.CLIENT_ORIGIN}/oauth?token=${token.id}`
+        `${process.env.CLIENT_ORIGIN}/oauth?token=${token.id}`,
       );
     } catch (error) {
       return next(error);
@@ -175,7 +175,7 @@ const githubCallbackGet = [
     try {
       const token = await db.createOauthToken(user.id);
       return res.redirect(
-        `${process.env.CLIENT_ORIGIN}/oauth?token=${token.id}`
+        `${process.env.CLIENT_ORIGIN}/oauth?token=${token.id}`,
       );
     } catch (error) {
       return next(error);
