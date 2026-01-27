@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const {
-  allUsersGet,
+  usersSearch,
   userGet,
   userPut,
   aboutOverviewGet,
@@ -25,7 +25,7 @@ const {
 
 const router = Router();
 
-router.get("/", allUsersGet);
+router.get("/search", usersSearch);
 router.route("/:userId").get(userGet).put(userPut);
 
 router.get("/:userId/about_overview", aboutOverviewGet);

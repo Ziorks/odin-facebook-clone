@@ -7,7 +7,9 @@ function useDataFetchPaginated(
   {
     resultsPerPage = 10,
     disableFetchOnMount = false,
+    overwriteDataOnFetch = false,
     dataLengthLimit = 0,
+    query,
   } = {},
 ) {
   const [page, setPage] = useState(0);
@@ -17,7 +19,9 @@ function useDataFetchPaginated(
   const [error, setError] = useState(false);
   const api = useApiPrivate();
   const abortRef = useRef(null);
-  const hasMore = page * resultsPerPage < count;
+
+  const nPages = Math.ceil(count / resultsPerPage);
+  const hasMore = page < nPages;
 
   const doAbort = () => {
     if (abortRef.current) {
@@ -26,53 +30,72 @@ function useDataFetchPaginated(
     }
   };
 
-  const fetchData = useCallback(() => {
-    doAbort();
+  const fetchData = useCallback(
+    (page) => {
+      if (page < 1 || (data && page > nPages)) return;
+      doAbort();
 
-    const controller = new AbortController();
-    abortRef.current = () => controller.abort();
+      const controller = new AbortController();
+      abortRef.current = () => controller.abort();
 
-    setError(false);
-    setIsLoading(true);
+      setError(false);
+      setIsLoading(true);
 
-    api
-      .get(`${path}?page=${page + 1}&resultsPerPage=${resultsPerPage}`, {
-        signal: controller.signal,
-      })
-      .then((resp) => {
-        const { results, count } = resp.data;
-        setData((prev) => {
-          const newData = prev ? [...prev, ...results] : results;
-          if (!dataLengthLimit) return newData;
-          return newData.length > dataLengthLimit
-            ? newData.slice(newData.length - dataLengthLimit)
-            : newData;
+      api
+        .get(
+          `${path}?page=${page}&resultsPerPage=${resultsPerPage}${query ? `&query=${query}` : ""}`,
+          {
+            signal: controller.signal,
+          },
+        )
+        .then((resp) => {
+          const { results, count } = resp.data;
+          setData((prev) => {
+            const newData =
+              prev && !overwriteDataOnFetch ? [...prev, ...results] : results;
+            if (!dataLengthLimit) return newData;
+            return newData.length > dataLengthLimit
+              ? newData.slice(newData.length - dataLengthLimit)
+              : newData;
+          });
+          setCount(count);
+          setPage(page);
+        })
+        .catch((err) => {
+          if (axios.isCancel(err)) return;
+          setError(true);
+        })
+        .finally(() => {
+          setIsLoading(false);
+          abortRef.current = null;
         });
-        setCount(count);
-        setPage((prev) => prev + 1);
-      })
-      .catch((err) => {
-        if (axios.isCancel(err)) return;
-        setError(true);
-      })
-      .finally(() => {
-        setIsLoading(false);
-        abortRef.current = null;
-      });
-  }, [api, page, path, resultsPerPage, dataLengthLimit]);
+    },
+    [
+      api,
+      data,
+      nPages,
+      path,
+      resultsPerPage,
+      query,
+      overwriteDataOnFetch,
+      dataLengthLimit,
+    ],
+  );
 
   useEffect(() => {
     if (data || disableFetchOnMount) return;
 
-    fetchData();
+    fetchData(1);
 
     return doAbort;
   }, [data, disableFetchOnMount, fetchData]);
 
   const fetchNext = () => {
-    if ((data && !hasMore) || isLoading) return;
+    fetchData(page + 1);
+  };
 
-    fetchData();
+  const fetchPrev = () => {
+    fetchData(page - 1);
   };
 
   const reset = () => {
@@ -88,10 +111,13 @@ function useDataFetchPaginated(
     isLoading,
     error,
     page,
+    nPages,
     count,
     hasMore,
     setData,
     fetchNext,
+    fetchPrev,
+    fetchPage: fetchData,
     reset,
   };
 }

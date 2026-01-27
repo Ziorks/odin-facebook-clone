@@ -21,12 +21,17 @@ const {
   getPaginationQuery,
 } = require("../middleware");
 
-const allUsersGet = async (req, res) => {
-  //TODO: add pagination
-  const users = await db.getAllUsers();
+const usersSearch = [
+  getPaginationQuery,
+  async (req, res) => {
+    const { query } = req.query;
+    const { page, resultsPerPage } = req.pagination;
 
-  return res.json({ users });
-};
+    const users = await db.getAllUsers({ query, page, resultsPerPage });
+
+    return res.json(users);
+  },
+];
 
 const userGet = [
   getUser,
@@ -572,7 +577,7 @@ const wallGet = [
 ];
 
 module.exports = {
-  allUsersGet,
+  usersSearch,
   userGet,
   userPut,
   aboutOverviewGet,

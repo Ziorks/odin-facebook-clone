@@ -188,16 +188,22 @@ async function getUserSanitized(userId) {
   return user;
 }
 
-async function getAllUsers() {
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      username: true,
-      profile: { select: { avatar: true } },
-    },
-  });
+async function getAllUsers({ query = "", page, resultsPerPage } = {}) {
+  const where = { username: { contains: query, mode: "insensitive" } };
+  const queryOptions = { where, ...userOptions };
 
-  return users;
+  let count = undefined;
+  if (page || resultsPerPage) {
+    page = page || 1;
+    resultsPerPage = resultsPerPage || 10;
+    queryOptions.skip = (page - 1) * resultsPerPage;
+    queryOptions.take = resultsPerPage;
+    count = await prisma.user.count({ where });
+  }
+
+  const users = await prisma.user.findMany(queryOptions);
+
+  return { results: users, count: count === undefined ? users.length : count };
 }
 
 async function getValidRefreshTokensByUserId(userId) {
