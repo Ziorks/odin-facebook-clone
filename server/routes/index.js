@@ -21,9 +21,5 @@ router.use("/posts", postRouter);
 router.use("/comments", commentRouter);
 router.use("/likes", likeRouter);
 router.use("/feed", feedRouter);
-//TODO: remove this
-router.get("/test", (req, res) => {
-  res.json({ message: "you've reached the protected route!" });
-});
 
 module.exports = router;

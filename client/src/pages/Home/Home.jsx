@@ -7,13 +7,14 @@ import Feed from "../../components/Feed/Feed";
 function Home() {
   const { clearAuth } = useContext(AuthContext);
   const api = useApiPrivate();
-  const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   //TODO: move this
   const handleLogout = () => {
     setIsLoading(true);
+    setError(null);
+
     api
       .post("/auth/logout", {}, { withCredentials: true })
       .then(() => {
@@ -21,24 +22,7 @@ function Home() {
       })
       .catch((err) => {
         console.error("logout failed", err);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
-
-  //TODO: remove this
-  const handleApiTest = () => {
-    setData(null);
-    setError(null);
-    setIsLoading(true);
-    api
-      .get("/test")
-      .then((res) => {
-        setData(res.data.message);
-      })
-      .catch((err) => {
-        setError(err.response?.data?.message || "an error occured");
+        setError("logout failed");
       })
       .finally(() => {
         setIsLoading(false);
@@ -49,9 +33,7 @@ function Home() {
     <>
       <h1>Home Page</h1>
       <button onClick={handleLogout}>Logout</button>
-      <button onClick={handleApiTest}>Test Api Auth</button>
       {isLoading && <p>Loading...</p>}
-      {data && <p>api response: {data}</p>}
       {error && <p>{error}</p>}
       <Feed />
     </>
