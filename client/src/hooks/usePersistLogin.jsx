@@ -1,26 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useRefreshToken from "./useRefreshToken";
 
 function usePersistLogin() {
   const refresh = useRefreshToken();
   const [isLoading, setIsLoading] = useState(true);
+  const hasMounted = useRef(false);
 
   useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
+    if (hasMounted.current) return;
+    hasMounted.current = true;
 
-    refresh(controller.signal).finally(() => {
-      if (isMounted) {
-        setIsLoading(false);
-      }
+    refresh().finally(() => {
+      setIsLoading(false);
     });
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refresh]);
 
   return isLoading;
 }

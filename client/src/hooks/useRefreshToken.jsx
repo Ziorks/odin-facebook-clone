@@ -16,9 +16,9 @@ const useRefreshToken = () => {
       setAuthFromResponse(response);
       return response?.data?.accessToken;
     } catch (err) {
-      if (!axios.isCancel(err)) {
-        console.error("no valid session", err);
-      }
+      if (axios.isCancel(err)) return;
+      console.error("no valid session", err);
+      throw new Error(err);
     }
   };
 

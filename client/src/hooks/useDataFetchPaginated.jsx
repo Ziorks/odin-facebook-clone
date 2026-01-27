@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import axios from "axios";
 import useApiPrivate from "./useApiPrivate";
 
 function useDataFetchPaginated(
@@ -18,25 +17,14 @@ function useDataFetchPaginated(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(false);
   const api = useApiPrivate();
-  const abortRef = useRef(null);
+  const hasMounted = useRef(false);
 
   const nPages = Math.ceil(count / resultsPerPage);
   const hasMore = page < nPages;
 
-  const doAbort = () => {
-    if (abortRef.current) {
-      abortRef.current();
-      abortRef.current = null;
-    }
-  };
-
   const fetchData = useCallback(
     (page) => {
-      if (page < 1 || (data && page > nPages)) return;
-      doAbort();
-
-      const controller = new AbortController();
-      abortRef.current = () => controller.abort();
+      if (page < 1 || (data && page > nPages) || isLoading) return;
 
       setError(false);
       setIsLoading(true);
@@ -44,9 +32,6 @@ function useDataFetchPaginated(
       api
         .get(
           `${path}?page=${page}&resultsPerPage=${resultsPerPage}${query ? `&query=${query}` : ""}`,
-          {
-            signal: controller.signal,
-          },
         )
         .then((resp) => {
           const { results, count } = resp.data;
@@ -61,19 +46,18 @@ function useDataFetchPaginated(
           setCount(count);
           setPage(page);
         })
-        .catch((err) => {
-          if (axios.isCancel(err)) return;
+        .catch(() => {
           setError(true);
         })
         .finally(() => {
           setIsLoading(false);
-          abortRef.current = null;
         });
     },
     [
       api,
       data,
       nPages,
+      isLoading,
       path,
       resultsPerPage,
       query,
@@ -83,11 +67,10 @@ function useDataFetchPaginated(
   );
 
   useEffect(() => {
-    if (data || disableFetchOnMount) return;
+    if (data || hasMounted.current || disableFetchOnMount) return;
+    hasMounted.current = true;
 
     fetchData(1);
-
-    return doAbort;
   }, [data, disableFetchOnMount, fetchData]);
 
   const fetchNext = () => {

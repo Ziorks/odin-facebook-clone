@@ -1,43 +1,40 @@
 // import styles from "./Oauth.module.css";
-import { useEffect, useContext, useState } from "react";
+import { useEffect, useContext, useState, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import AuthContext from "../../contexts/AuthContext";
 import api from "../../api";
-import axios from "axios";
 
 function Oauth() {
-  const [error, setError] = useState(false);
   const [searchParams] = useSearchParams();
   const { setAuthFromResponse } = useContext(AuthContext);
+  const [error, setError] = useState(false);
+  const hasMounted = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const controller = new AbortController();
+    if (hasMounted.current) return;
+    hasMounted.current = true;
+
     const oauthToken = searchParams.get("token");
     if (!oauthToken) {
       navigate("/", { replace: true });
+      return;
     }
 
     api
       .post(
         "/auth/oauth-token-exchange",
         { oauthToken },
-        { withCredentials: true, signal: controller.signal },
+        { withCredentials: true },
       )
       .then((res) => {
         setAuthFromResponse(res);
         navigate("/", { replace: true });
       })
       .catch((err) => {
-        if (!axios.isCancel(err)) {
-          setError(true);
-          console.error("oauth login failed", err);
-        }
+        console.error("oauth login failed", err);
+        setError(true);
       });
-
-    return () => {
-      controller.abort();
-    };
   }, [searchParams, setAuthFromResponse, navigate]);
 
   return (

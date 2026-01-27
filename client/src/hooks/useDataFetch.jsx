@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import axios from "axios";
 import useApiPrivate from "./useApiPrivate";
 
 function useDataFetch(path) {
@@ -7,44 +6,33 @@ function useDataFetch(path) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(false);
   const api = useApiPrivate();
-  const abortRef = useRef(null);
-
-  const doAbort = () => {
-    if (abortRef.current) {
-      abortRef.current();
-      abortRef.current = null;
-    }
-  };
+  const hasMounted = useRef(false);
 
   const fetchData = useCallback(() => {
-    doAbort();
-
-    const controller = new AbortController();
-    abortRef.current = () => controller.abort();
+    if (isLoading) return;
 
     setData(null);
     setError(false);
     setIsLoading(true);
 
     api
-      .get(path, { signal: controller.signal })
+      .get(path)
       .then((resp) => {
         setData(resp.data);
       })
-      .catch((err) => {
-        if (axios.isCancel(err)) return;
+      .catch(() => {
         setError(true);
       })
       .finally(() => {
         setIsLoading(false);
-        abortRef.current = null;
       });
-  }, [api, path]);
+  }, [isLoading, api, path]);
 
   useEffect(() => {
-    fetchData();
+    if (hasMounted.current) return;
+    hasMounted.current = true;
 
-    return doAbort;
+    fetchData();
   }, [fetchData]);
 
   return {
