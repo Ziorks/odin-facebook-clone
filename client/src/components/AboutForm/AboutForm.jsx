@@ -14,11 +14,13 @@ function AboutForm({
   disableSave = false,
 }) {
   const api = useApiPrivate();
+  const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setIsSaved(false);
     setErrors(null);
     setIsLoading(true);
 
@@ -28,6 +30,8 @@ function AboutForm({
       data,
     })
       .then(() => {
+        setIsSaved(true);
+        setIsLoading(false);
         onSuccess?.();
       })
       .catch((err) => {
@@ -40,8 +44,6 @@ function AboutForm({
             { msg: err.response?.data?.message || "Something went wrong." },
           ]);
         }
-      })
-      .finally(() => {
         setIsLoading(false);
       });
   };
@@ -65,6 +67,7 @@ function AboutForm({
             Save
           </button>
           {isLoading && <span>{loadingMsg || "Saving..."}</span>}
+          {isSaved && <span>Saved!</span>}
         </div>
       </form>
     </>
