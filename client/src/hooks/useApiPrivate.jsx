@@ -1,7 +1,9 @@
 import { useContext, useEffect } from "react";
-import api from "../api";
 import AuthContext from "../contexts/AuthContext";
 import useRefreshToken from "./useRefreshToken";
+import { createNewApiInstance } from "../api";
+
+const api = createNewApiInstance();
 
 const useApiPrivate = () => {
   const { auth, clearAuth } = useContext(AuthContext);
