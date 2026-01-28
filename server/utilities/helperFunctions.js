@@ -73,6 +73,10 @@ async function attachMyLikesToPost(post, userId) {
   post.myLike = postLike || null;
 }
 
+const getRandomNumber = (start, end) => {
+  return Math.floor(start + (end - start + 1) * Math.random());
+};
+
 module.exports = {
   generateAccessToken,
   generateRefreshToken,
@@ -80,4 +84,5 @@ module.exports = {
   getRefreshTokenCookieOptions,
   formatComment,
   attachMyLikesToPost,
+  getRandomNumber,
 };

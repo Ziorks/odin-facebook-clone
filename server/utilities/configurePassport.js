@@ -7,6 +7,7 @@ const GithubStrategy = require("passport-github2").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
 const bcrypt = require("bcryptjs");
 const db = require("../db/queries");
+const { getRandomNumber } = require("./helperFunctions");
 
 passport.use(
   new JwtStrategy(
@@ -25,8 +26,8 @@ passport.use(
       } catch (err) {
         return done(err);
       }
-    }
-  )
+    },
+  ),
 );
 
 passport.use(
@@ -53,7 +54,7 @@ passport.use(
     } catch (err) {
       return done(err);
     }
-  })
+  }),
 );
 
 async function findOrCreateUser(
@@ -63,7 +64,7 @@ async function findOrCreateUser(
   email,
   verified,
   done,
-  { avatar, firstName, lastName } = {}
+  { avatar, firstName, lastName } = {},
 ) {
   email = email && email.toLowerCase();
 
@@ -87,11 +88,29 @@ async function findOrCreateUser(
     }
 
     //no stored credentials AND no user with verified email => create user and create credentials
+
+    //create valid username
+    if (username.length > 128) {
+      username = username.slice(0, 128);
+    }
+
+    let usernameTaken = await db.getUserByUsername(username);
+    let hasRun = false;
+    while (usernameTaken) {
+      if (username.length > 123 || hasRun) {
+        username = username.slice(0, username.length - 5);
+      }
+
+      username = `${username}_${getRandomNumber(1000, 9999)}`;
+      usernameTaken = await db.getUserByUsername(username);
+      if (!hasRun) hasRun = true;
+    }
+
     const user = await db.createUser(
-      username, //TODO:make username unique if already exists OR random generate username OR let user pick username
+      username,
       undefined,
       verified ? email : undefined,
-      { avatar, firstName, lastName }
+      { avatar, firstName, lastName },
     );
     await db.createFederatedCredentials(providerId, provider, user.id);
     return done(null, user);
@@ -125,10 +144,10 @@ passport.use(
         email,
         email_verified,
         done,
-        { avatar: picture, firstName: given_name, lastName: family_name }
+        { avatar: picture, firstName: given_name, lastName: family_name },
       );
-    }
-  )
+    },
+  ),
 );
 
 passport.use(
@@ -148,6 +167,6 @@ passport.use(
         firstName,
         lastName,
       });
-    }
-  )
+    },
+  ),
 );
