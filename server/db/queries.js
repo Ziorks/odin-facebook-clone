@@ -300,6 +300,17 @@ async function getUsersIncomingFriendRequests(userId) {
   return requests;
 }
 
+async function getUsersIncomingFriendRequestsCount(userId) {
+  const count = await prisma.friendship.count({
+    where: {
+      user2Id: userId,
+      accepted: false,
+    },
+  });
+
+  return count;
+}
+
 async function getUsersOutgoingFriendRequests(userId) {
   const requests = await prisma.friendship.findMany({
     where: {
@@ -1239,6 +1250,7 @@ module.exports = {
   getFriendshipByUserIds,
   getUsersFriends,
   getUsersIncomingFriendRequests,
+  getUsersIncomingFriendRequestsCount,
   getUsersOutgoingFriendRequests,
   getPost,
   getPostComments,

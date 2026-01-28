@@ -4,9 +4,9 @@ const { validationResult } = require("express-validator");
 const db = require("../db/queries");
 const { validateRegister } = require("../utilities/validators");
 const {
-  generateAccessToken,
   generateRefreshToken,
   getRefreshTokenCookieOptions,
+  getAuthObject,
 } = require("../utilities/helperFunctions");
 
 const loginPost = (req, res, next) => {
@@ -23,23 +23,22 @@ const loginPost = (req, res, next) => {
       }
       const { rememberDevice } = req.body;
 
-      const accessToken = generateAccessToken(user.id);
       const refreshToken = await generateRefreshToken(user.id, {
         rememberDevice,
       });
+      res.cookie(
+        "refreshToken",
+        refreshToken,
+        getRefreshTokenCookieOptions({ rememberDevice }),
+      );
 
-      const cookieOpts = getRefreshTokenCookieOptions({ rememberDevice });
-
-      res.cookie("refreshToken", refreshToken, cookieOpts);
-
-      const sanitizedUser = await db.getUserSanitized(user.id);
+      const authObject = await getAuthObject(user.id);
 
       return res.json({
         message: "login was successful",
-        user: sanitizedUser,
-        accessToken,
+        ...authObject,
       });
-    }
+    },
   )(req, res, next);
 };
 
@@ -100,23 +99,18 @@ const registerPost = [
           avatar: AVATAR_URL,
         });
 
-        const accessToken = generateAccessToken(user.id);
         const refreshToken = await generateRefreshToken(user.id);
+        res.cookie(
+          "refreshToken",
+          refreshToken,
+          getRefreshTokenCookieOptions(),
+        );
 
-        const cookieOpts = getRefreshTokenCookieOptions();
-
-        res.cookie("refreshToken", refreshToken, cookieOpts);
-
-        const sanitizedUser = {
-          id: user.id,
-          username: user.username,
-          profile: { avatar: AVATAR_URL },
-        };
+        const authObject = await getAuthObject(user.id);
 
         return res.json({
           message: "registration was successful",
-          user: sanitizedUser,
-          accessToken,
+          ...authObject,
         });
       } catch (err) {
         return next(err);

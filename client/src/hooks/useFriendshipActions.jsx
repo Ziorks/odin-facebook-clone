@@ -1,8 +1,10 @@
 import { useState } from "react";
 import useApiPrivate from "./useApiPrivate";
+import useRefreshToken from "./useRefreshToken";
 
 function useFriendshipActions(friendshipId) {
   const api = useApiPrivate();
+  const refresh = useRefreshToken();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -17,7 +19,11 @@ function useFriendshipActions(friendshipId) {
 
     return api
       .delete(`/friendship/${friendshipId}/remove`)
-      .then(() => true)
+      .then(() => {
+        refresh().finally(() => {
+          return true;
+        });
+      })
       .catch((err) => {
         console.error(err);
         setError(
@@ -48,7 +54,11 @@ function useFriendshipActions(friendshipId) {
     setError(null);
     return api
       .put(`/friendship/${friendshipId}/accept`)
-      .then((resp) => resp.data?.friendship)
+      .then((resp) => {
+        refresh().finally(() => {
+          return resp.data?.friendship;
+        });
+      })
       .catch((err) => {
         console.error(err);
         setError(

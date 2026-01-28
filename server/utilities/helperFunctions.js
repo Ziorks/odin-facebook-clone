@@ -77,6 +77,22 @@ const getRandomNumber = (start, end) => {
   return Math.floor(start + (end - start + 1) * Math.random());
 };
 
+async function getAuthObject(userId) {
+  const accessToken = generateAccessToken(userId);
+  const [sanitizedUser, nIncomingFriendRequests] = await Promise.all([
+    db.getUserSanitized(userId),
+    db.getUsersIncomingFriendRequestsCount(userId),
+  ]);
+
+  return {
+    accessToken,
+    user: sanitizedUser,
+    count: {
+      incomingFriendRequests: nIncomingFriendRequests,
+    },
+  };
+}
+
 module.exports = {
   generateAccessToken,
   generateRefreshToken,
@@ -85,4 +101,5 @@ module.exports = {
   formatComment,
   attachMyLikesToPost,
   getRandomNumber,
+  getAuthObject,
 };

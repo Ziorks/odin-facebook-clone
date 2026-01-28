@@ -8,6 +8,8 @@ function App() {
   const { auth } = useContext(AuthContext);
   const isLoading = usePersistLogin();
 
+  console.log(auth);
+
   return (
     <>
       {isLoading ? (
@@ -15,7 +17,19 @@ function App() {
       ) : auth?.user ? (
         <>
           <nav>
-            <Link to={"/"}>Home</Link> <Link to={"/friends"}>Friends</Link>{" "}
+            <Link to={"/"}>Home</Link>{" "}
+            {auth.count.incomingFriendRequests > 0 && (
+              <div
+                style={{
+                  display: "inline-block",
+                  width: "5px",
+                  height: "5px",
+                  borderRadius: "50%",
+                  backgroundColor: "red",
+                }}
+              ></div>
+            )}
+            <Link to={"/friends"}>Friends</Link>{" "}
             <Link to={"/users"}>User Search</Link>{" "}
             <Link to={`/users/${auth.user.id}`}>My Profile</Link>{" "}
             <Link to={"/settings"}>Settings</Link>{" "}

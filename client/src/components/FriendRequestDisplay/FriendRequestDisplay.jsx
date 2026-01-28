@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import AuthContext from "../../contexts/AuthContext";
 import useFriendshipActions from "../../hooks/useFriendshipActions";
 import UserThumbnail from "../UserThumbnail";
+import { formatDistanceToNowShort } from "../../utils/helperFunctions";
 // import styles from "./FriendRequestDisplay.module.css";
 
 const REQUEST_STATUS = { PENDING: 0, ACCEPTED: 1, DECLINED: 2 };
@@ -57,6 +58,7 @@ function FriendRequestDisplay({ request }) {
         </>
       )}
       {error && <p>An error occurred</p>}
+      <p>{formatDistanceToNowShort(request.createdAt)}</p>
     </UserThumbnail>
   );
 }

@@ -8,7 +8,8 @@ export function AuthProvider({ children }) {
   const setAuthFromResponse = (response) => {
     const accessToken = response?.data?.accessToken;
     const user = response?.data?.user;
-    setAuth({ user, accessToken });
+    const count = response?.data?.count;
+    setAuth({ user, accessToken, count });
   };
 
   const clearAuth = () => {

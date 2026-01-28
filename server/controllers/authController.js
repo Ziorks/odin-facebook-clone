@@ -2,10 +2,10 @@ require("dotenv").config();
 const passport = require("passport");
 const db = require("../db/queries");
 const {
-  generateAccessToken,
   generateRefreshToken,
   getRefreshTokenCookieOptions,
   getTokenRecord,
+  getAuthObject,
 } = require("../utilities/helperFunctions");
 
 const tokenExchangePost = async (req, res, next) => {
@@ -21,23 +21,22 @@ const tokenExchangePost = async (req, res, next) => {
     }
 
     await db.deleteOauthToken(oauthToken);
-    const rememberDevice = true;
 
-    const accessToken = generateAccessToken(user.id);
+    const rememberDevice = true;
     const refreshToken = await generateRefreshToken(user.id, {
       rememberDevice,
     });
+    res.cookie(
+      "refreshToken",
+      refreshToken,
+      getRefreshTokenCookieOptions({ rememberDevice }),
+    );
 
-    const cookieOpts = getRefreshTokenCookieOptions({ rememberDevice });
-
-    res.cookie("refreshToken", refreshToken, cookieOpts);
-
-    const sanitizedUser = await db.getUserSanitized(user.id);
+    const authObject = await getAuthObject(user.id);
 
     return res.json({
       message: "login was successful",
-      user: sanitizedUser,
-      accessToken,
+      ...authObject,
     });
   } catch (err) {
     return next(err);
@@ -56,24 +55,22 @@ const refreshPost = async (req, res) => {
       message: "invalid or expired refresh token",
     });
   }
-  const { rememberDevice } = tokenRecord;
+  const { rememberDevice, userId } = tokenRecord;
 
   await db.updateRefreshToken(tokenRecord.id, { revoked: true });
-
-  const newAccessToken = generateAccessToken(tokenRecord.userId);
-  const newRefreshToken = await generateRefreshToken(tokenRecord.userId, {
+  const newRefreshToken = await generateRefreshToken(userId, {
     rememberDevice,
   });
+  res.cookie(
+    "refreshToken",
+    newRefreshToken,
+    getRefreshTokenCookieOptions({ rememberDevice }),
+  );
 
-  const cookieOpts = getRefreshTokenCookieOptions({ rememberDevice });
-
-  const sanitizedUser = await db.getUserSanitized(+refreshToken.split(".")[0]);
-
-  res.cookie("refreshToken", newRefreshToken, cookieOpts);
+  const authObject = await getAuthObject(userId);
 
   return res.json({
-    user: sanitizedUser,
-    accessToken: newAccessToken,
+    ...authObject,
   });
 };
 
@@ -113,22 +110,14 @@ const guestLoginGet = async (req, res, next) => {
         avatar: AVATAR_URL,
       });
     }
-    const accessToken = generateAccessToken(user.id);
+
+    const authObject = await getAuthObject(user.id);
     const refreshToken = await generateRefreshToken(user.id);
-
-    const cookieOpts = getRefreshTokenCookieOptions();
-    res.cookie("refreshToken", refreshToken, cookieOpts);
-
-    const sanitizedUser = {
-      id: user.id,
-      username: user.username,
-      profile: { avatar: AVATAR_URL },
-    };
+    res.cookie("refreshToken", refreshToken, getRefreshTokenCookieOptions());
 
     return res.json({
       message: "guest user login successful",
-      user: sanitizedUser,
-      accessToken,
+      ...authObject,
     });
   } catch (err) {
     return next(err);
