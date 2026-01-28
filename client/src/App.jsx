@@ -8,8 +8,6 @@ function App() {
   const { auth } = useContext(AuthContext);
   const isLoading = usePersistLogin();
 
-  console.log(auth);
-
   return (
     <>
       {isLoading ? (

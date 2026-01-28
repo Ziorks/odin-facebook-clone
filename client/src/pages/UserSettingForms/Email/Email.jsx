@@ -17,6 +17,7 @@ function Email() {
       url={`/users/${auth.user.id}`}
       data={{ email }}
       onSuccess={async () => {
+        setChangesMade(false);
         await refresh();
         closeModal();
       }}

@@ -17,6 +17,7 @@ function Username() {
       url={`/users/${auth.user.id}`}
       data={{ username }}
       onSuccess={async () => {
+        setChangesMade(false);
         await refresh();
         closeModal();
       }}

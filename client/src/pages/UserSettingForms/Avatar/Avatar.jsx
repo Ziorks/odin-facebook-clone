@@ -23,6 +23,7 @@ function Avatar() {
       url={`/users/${auth.user.id}`}
       data={formData}
       onSuccess={async () => {
+        setChangesMade(false);
         await refresh();
         closeModal();
       }}
