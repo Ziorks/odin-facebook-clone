@@ -8,7 +8,7 @@ import useApiPrivate from "../../hooks/useApiPrivate";
 function Logout() {
   const api = useApiPrivate();
   const navigate = useNavigate();
-  const { clearAuth } = useContext(AuthContext);
+  const { auth, clearAuth } = useContext(AuthContext);
   const [error, setError] = useState(null);
   const hasMounted = useRef(false);
 
@@ -17,7 +17,7 @@ function Logout() {
       .post("/auth/logout", {}, { withCredentials: true })
       .then(() => {
         clearAuth();
-        navigate("/");
+        navigate("/", { replace: true });
       })
       .catch((err) => {
         if (axios.isCancel(err)) return;
@@ -31,8 +31,12 @@ function Logout() {
     if (hasMounted.current) return;
     hasMounted.current = true;
 
+    if (!auth.user) {
+      return navigate("/", { replace: true });
+    }
+
     doLogout();
-  }, [doLogout]);
+  }, [auth, navigate, doLogout]);
 
   return (
     <>
