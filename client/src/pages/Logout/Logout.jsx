@@ -1,6 +1,5 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import AuthContext from "../../contexts/AuthContext";
 import useApiPrivate from "../../hooks/useApiPrivate";
 // import styles from "./Logout.module.css";
@@ -8,11 +7,13 @@ import useApiPrivate from "../../hooks/useApiPrivate";
 function Logout() {
   const api = useApiPrivate();
   const navigate = useNavigate();
-  const { auth, clearAuth } = useContext(AuthContext);
-  const [error, setError] = useState(null);
+  const { clearAuth } = useContext(AuthContext);
+  const [error, setError] = useState(false);
   const hasMounted = useRef(false);
 
   const doLogout = useCallback(() => {
+    setError(false);
+
     api
       .post("/auth/logout", {}, { withCredentials: true })
       .then(() => {
@@ -20,10 +21,8 @@ function Logout() {
         navigate("/", { replace: true });
       })
       .catch((err) => {
-        if (axios.isCancel(err)) return;
-
         console.error("logout failed", err);
-        setError(err.response?.data?.message || "Something went wrong.");
+        setError(true);
       });
   }, [api, clearAuth, navigate]);
 
@@ -31,18 +30,15 @@ function Logout() {
     if (hasMounted.current) return;
     hasMounted.current = true;
 
-    if (!auth.user) {
-      return navigate("/", { replace: true });
-    }
-
     doLogout();
-  }, [auth, navigate, doLogout]);
+  }, [doLogout]);
 
   return (
     <>
       {error ? (
         <p>
-          {error} <button onClick={doLogout}>Try again</button>
+          Logout failed. Check console for details. Click here to{" "}
+          <button onClick={doLogout}>try again</button>
         </p>
       ) : (
         <p>Logging you out...</p>

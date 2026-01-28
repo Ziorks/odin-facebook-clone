@@ -121,9 +121,9 @@ function LikesSample({ nLikes, myLike, useLikesSample }) {
 function Likes({ nLikes, myLike, path }) {
   const [showLikesModal, setShowLikesModal] = useState(false);
   const [showLikesSample, setShowLikesSample] = useState(false);
-  const useLikes = useDataFetchPaginated(path, { disableFetchOnMount: true });
+  const useLikes = useDataFetchPaginated(path, { disableFetchOnChange: true });
   const useLikesSample = useDataFetchPaginated(path, {
-    disableFetchOnMount: true,
+    disableFetchOnChange: true,
     resultsPerPage: 19,
   });
   const timeout = useRef(null);

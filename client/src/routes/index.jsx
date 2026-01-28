@@ -33,6 +33,10 @@ const routes = [
     errorElement: <Error />,
     children: [
       {
+        path: "logout",
+        element: <Logout />,
+      },
+      {
         index: true,
         element: <Home />,
       },
@@ -118,10 +122,6 @@ const routes = [
   {
     path: "/oauth",
     element: <Oauth />,
-  },
-  {
-    path: "/logout",
-    element: <Logout />,
   },
 ];
 

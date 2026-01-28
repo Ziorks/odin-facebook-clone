@@ -10,9 +10,13 @@ function usePersistLogin() {
     if (hasMounted.current) return;
     hasMounted.current = true;
 
-    refresh().finally(() => {
-      setIsLoading(false);
-    });
+    refresh()
+      .catch(() => {
+        console.log("persist login failed");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [refresh]);
 
   return isLoading;

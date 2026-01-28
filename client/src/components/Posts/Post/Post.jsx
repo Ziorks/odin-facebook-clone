@@ -196,7 +196,7 @@ function Post({ post: postObj, removePost, disableCommentForm }) {
   const [showPostDetails, setShowPostDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const useComments = useDataFetchPaginated(`/posts/${post.id}/comments`, {
-    disableFetchOnMount: true,
+    disableFetchOnChange: true,
   });
 
   if (!post) return;

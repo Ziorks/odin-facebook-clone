@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import axios from "axios";
-import AuthContext from "../contexts/AuthContext";
 import api from "../api";
+import AuthContext from "../contexts/AuthContext";
 
 const useRefreshToken = () => {
   const { setAuthFromResponse } = useContext(AuthContext);
@@ -17,8 +17,8 @@ const useRefreshToken = () => {
       return response?.data?.accessToken;
     } catch (err) {
       if (axios.isCancel(err)) return;
-      console.error("no valid session", err);
-      throw new Error(err);
+      console.error("access token refresh failed", err);
+      return Promise.reject(err);
     }
   };
 

@@ -1,8 +1,8 @@
 import { useContext } from "react";
 import { Outlet, Link } from "react-router-dom";
 import AuthContext from "./contexts/AuthContext";
-import Login from "./pages/Login";
 import usePersistLogin from "./hooks/usePersistLogin";
+import Login from "./pages/Login";
 
 function App() {
   const { auth } = useContext(AuthContext);

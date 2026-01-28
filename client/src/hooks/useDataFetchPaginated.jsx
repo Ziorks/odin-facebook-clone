@@ -1,11 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import axios from "axios";
 import useApiPrivate from "./useApiPrivate";
 
 function useDataFetchPaginated(
   path,
   {
     resultsPerPage = 10,
-    disableFetchOnMount = false,
+    disableFetchOnChange = false,
     overwriteDataOnFetch = false,
     dataLengthLimit = 0,
     query,
@@ -17,14 +18,21 @@ function useDataFetchPaginated(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(false);
   const api = useApiPrivate();
-  const hasMounted = useRef(false);
+  const abortRef = useRef(null);
 
   const nPages = Math.ceil(count / resultsPerPage);
   const hasMore = page < nPages;
 
   const fetchData = useCallback(
     (page) => {
-      if (page < 1 || (data && page > nPages) || isLoading) return;
+      if (page < 1 || (data && page > nPages)) return;
+
+      abortRef.current?.();
+
+      const controller = new AbortController();
+      abortRef.current = () => {
+        controller.abort();
+      };
 
       setError(false);
       setIsLoading(true);
@@ -32,6 +40,7 @@ function useDataFetchPaginated(
       api
         .get(
           `${path}?page=${page}&resultsPerPage=${resultsPerPage}${query ? `&query=${query}` : ""}`,
+          { signal: controller.signal },
         )
         .then((resp) => {
           const { results, count } = resp.data;
@@ -46,7 +55,8 @@ function useDataFetchPaginated(
           setCount(count);
           setPage(page);
         })
-        .catch(() => {
+        .catch((err) => {
+          if (axios.isCancel(err)) return;
           setError(true);
         })
         .finally(() => {
@@ -57,7 +67,6 @@ function useDataFetchPaginated(
       api,
       data,
       nPages,
-      isLoading,
       path,
       resultsPerPage,
       query,
@@ -67,11 +76,14 @@ function useDataFetchPaginated(
   );
 
   useEffect(() => {
-    if (data || hasMounted.current || disableFetchOnMount) return;
-    hasMounted.current = true;
+    if (data || disableFetchOnChange) return;
 
     fetchData(1);
-  }, [data, disableFetchOnMount, fetchData]);
+
+    return () => {
+      abortRef.current?.();
+    };
+  }, [data, disableFetchOnChange, fetchData]);
 
   const fetchNext = () => {
     fetchData(page + 1);
