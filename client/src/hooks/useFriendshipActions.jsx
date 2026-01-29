@@ -8,7 +8,7 @@ function useFriendshipActions(friendshipId) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const removeFriendship = (confirmMsg) => {
+  const removeFriendship = async (confirmMsg) => {
     if (
       !confirm(confirmMsg || "Are you sure you want to delete this friendship?")
     )
@@ -19,10 +19,9 @@ function useFriendshipActions(friendshipId) {
 
     return api
       .delete(`/friendship/${friendshipId}/remove`)
-      .then(() => {
-        refresh().finally(() => {
-          return true;
-        });
+      .then(async () => {
+        await refresh();
+        return true;
       })
       .catch((err) => {
         console.error(err);
@@ -54,10 +53,9 @@ function useFriendshipActions(friendshipId) {
     setError(null);
     return api
       .put(`/friendship/${friendshipId}/accept`)
-      .then((resp) => {
-        refresh().finally(() => {
-          return resp.data?.friendship;
-        });
+      .then(async (resp) => {
+        await refresh();
+        return resp.data?.friendship;
       })
       .catch((err) => {
         console.error(err);
