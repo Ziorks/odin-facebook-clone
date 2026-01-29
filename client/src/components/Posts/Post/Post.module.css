@@ -9,3 +9,7 @@
   height: 25px;
   border-radius: 50%;
 }
+
+.postContent {
+  white-space: pre-wrap;
+}

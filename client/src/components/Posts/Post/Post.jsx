@@ -128,7 +128,9 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
         <EditForm handleClose={() => setShowEditForm(false)} />
       ) : (
         <>
-          {post.type === "REGULAR" && <p>{post.content}</p>}
+          {post.type === "REGULAR" && (
+            <p className={styles.postContent}>{post.content}</p>
+          )}
           {post.type === "PROFILE_PIC_UPDATE" && (
             <p>{`${post.author.username} updated their profile picture`}</p>
           )}

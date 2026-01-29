@@ -12,3 +12,7 @@
 .replyChain {
   list-style: none;
 }
+
+.commentContent {
+  white-space: pre-wrap;
+}

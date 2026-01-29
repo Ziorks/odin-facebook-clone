@@ -209,7 +209,7 @@ function Comment({
           />
         ) : (
           <>
-            <p>{comment.content}</p>
+            <p className={styles.commentContent}>{comment.content}</p>
             <div>
               <span>
                 {pending
