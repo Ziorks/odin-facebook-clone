@@ -128,7 +128,11 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
         <EditForm handleClose={() => setShowEditForm(false)} />
       ) : (
         <>
-          <p>{post.content}</p>
+          {post.type === "REGULAR" && <p>{post.content}</p>}
+          {post.type === "PROFILE_PIC_UPDATE" && (
+            <p>{`${post.author.username} updated their profile picture`}</p>
+          )}
+          {post.mediaUrl && <img src={post.mediaUrl} />}
           <div>
             <Likes
               nLikes={post._count.likes}
@@ -150,7 +154,9 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
             <button onClick={handleCommentBtnClick}>Comment</button>
             {auth.user.id === post.author.id && (
               <>
-                <button onClick={() => setShowEditForm(true)}>Edit</button>
+                {post.type === "REGULAR" && (
+                  <button onClick={() => setShowEditForm(true)}>Edit</button>
+                )}
                 <button onClick={toggleDeleteModal}>Delete</button>
               </>
             )}

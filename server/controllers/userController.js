@@ -52,10 +52,6 @@ const userPut = [
   profileEditAuth,
   validateUserUpdate,
   async (req, res, next) => {
-    //TODO: This and the validation seem like a mess
-    // perhaps try seperating routes for username,password,avatar,etc..
-    // otherwise just make sure everything works as intended and call it good
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res
@@ -98,7 +94,7 @@ const userPut = [
           lastName,
         });
       } catch (err) {
-        //delete new pic if something goes wrong
+        //delete new pic if user update fails
         if (avatarPublicId) {
           try {
             await cloudinary.uploader.destroy(avatarPublicId);
@@ -112,14 +108,8 @@ const userPut = [
         return next(err);
       }
 
-      //delete old picture from cloudinary
-      const oldPicPublicId = extractPublicId(user.profile.avatar);
-      if (
-        req.file &&
-        oldPicPublicId !== "messaging_app_profile_pics/icsll72wpxwcku6gb1by"
-      ) {
-        await cloudinary.uploader.destroy(oldPicPublicId);
-      }
+      //create profile pic update post if avatar uploaded
+      if (req.file) await db.createProfilePicUpdatePost(user.id, avatarURL);
 
       return res.json({ message: "user updated" });
     };
