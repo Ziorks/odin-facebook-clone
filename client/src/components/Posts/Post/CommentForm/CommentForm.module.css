@@ -1,1 +1,60 @@
+.form {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.9rem;
+  overflow-y: auto;
+  background-color: #555;
+  color: #fff;
+  border: 1px solid #777;
+}
 
+.form:focus-within {
+  outline: 2px solid #aaa;
+}
+
+.input {
+  /* line-height: 2rem; */
+  display: block;
+  font-size: 1rem;
+  min-height: 1rem;
+  max-height: 8rem;
+  width: 100%;
+  background-color: transparent;
+  color: #fff;
+  border: none;
+  resize: none;
+}
+
+.input:focus {
+  outline: none;
+}
+
+.actionsContainer {
+  display: flex;
+  justify-content: right;
+  gap: 1rem;
+}
+
+.actionsContainer button {
+  padding: 0.3rem 0.5rem;
+  line-height: 0;
+  background: none;
+  border: none;
+  color: #bbb;
+  font-size: 1.5rem;
+  cursor: pointer;
+  border-radius: 0.5rem;
+}
+
+.actionsContainer button:focus {
+  outline: 2px solid #aaa;
+}
+
+.actionsContainer button:focus,
+.actionsContainer button:hover:not(:disabled) {
+  color: #fff;
+}
+
+.actionsContainer button:disabled {
+  cursor: not-allowed;
+}

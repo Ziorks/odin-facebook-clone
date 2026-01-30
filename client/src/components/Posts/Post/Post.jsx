@@ -186,14 +186,18 @@ function PostModal() {
 
   return (
     <Modal handleClose={toggleDetailsModal}>
-      <PostContent
-        handleNCommentsBtnClick={() => focusRef(commentsSectionRef)}
-        handleCommentBtnClick={() => focusRef(commentFormRef)}
-      />
-      <Comments
-        setCommentListRef={setCommentsSectionRef}
-        setCommentFormRef={setCommentFormRef}
-      />
+      <div className={styles.postModalContainer}>
+        <div>
+          <PostContent
+            handleNCommentsBtnClick={() => focusRef(commentsSectionRef)}
+            handleCommentBtnClick={() => focusRef(commentFormRef)}
+          />
+          <Comments setCommentListRef={setCommentsSectionRef} />
+        </div>
+        <div>
+          <CommentForm setInputRef={setCommentFormRef} />
+        </div>
+      </div>
     </Modal>
   );
 }

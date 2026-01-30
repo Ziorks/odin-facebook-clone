@@ -1,18 +1,21 @@
 import { useState, useContext } from "react";
-import useApiPrivate from "../../../../hooks/useApiPrivate";
+import { BsEmojiSmileFill } from "react-icons/bs";
+import { AiOutlinePicture } from "react-icons/ai";
+import { PiGifFill } from "react-icons/pi";
+import { LuSendHorizontal } from "react-icons/lu";
 import AuthContext from "../../../../contexts/AuthContext";
 import PostContext from "../../../../contexts/PostContext";
-import Comment from "../Comment";
-// import styles from "./CommentForm.module.css";
+import useApiPrivate from "../../../../hooks/useApiPrivate";
+import styles from "./CommentForm.module.css";
 
 function CommentForm({ parentComment = null, setInputRef, onSuccess }) {
-  const { post, onPostComment } = useContext(PostContext);
+  const { auth } = useContext(AuthContext);
+  const { post } = useContext(PostContext);
+  const api = useApiPrivate();
+
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState(null);
-  const [postedComment, setPostedComment] = useState(null);
-  const api = useApiPrivate();
-  const { auth } = useContext(AuthContext);
 
   const handleCommentSubmit = (e) => {
     e.preventDefault();
@@ -26,9 +29,9 @@ function CommentForm({ parentComment = null, setInputRef, onSuccess }) {
         parentId: parentComment?.id || null,
       })
       .then((resp) => {
-        setPostedComment(resp.data.comment);
-        onSuccess?.();
-        if (!parentComment) onPostComment();
+        const { comment } = resp.data;
+        onSuccess?.(comment);
+        setContent("");
       })
       .catch((err) => {
         console.error("comment creation error", err);
@@ -46,50 +49,53 @@ function CommentForm({ parentComment = null, setInputRef, onSuccess }) {
       });
   };
 
+  const handleInputChange = (e) => {
+    setErrors(null);
+    setContent(e.target.value);
+    e.target.style.height = "auto";
+    e.target.style.height = e.target.scrollHeight + "px";
+  };
+
   return (
     <>
-      {postedComment ? (
-        <Comment comment={postedComment} />
-      ) : (
-        <>
-          {isLoading ? (
-            <Comment
-              pending={true}
-              comment={{
-                content,
-                postId: post.id,
-                author: auth.user,
-              }}
-            />
-          ) : (
-            <>
-              {errors && (
-                <ul>
-                  {errors.map((error, i) => (
-                    <li key={i}>{error.msg}</li>
-                  ))}
-                </ul>
-              )}
-              <form onSubmit={handleCommentSubmit}>
-                <textarea
-                  ref={setInputRef}
-                  placeholder={
-                    parentComment
-                      ? `Reply to ${parentComment.author.username}`
-                      : `Comment as ${auth.user.username}`
-                  }
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                />
-                <div>
-                  <button type="submit" disabled={!content || isLoading}>
-                    Post
-                  </button>
-                </div>
-              </form>
-            </>
-          )}
-        </>
+      <form className={styles.form} onSubmit={handleCommentSubmit}>
+        <textarea
+          className={styles.input}
+          rows={1}
+          ref={setInputRef}
+          placeholder={
+            parentComment
+              ? `Reply to ${parentComment.author.username}`
+              : `Comment as ${auth.user.username}`
+          }
+          value={content}
+          onChange={handleInputChange}
+        />
+        <div className={styles.actionsContainer}>
+          <div>
+            <button>
+              <BsEmojiSmileFill />
+            </button>
+            <button>
+              <AiOutlinePicture />
+            </button>
+            <button>
+              <PiGifFill />
+            </button>
+          </div>
+          <div>
+            <button type="submit" disabled={!content || isLoading}>
+              <LuSendHorizontal />
+            </button>
+          </div>
+        </div>
+      </form>
+      {errors && (
+        <ul>
+          {errors.map((error, i) => (
+            <li key={i}>{error.msg}</li>
+          ))}
+        </ul>
       )}
     </>
   );
