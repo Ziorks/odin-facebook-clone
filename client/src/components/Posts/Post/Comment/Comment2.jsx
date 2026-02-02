@@ -19,8 +19,15 @@ const STATUS = {
   ERROR: 3,
 };
 
-function Replies({ comment, parentIdChain, setComment, onFetchSuccess }) {
+function Replies({
+  comment,
+  parentIdChain,
+  idWhitelist,
+  setComment,
+  onFetchSuccess,
+}) {
   const api = useApiPrivate();
+  const { toggleDetailsModal } = useContext(PostContext);
 
   const [status, setStatus] = useState(STATUS.OK);
   const page = useRef(1);
@@ -61,25 +68,32 @@ function Replies({ comment, parentIdChain, setComment, onFetchSuccess }) {
               <Comment
                 comment={reply}
                 parentIdChain={[...parentIdChain, comment.id]}
+                idWhitelist={idWhitelist}
               />
             </li>
           ))}
         </ol>
       )}
       {status === STATUS.OK &&
-        replyCount > (comment.replies?.length || 0) &&
-        (!comment.replies ? (
-          <div>
-            <button onClick={fetchNext}>
-              {replyCount > 1
-                ? `View all ${replyCount} replies`
-                : "View 1 reply"}
-            </button>
-          </div>
+        (idWhitelist && replyCount > 1 && !comment.parentId ? (
+          <button onClick={toggleDetailsModal}>
+            View all {replyCount} replies
+          </button>
         ) : (
-          <div>
-            <button onClick={fetchNext}>View more</button>
-          </div>
+          replyCount > (comment.replies?.length || 0) &&
+          (!comment.replies ? (
+            <div>
+              <button onClick={fetchNext}>
+                {replyCount > 1
+                  ? `View all ${replyCount} replies`
+                  : "View 1 reply"}
+              </button>
+            </div>
+          ) : (
+            <div>
+              <button onClick={fetchNext}>View more replies</button>
+            </div>
+          ))
         ))}
       {status === STATUS.LOADING && <p>Loading replies...</p>}
       {status === STATUS.ERROR && (
@@ -175,13 +189,13 @@ function DeleteModal({ id, handleClose, onSuccess }) {
 }
 
 function Comment({
-  children,
   comment,
   parentIdChain = [],
   disableReplies = false,
+  idWhitelist,
 }) {
   const { auth } = useContext(AuthContext);
-  const { useComments } = useContext(PostContext);
+  const { useComments, addPendingIdToWhitelist } = useContext(PostContext);
   const { setData: setComments } = useComments;
 
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -198,13 +212,22 @@ function Comment({
     focusReplyForm();
   }, [showReplyForm]);
 
-  const pending =
-    Object.hasOwn(comment, "pendingId") && !Object.hasOwn(comment, "id");
-
   const focusReplyForm = () => {
     if (!replyFormRef.current) return;
     replyFormRef.current.focus();
   };
+
+  if (
+    idWhitelist &&
+    !(
+      idWhitelist.ids.includes(comment.id) ||
+      idWhitelist.pendingIds.includes(comment.pendingId)
+    )
+  )
+    return;
+
+  const pending =
+    Object.hasOwn(comment, "pendingId") && !Object.hasOwn(comment, "id");
 
   const setComment = (value) => {
     function getEditedComments(commentsArr, parentIds) {
@@ -278,6 +301,8 @@ function Comment({
       ...prev,
       replies: prev.replies ? [pendingReply, ...prev.replies] : [pendingReply],
     }));
+
+    if (idWhitelist) addPendingIdToWhitelist(pendingReply.pendingId);
   };
 
   const onReplyError = (pendingReply, error) => {
@@ -383,11 +408,11 @@ function Comment({
           <Replies
             comment={comment}
             parentIdChain={parentIdChain}
+            idWhitelist={idWhitelist}
             setComment={setComment}
             onFetchSuccess={() => setHasFetchedReplies(true)}
           />
         )}
-        {children}
         {(showReplyForm || hasFetchedReplies) && (
           <CommentForm
             postId={comment.postId}

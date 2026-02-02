@@ -536,7 +536,7 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
     if (post.comments.length > 0) {
       const comment = post.comments[0];
       prev.push(comment);
-      if (comment.replies.length > 0) {
+      if (comment._count.replies === 1) {
         prev.push(comment.replies[0]);
       }
     }
@@ -564,10 +564,11 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
   //reconstruct posts with new comments/replies
   posts.forEach((post) => {
     const topComment = commentsByPost[post.id]?.comment;
+    const reply = commentsByPost[post.id]?.reply;
     if (topComment) {
-      delete topComment.replies;
-      topComment.reply = commentsByPost[post.id].reply ?? null;
+      topComment.replies = reply ? [reply] : [];
     }
+
     delete post.comments;
     post.topComment = topComment ?? null;
   });

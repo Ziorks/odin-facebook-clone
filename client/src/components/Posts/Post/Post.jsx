@@ -189,9 +189,12 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
 // };
 
 function PostModal() {
-  const { toggleDetailsModal, useComments, onPostComment } =
-    useContext(PostContext);
-  const { setData: setComments } = useComments;
+  const {
+    toggleDetailsModal,
+    onPostCommentSubmit,
+    onPostCommentError,
+    onPostCommentPosted,
+  } = useContext(PostContext);
   const commentsSectionRef = useRef();
   const setCommentsSectionRef = useCallback((node) => {
     commentsSectionRef.current = node;
@@ -203,33 +206,6 @@ function PostModal() {
   const focusRef = (ref) => {
     if (!ref.current) return;
     ref.current.focus();
-  };
-
-  const onCommentSubmit = (pendingComment) => {
-    setComments((prev) => [pendingComment, ...prev]);
-  };
-
-  const onCommentError = (pendingComment, error) => {
-    setComments((prev) =>
-      prev.map((comment) => {
-        if (comment.pendingId === pendingComment.pendingId) {
-          return { ...pendingComment, error };
-        }
-        return comment;
-      }),
-    );
-  };
-
-  const onCommentPosted = (postedComment) => {
-    setComments((prev) =>
-      prev.map((comment) => {
-        if (comment.pendingId === postedComment.pendingId) {
-          return postedComment;
-        }
-        return comment;
-      }),
-    );
-    onPostComment();
   };
 
   return (
@@ -245,9 +221,9 @@ function PostModal() {
         <div>
           <CommentForm
             setInputRef={setCommentFormRef}
-            onSubmit={onCommentSubmit}
-            onError={onCommentError}
-            onSuccess={onCommentPosted}
+            onSubmit={onPostCommentSubmit}
+            onError={onPostCommentError}
+            onSuccess={onPostCommentPosted}
           />
         </div>
       </div>
@@ -259,10 +235,30 @@ function Post({ post: postObj, removePost, disableComments }) {
   const [post, setPost] = useState(postObj);
   const [showPostDetails, setShowPostDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [commentIdsWhitelist, setCommentIdsWhitelist] = useState(() => {
+    let whitelist = { pendingIds: [], ids: [] };
+    const { topComment } = postObj;
+    if (topComment) {
+      whitelist.ids.push(topComment.id);
+      const { replies } = topComment;
+      if (replies.length > 0) {
+        whitelist.ids.push(replies[0].id);
+      }
+    }
+    return whitelist;
+  });
+
   const useComments = useDataFetchPaginated(`/posts/${post.id}/comments`, {
     disableFetchOnChange: true,
   });
+
   const hasMounted = useRef(false);
+  const pendingIdCounterRef = useRef(1);
+  const commentFormRef = useRef();
+  const setCommentFormRef = useCallback(
+    (node) => (commentFormRef.current = node),
+    [],
+  );
 
   useEffect(() => {
     //add top comment to comments arr on mount
@@ -271,13 +267,7 @@ function Post({ post: postObj, removePost, disableComments }) {
 
     if (!postObj.topComment) return;
 
-    const newComment = { ...postObj.topComment };
-    if (newComment.reply) {
-      newComment.replies = [newComment.reply];
-      delete newComment.reply;
-    }
-
-    useComments.setData([newComment]);
+    useComments.setData([{ ...postObj.topComment }]);
   }, [postObj, useComments]);
 
   if (!post) return;
@@ -291,17 +281,47 @@ function Post({ post: postObj, removePost, disableComments }) {
       },
       myLike: like,
     }));
-  const onPostComment = () => {
-    setPost((prev) => ({
-      ...prev,
-      _count: { ...prev._count, comments: prev._count.comments + 1 },
-    }));
-  };
   const onPostEdit = (post) => {
     setPost(post);
   };
   const onPostDelete = () => {
     removePost?.(post.id);
+  };
+  const onPostCommentSubmit = (pendingComment) => {
+    useComments.setData((prev) => {
+      return prev === null ? [pendingComment] : [pendingComment, ...prev];
+    });
+  };
+  const onPostCommentError = (pendingComment, error) => {
+    useComments.setData((prev) =>
+      prev.map((comment) => {
+        if (comment.pendingId === pendingComment.pendingId) {
+          return { ...pendingComment, error };
+        }
+        return comment;
+      }),
+    );
+  };
+  const onPostCommentPosted = (postedComment) => {
+    useComments.setData((prev) =>
+      prev.map((comment) => {
+        if (comment.pendingId === postedComment.pendingId) {
+          return postedComment;
+        }
+        return comment;
+      }),
+    );
+    setPost((prev) => ({
+      ...prev,
+      _count: { ...prev._count, comments: prev._count.comments + 1 },
+    }));
+  };
+
+  const addPendingIdToWhitelist = (pendingId) => {
+    setCommentIdsWhitelist((prev) => ({
+      ...prev,
+      pendingIds: [...prev.pendingIds, pendingId],
+    }));
   };
 
   const toggleDetailsModal = () => {
@@ -311,9 +331,11 @@ function Post({ post: postObj, removePost, disableComments }) {
     setShowDeleteModal((prev) => !prev);
   };
 
-  const topComment =
-    postObj.topComment &&
-    useComments.data?.find((c) => c.id === postObj.topComment.id);
+  const handleCommentBtnClick = () => {
+    if (commentFormRef.current) {
+      commentFormRef.current.focus();
+    } else toggleDetailsModal();
+  };
 
   return (
     <PostContext.Provider
@@ -321,13 +343,18 @@ function Post({ post: postObj, removePost, disableComments }) {
         post,
         setPost,
         onPostLikeChange,
-        onPostComment,
+        onPostCommentSubmit,
+        onPostCommentError,
+        onPostCommentPosted,
         onPostEdit,
         onPostDelete,
+        addPendingIdToWhitelist,
         toggleDetailsModal,
         toggleDeleteModal,
         useComments,
-      }}>
+        pendingIdCounterRef,
+      }}
+    >
       {showPostDetails && <PostModal />}
       {showDeleteModal && (
         <DeleteModal
@@ -342,58 +369,22 @@ function Post({ post: postObj, removePost, disableComments }) {
       <div className={styles.container}>
         <PostContent
           handleNCommentsBtnClick={toggleDetailsModal}
-          handleCommentBtnClick={toggleDetailsModal}
+          handleCommentBtnClick={handleCommentBtnClick}
         />
+        {postObj.topComment && post._count.comments > 1 && (
+          <button onClick={toggleDetailsModal}>View more comments</button>
+        )}
+        <Comments idWhitelist={commentIdsWhitelist} />
         {!disableComments && (
-          <>
-            {topComment && (
-              <>
-                {/* TODO: below will be if(topComment || newComments.length > 0)*/}
-                {post._count.comments > 1 && (
-                  <button onClick={toggleDetailsModal}>
-                    View more comments
-                  </button>
-                )}
-                <Comment comment={topComment} disableReplies={true}>
-                  {/*TODO: below isn't working quite right
-                    I want to display the reply supplied from server if there is exactly 1; otherwise show 'view more' btn that toggles modal
-                    I also want to display new replies made outside of modal regardless of reply count
-
-                    MAIN IDEA: comments made in modal should not appear here
-                  */}
-                  {postObj.topComment.reply && (
-                    <>
-                      {topComment.replies.map((r) => {
-                        if (
-                          (postObj.topComment._count.replies < 2 &&
-                            r.id === postObj.topComment.reply.id) ||
-                          (Object.hasOwn(r, "pendingId") &&
-                            Object.hasOwn(r, "id"))
-                        ) {
-                          return (
-                            <Comment
-                              key={r.id}
-                              comment={r}
-                              disableReplies={true}
-                              parentIdChain={[postObj.topComment.id]}
-                            />
-                          );
-                        }
-                      })}
-                      {postObj.topComment._count.replies > 1 && (
-                        <div>
-                          <button onClick={toggleDetailsModal}>
-                            {`View ${topComment._count.replies} replies`}
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </Comment>
-              </>
-            )}
-            <CommentForm />
-          </>
+          <CommentForm
+            setInputRef={setCommentFormRef}
+            onSubmit={(pendingComment) => {
+              onPostCommentSubmit(pendingComment);
+              addPendingIdToWhitelist(pendingComment.pendingId);
+            }}
+            onError={onPostCommentError}
+            onSuccess={onPostCommentPosted}
+          />
         )}
       </div>
     </PostContext.Provider>

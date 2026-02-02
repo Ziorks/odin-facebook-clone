@@ -1,4 +1,4 @@
-import { useState, useContext, useRef } from "react";
+import { useState, useContext } from "react";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { AiOutlinePicture } from "react-icons/ai";
 import { PiGifFill } from "react-icons/pi";
@@ -16,11 +16,10 @@ function CommentForm({
   onSuccess,
 }) {
   const { auth } = useContext(AuthContext);
-  const { post } = useContext(PostContext);
+  const { post, pendingIdCounterRef } = useContext(PostContext);
   const api = useApiPrivate();
 
   const [content, setContent] = useState("");
-  const pendingIdCounter = useRef(1);
 
   const handleCommentSubmit = (e) => {
     e.preventDefault();
@@ -30,7 +29,8 @@ function CommentForm({
       postId: post.id,
       parentId: parentComment?.id || null,
     };
-    const pendingId = pendingIdCounter.current++;
+    const pendingId = pendingIdCounterRef.current++;
+
     const pendingComment = {
       ...payload,
       author: auth.user,
