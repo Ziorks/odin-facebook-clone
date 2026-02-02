@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useRef, useEffect } from "react";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { AiOutlinePicture } from "react-icons/ai";
 import { PiGifFill } from "react-icons/pi";
@@ -20,6 +20,8 @@ function CommentForm({
   const api = useApiPrivate();
 
   const [content, setContent] = useState("");
+  const formRef = useRef();
+  const inputRef = useRef();
 
   const handleCommentSubmit = (e) => {
     e.preventDefault();
@@ -37,6 +39,7 @@ function CommentForm({
       pendingId,
     };
 
+    setContent("");
     onSubmit?.(pendingComment);
 
     api
@@ -44,7 +47,6 @@ function CommentForm({
       .then((resp) => {
         const { comment } = resp.data;
         onSuccess?.({ ...comment, pendingId });
-        setContent("");
       })
       .catch((err) => {
         console.error("comment creation error", err);
@@ -52,19 +54,36 @@ function CommentForm({
       });
   };
 
+  useEffect(() => {
+    inputRef.current.style.height = "auto";
+    inputRef.current.style.height = inputRef.current.scrollHeight + "px";
+  }, [content]);
+
   const handleInputChange = (e) => {
     setContent(e.target.value);
-    e.target.style.height = "auto";
-    e.target.style.height = e.target.scrollHeight + "px";
+  };
+
+  const onTextareaKeyDown = (e) => {
+    if (e.key === "Enter" && e.shiftKey === false && content.trim()) {
+      e.preventDefault();
+      formRef.current.requestSubmit();
+    }
   };
 
   return (
     <>
-      <form className={styles.form} onSubmit={handleCommentSubmit}>
+      <form
+        className={styles.form}
+        ref={formRef}
+        onSubmit={handleCommentSubmit}
+      >
         <textarea
           className={styles.input}
           rows={1}
-          ref={setInputRef}
+          ref={(el) => {
+            setInputRef?.(el);
+            inputRef.current = el;
+          }}
           placeholder={
             parentComment
               ? `Reply to ${parentComment.author.username}`
@@ -72,16 +91,17 @@ function CommentForm({
           }
           value={content}
           onChange={handleInputChange}
+          onKeyDown={onTextareaKeyDown}
         />
         <div className={styles.actionsContainer}>
           <div>
-            <button>
+            <button type="button">
               <BsEmojiSmileFill />
             </button>
-            <button>
+            <button type="button">
               <AiOutlinePicture />
             </button>
-            <button>
+            <button type="button">
               <PiGifFill />
             </button>
           </div>
