@@ -438,6 +438,7 @@ async function getCommentReplies(commentId, { page, resultsPerPage } = {}) {
   };
   const queryOptions = {
     where,
+    orderBy: { createdAt: "desc" },
     ...commentOptions,
   };
 

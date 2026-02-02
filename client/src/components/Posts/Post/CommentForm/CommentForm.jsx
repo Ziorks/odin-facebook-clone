@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useRef } from "react";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { AiOutlinePicture } from "react-icons/ai";
 import { PiGifFill } from "react-icons/pi";
@@ -8,49 +8,51 @@ import PostContext from "../../../../contexts/PostContext";
 import useApiPrivate from "../../../../hooks/useApiPrivate";
 import styles from "./CommentForm.module.css";
 
-function CommentForm({ parentComment = null, setInputRef, onSuccess }) {
+function CommentForm({
+  parentComment = null,
+  setInputRef,
+  onSubmit,
+  onError,
+  onSuccess,
+}) {
   const { auth } = useContext(AuthContext);
   const { post } = useContext(PostContext);
   const api = useApiPrivate();
 
   const [content, setContent] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState(null);
+  const pendingIdCounter = useRef(1);
 
   const handleCommentSubmit = (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setErrors(null);
+
+    const payload = {
+      content,
+      postId: post.id,
+      parentId: parentComment?.id || null,
+    };
+    const pendingId = pendingIdCounter.current++;
+    const pendingComment = {
+      ...payload,
+      author: auth.user,
+      pendingId,
+    };
+
+    onSubmit?.(pendingComment);
 
     api
-      .post("/comments", {
-        content,
-        postId: post.id,
-        parentId: parentComment?.id || null,
-      })
+      .post("/comments", payload)
       .then((resp) => {
         const { comment } = resp.data;
-        onSuccess?.(comment);
+        onSuccess?.({ ...comment, pendingId });
         setContent("");
       })
       .catch((err) => {
         console.error("comment creation error", err);
-
-        if (err.response?.status === 400) {
-          setErrors(err.response.data.errors);
-        } else {
-          setErrors([
-            { msg: err.response?.data?.message || "Something went wrong." },
-          ]);
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
+        onError?.(pendingComment, err);
       });
   };
 
   const handleInputChange = (e) => {
-    setErrors(null);
     setContent(e.target.value);
     e.target.style.height = "auto";
     e.target.style.height = e.target.scrollHeight + "px";
@@ -84,19 +86,12 @@ function CommentForm({ parentComment = null, setInputRef, onSuccess }) {
             </button>
           </div>
           <div>
-            <button type="submit" disabled={!content || isLoading}>
+            <button type="submit" disabled={!content}>
               <LuSendHorizontal />
             </button>
           </div>
         </div>
       </form>
-      {errors && (
-        <ul>
-          {errors.map((error, i) => (
-            <li key={i}>{error.msg}</li>
-          ))}
-        </ul>
-      )}
     </>
   );
 }

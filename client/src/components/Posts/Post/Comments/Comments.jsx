@@ -32,7 +32,7 @@ function Comments({ setCommentListRef }) {
           <ol className={styles.commentsList} ref={setCommentListRef}>
             {comments.map((comment, index) => (
               <li
-                key={comment.id}
+                key={comment.pendingId ? `p_${comment.pendingId}` : comment.id}
                 ref={index + 1 === comments.length ? visibleRef : undefined}
               >
                 <Comment comment={comment} />

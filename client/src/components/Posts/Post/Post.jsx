@@ -1,4 +1,4 @@
-import { useCallback, useContext, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import AuthContext from "../../../contexts/AuthContext";
@@ -169,8 +169,29 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
   );
 }
 
+//TODO:This maybe useful later
+//get a comments array with pending comments removed
+
+// const getOnlyPostedComments = (comments) => {
+//   return comments.reduce((prev, comment) => {
+//     //Not posted? -> remove it
+//     if (!Object.hasOwn(comment, "id")) return prev;
+
+//     //No replies? -> no need to remove pending comments
+//     if (!Object.hasOwn(comment, "replies")) return [...prev, comment];
+
+//     //Posted & has replies -> recursively remove pending replies
+//     return [
+//       ...prev,
+//       { ...comment, replies: getOnlyPostedComments(comment.replies) },
+//     ];
+//   }, []);
+// };
+
 function PostModal() {
-  const { toggleDetailsModal } = useContext(PostContext);
+  const { toggleDetailsModal, useComments, onPostComment } =
+    useContext(PostContext);
+  const { setData: setComments } = useComments;
   const commentsSectionRef = useRef();
   const setCommentsSectionRef = useCallback((node) => {
     commentsSectionRef.current = node;
@@ -184,6 +205,33 @@ function PostModal() {
     ref.current.focus();
   };
 
+  const onCommentSubmit = (pendingComment) => {
+    setComments((prev) => [pendingComment, ...prev]);
+  };
+
+  const onCommentError = (pendingComment, error) => {
+    setComments((prev) =>
+      prev.map((comment) => {
+        if (comment.pendingId === pendingComment.pendingId) {
+          return { ...pendingComment, error };
+        }
+        return comment;
+      }),
+    );
+  };
+
+  const onCommentPosted = (postedComment) => {
+    setComments((prev) =>
+      prev.map((comment) => {
+        if (comment.pendingId === postedComment.pendingId) {
+          return postedComment;
+        }
+        return comment;
+      }),
+    );
+    onPostComment();
+  };
+
   return (
     <Modal handleClose={toggleDetailsModal}>
       <div className={styles.postModalContainer}>
@@ -195,21 +243,42 @@ function PostModal() {
           <Comments setCommentListRef={setCommentsSectionRef} />
         </div>
         <div>
-          <CommentForm setInputRef={setCommentFormRef} />
+          <CommentForm
+            setInputRef={setCommentFormRef}
+            onSubmit={onCommentSubmit}
+            onError={onCommentError}
+            onSuccess={onCommentPosted}
+          />
         </div>
       </div>
     </Modal>
   );
 }
 
-function Post({ post: postObj, removePost, disableCommentForm }) {
+function Post({ post: postObj, removePost, disableComments }) {
   const [post, setPost] = useState(postObj);
-  const [topComment, setTopComment] = useState(postObj.topComment);
   const [showPostDetails, setShowPostDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const useComments = useDataFetchPaginated(`/posts/${post.id}/comments`, {
     disableFetchOnChange: true,
   });
+  const hasMounted = useRef(false);
+
+  useEffect(() => {
+    //add top comment to comments arr on mount
+    if (hasMounted.current) return;
+    hasMounted.current = true;
+
+    if (!postObj.topComment) return;
+
+    const newComment = { ...postObj.topComment };
+    if (newComment.reply) {
+      newComment.replies = [newComment.reply];
+      delete newComment.reply;
+    }
+
+    useComments.setData([newComment]);
+  }, [postObj, useComments]);
 
   if (!post) return;
 
@@ -235,22 +304,16 @@ function Post({ post: postObj, removePost, disableCommentForm }) {
     removePost?.(post.id);
   };
 
-  const onCommentChange = (comment) => {
-    if (comment.id === topComment?.id) {
-      setTopComment((prev) => ({ ...comment, reply: prev.reply }));
-    }
-
-    if (comment.id === topComment?.reply?.id) {
-      setTopComment((prev) => ({ ...prev, reply: comment }));
-    }
-  };
-
   const toggleDetailsModal = () => {
     setShowPostDetails((prev) => !prev);
   };
   const toggleDeleteModal = () => {
     setShowDeleteModal((prev) => !prev);
   };
+
+  const topComment =
+    postObj.topComment &&
+    useComments.data?.find((c) => c.id === postObj.topComment.id);
 
   return (
     <PostContext.Provider
@@ -261,12 +324,10 @@ function Post({ post: postObj, removePost, disableCommentForm }) {
         onPostComment,
         onPostEdit,
         onPostDelete,
-        onCommentChange,
         toggleDetailsModal,
         toggleDeleteModal,
         useComments,
-      }}
-    >
+      }}>
       {showPostDetails && <PostModal />}
       {showDeleteModal && (
         <DeleteModal
@@ -283,27 +344,57 @@ function Post({ post: postObj, removePost, disableCommentForm }) {
           handleNCommentsBtnClick={toggleDetailsModal}
           handleCommentBtnClick={toggleDetailsModal}
         />
-        {topComment && (
+        {!disableComments && (
           <>
-            {post._count.comments > 1 && (
-              <button onClick={toggleDetailsModal}>View more comments</button>
+            {topComment && (
+              <>
+                {/* TODO: below will be if(topComment || newComments.length > 0)*/}
+                {post._count.comments > 1 && (
+                  <button onClick={toggleDetailsModal}>
+                    View more comments
+                  </button>
+                )}
+                <Comment comment={topComment} disableReplies={true}>
+                  {/*TODO: below isn't working quite right
+                    I want to display the reply supplied from server if there is exactly 1; otherwise show 'view more' btn that toggles modal
+                    I also want to display new replies made outside of modal regardless of reply count
+
+                    MAIN IDEA: comments made in modal should not appear here
+                  */}
+                  {postObj.topComment.reply && (
+                    <>
+                      {topComment.replies.map((r) => {
+                        if (
+                          (postObj.topComment._count.replies < 2 &&
+                            r.id === postObj.topComment.reply.id) ||
+                          (Object.hasOwn(r, "pendingId") &&
+                            Object.hasOwn(r, "id"))
+                        ) {
+                          return (
+                            <Comment
+                              key={r.id}
+                              comment={r}
+                              disableReplies={true}
+                              parentIdChain={[postObj.topComment.id]}
+                            />
+                          );
+                        }
+                      })}
+                      {postObj.topComment._count.replies > 1 && (
+                        <div>
+                          <button onClick={toggleDetailsModal}>
+                            {`View ${topComment._count.replies} replies`}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </Comment>
+              </>
             )}
-            <Comment comment={topComment} disableReplies={true}>
-              {topComment.reply ? (
-                <Comment comment={topComment.reply} disableReplies={true} />
-              ) : (
-                topComment._count.replies > 1 && (
-                  <div>
-                    <button onClick={toggleDetailsModal}>
-                      {`View ${topComment._count.replies} replies`}
-                    </button>
-                  </div>
-                )
-              )}
-            </Comment>
+            <CommentForm />
           </>
         )}
-        {!disableCommentForm && <CommentForm />}
       </div>
     </PostContext.Provider>
   );
