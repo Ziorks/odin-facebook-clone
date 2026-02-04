@@ -3,7 +3,6 @@
   width: 100%;
   padding: 0.5rem 0.7rem;
   border-radius: 0.9rem;
-  overflow-y: auto;
   background-color: #555;
   color: #fff;
   border: 1px solid #777;
@@ -66,4 +65,8 @@
 
 .actionsContainer button:disabled {
   cursor: not-allowed;
+}
+
+.relative {
+  position: relative;
 }

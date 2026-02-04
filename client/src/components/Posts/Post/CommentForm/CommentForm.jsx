@@ -6,7 +6,10 @@ import { LuSendHorizontal } from "react-icons/lu";
 import AuthContext from "../../../../contexts/AuthContext";
 import PostContext from "../../../../contexts/PostContext";
 import useApiPrivate from "../../../../hooks/useApiPrivate";
+import GifSearch from "../../../GifSearch";
 import styles from "./CommentForm.module.css";
+
+const POPUPS = { NONE: "NONE", EMOJI: "EMOJI", GIF: "GIF" };
 
 function CommentForm({
   parentComment = null,
@@ -20,6 +23,7 @@ function CommentForm({
   const api = useApiPrivate();
 
   const [content, setContent] = useState("");
+  const [activePopup, setActivePopup] = useState(POPUPS.NONE);
   const formRef = useRef();
   const inputRef = useRef();
 
@@ -95,15 +99,27 @@ function CommentForm({
         />
         <div className={styles.actionsContainer}>
           <div>
-            <button type="button">
-              <BsEmojiSmileFill />
-            </button>
+            <span className={styles.relative}>
+              <button type="button">
+                <BsEmojiSmileFill />
+              </button>
+            </span>
             <button type="button">
               <AiOutlinePicture />
             </button>
-            <button type="button">
-              <PiGifFill />
-            </button>
+            <span className={styles.relative}>
+              {activePopup === POPUPS.GIF && <GifSearch />}
+              <button
+                type="button"
+                onClick={() =>
+                  setActivePopup((prev) =>
+                    prev === POPUPS.GIF ? POPUPS.NONE : POPUPS.GIF,
+                  )
+                }
+              >
+                <PiGifFill />
+              </button>
+            </span>
           </div>
           <div>
             <button type="submit" disabled={!content}>

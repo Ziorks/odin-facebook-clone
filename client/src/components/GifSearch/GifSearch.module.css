@@ -1,0 +1,52 @@
+.container {
+  background-color: black;
+  position: absolute;
+  bottom: calc(100% + 20px);
+  right: 0;
+  padding: 0.8rem;
+  width: 320px;
+  border-radius: 10px;
+}
+
+.input {
+  width: 100%;
+  background-color: #444;
+  color: #eee;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  padding: 0.2rem 0.4rem;
+}
+
+.input:focus {
+  outline: 3px solid #777;
+}
+
+.resultContainer {
+  overflow-y: auto;
+  height: 20rem;
+  margin-top: 1rem;
+}
+
+.results {
+  column-count: 2;
+  column-gap: 10px;
+  list-style: none;
+  padding: 10px 20px 10px 10px;
+}
+
+.results > li {
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.results > li:hover {
+  outline: 3px solid #ccc;
+}
+
+.results > li > img {
+  width: 100%;
+  display: block;
+}
