@@ -43,7 +43,7 @@
   right: 0;
 }
 
-.actionsContainer button {
+.actionBtn {
   padding: 0.3rem 0.5rem;
   line-height: 0;
   background: none;
@@ -54,16 +54,16 @@
   border-radius: 0.5rem;
 }
 
-.actionsContainer button:focus {
+.actionBtn:focus {
   outline: 2px solid #aaa;
 }
 
-.actionsContainer button:focus,
-.actionsContainer button:hover:not(:disabled) {
+.actionBtn:focus,
+.actionBtn:hover:not(:disabled) {
   color: #fff;
 }
 
-.actionsContainer button:disabled {
+.actionBtn:disabled {
   cursor: not-allowed;
 }
 

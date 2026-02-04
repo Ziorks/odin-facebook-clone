@@ -6,6 +6,7 @@ import { LuSendHorizontal } from "react-icons/lu";
 import AuthContext from "../../../../contexts/AuthContext";
 import PostContext from "../../../../contexts/PostContext";
 import useApiPrivate from "../../../../hooks/useApiPrivate";
+import EmojiPicker from "../../../EmojiPicker";
 import GifSearch from "../../../GifSearch";
 import styles from "./CommentForm.module.css";
 
@@ -74,6 +75,10 @@ function CommentForm({
     }
   };
 
+  const handleEmojiSelect = (emoji) => {
+    setContent((prev) => prev + emoji);
+  };
+
   return (
     <>
       <form
@@ -100,16 +105,28 @@ function CommentForm({
         <div className={styles.actionsContainer}>
           <div>
             <span className={styles.relative}>
-              <button type="button">
+              {activePopup === POPUPS.EMOJI && (
+                <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+              )}
+              <button
+                className={styles.actionBtn}
+                type="button"
+                onClick={() =>
+                  setActivePopup((prev) =>
+                    prev === POPUPS.EMOJI ? POPUPS.NONE : POPUPS.EMOJI,
+                  )
+                }
+              >
                 <BsEmojiSmileFill />
               </button>
             </span>
-            <button type="button">
+            <button className={styles.actionBtn} type="button">
               <AiOutlinePicture />
             </button>
             <span className={styles.relative}>
               {activePopup === POPUPS.GIF && <GifSearch />}
               <button
+                className={styles.actionBtn}
                 type="button"
                 onClick={() =>
                   setActivePopup((prev) =>
@@ -122,7 +139,11 @@ function CommentForm({
             </span>
           </div>
           <div>
-            <button type="submit" disabled={!content}>
+            <button
+              className={styles.actionBtn}
+              type="submit"
+              disabled={!content}
+            >
               <LuSendHorizontal />
             </button>
           </div>
