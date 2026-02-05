@@ -880,15 +880,14 @@ async function createProfilePicUpdatePost(wallId, mediaUrl) {
   return post;
 }
 
-async function createComment(authorId, postId, content, parentId) {
-  const parent = parentId !== null ? { connect: { id: parentId } } : {};
-
+async function createComment(authorId, postId, content, mediaUrl, parentId) {
   const comment = await prisma.comment.create({
     data: {
       author: { connect: { id: authorId } },
       post: { connect: { id: postId } },
       content,
-      parent,
+      mediaUrl,
+      parent: parentId !== undefined ? { connect: { id: parentId } } : {},
     },
     ...commentOptions,
   });
@@ -1046,10 +1045,13 @@ async function updatePost(postId, { content }) {
   return post;
 }
 
-async function updateComment(commentId, { content }) {
+async function updateComment(commentId, { content, mediaUrl }) {
   const comment = await prisma.comment.update({
     where: { id: commentId },
-    data: { content },
+    data: {
+      content,
+      mediaUrl,
+    },
     ...commentOptions,
   });
 

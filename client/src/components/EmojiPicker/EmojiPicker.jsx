@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import emojiData from "unicode-emoji-json/data-by-group";
 import styles from "./EmojiPicker.module.css";
 
-function EmojiSection({ search, group, onEmojiSelect, sectionRef }) {
+function EmojiSection({ search, group, onSelect, sectionRef }) {
   return (
     <>
       {!search && (
@@ -16,7 +16,7 @@ function EmojiSection({ search, group, onEmojiSelect, sectionRef }) {
           <button
             key={emoji.name}
             type="button"
-            onClick={() => onEmojiSelect?.(emoji.emoji)}
+            onClick={() => onSelect?.(emoji.emoji)}
           >
             {emoji.emoji}
           </button>
@@ -26,7 +26,7 @@ function EmojiSection({ search, group, onEmojiSelect, sectionRef }) {
   );
 }
 
-function EmojiPicker({ onEmojiSelect }) {
+function EmojiPicker({ onSelect }) {
   const [search, setSearch] = useState("");
   const [selectedSection, setSelectedSection] = useState(null);
 
@@ -72,7 +72,7 @@ function EmojiPicker({ onEmojiSelect }) {
             key={group.slug}
             group={group}
             search={search}
-            onEmojiSelect={onEmojiSelect}
+            onSelect={onSelect}
             sectionRef={
               selectedSection === group.slug ? scrollToSelected : undefined
             }

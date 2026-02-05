@@ -196,16 +196,44 @@ const validatePostCreate = [
 
 const validateCommentEdit = [
   body("content")
-    .exists()
-    .withMessage("'content'" + existsMessage)
-    .trim()
+    .optional()
     .isString()
-    .withMessage("Content must be a string"),
+    .withMessage("'content' must be a string")
+    .trim(),
+  body("imageUrl")
+    .optional()
+    .isURL()
+    .withMessage("'imageUrl' must be a valid URL"),
 ];
 
 const validateCommentCreate = [
-  body("postId").toInt(),
-  body("parentId").optional({ values: "null" }).toInt(),
+  (req, res, next) => {
+    upload.single("image")(req, res, (err) => {
+      if (err) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          req.fileValidationError = {
+            msg: "File too large. Max 2MB allowed.",
+          };
+        } else {
+          return next(err);
+        }
+      }
+
+      return next();
+    });
+  },
+  body("postId")
+    .exists()
+    .withMessage("'postId'" + existsMessage)
+    .bail()
+    .isInt()
+    .withMessage("'postId' must be an integer")
+    .toInt(),
+  body("parentId")
+    .optional()
+    .isInt()
+    .withMessage("'parentId' must be an integer if provided")
+    .toInt(),
   async (req, res, next) => {
     const { postId, parentId } = req.body;
 
@@ -227,26 +255,15 @@ const validateCommentCreate = [
 
     return next();
   },
-  ...validateCommentEdit,
-  body("postId")
-    .exists()
-    .withMessage("'postId'" + existsMessage)
-    .bail()
-    .isInt()
-    .withMessage("PostId must be an integer")
-    .bail()
-    .custom((_, { req }) => {
-      if (req.postIdValidationError) {
-        throw new Error(req.postIdValidationError.msg);
-      }
+  body("postId").custom((_, { req }) => {
+    if (req.postIdValidationError) {
+      throw new Error(req.postIdValidationError.msg);
+    }
 
-      return true;
-    }),
+    return true;
+  }),
   body("parentId")
-    .optional({ values: "null" })
-    .isInt()
-    .withMessage("ParentId must be an integer or null")
-    .bail()
+    .optional()
     .custom((_, { req }) => {
       if (req.parentIdValidationError) {
         throw new Error(req.parentIdValidationError.msg);
@@ -254,6 +271,29 @@ const validateCommentCreate = [
 
       return true;
     }),
+  body("image")
+    .optional()
+    .custom((_, { req }) => {
+      if (req.fileValidationError) {
+        throw new Error(req.fileValidationError.msg);
+      }
+
+      const image = req.file;
+      if (!image) return true;
+
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      if (!allowedTypes.includes(image.mimetype)) {
+        throw new Error("'image' must be an image file");
+      }
+
+      return true;
+    }),
+  ...validateCommentEdit,
 ];
 
 const validateWork = [

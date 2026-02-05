@@ -16,3 +16,8 @@
 .commentContent {
   white-space: pre-wrap;
 }
+
+.commentMedia {
+  display: block;
+  max-height: 100px;
+}

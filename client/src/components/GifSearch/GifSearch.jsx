@@ -19,7 +19,6 @@ function GifSearch({ onSelect }) {
     hasMounted.current = true;
 
     doFetch(trendingUrl);
-    inputRef.current.focus();
   }, []);
 
   const doFetch = (url) => {

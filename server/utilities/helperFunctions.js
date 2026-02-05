@@ -56,7 +56,10 @@ const getRefreshTokenCookieOptions = ({ rememberDevice = false } = {}) => {
 async function formatComment(comment, userId) {
   const myLike = await db.getLikeByUserAndTarget(userId, comment.id, "COMMENT");
   comment.myLike = myLike || null;
-  if (comment.isDeleted) comment.content = "[deleted comment]";
+  if (comment.isDeleted) {
+    comment.content = "[deleted comment]";
+    comment.mediaUrl = null;
+  }
 }
 
 async function attachMyLikesToPost(post, userId) {

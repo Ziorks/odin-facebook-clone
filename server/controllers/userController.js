@@ -1,6 +1,5 @@
 const { validationResult } = require("express-validator");
 const cloudinary = require("../utilities/cloudinary");
-const { extractPublicId } = require("cloudinary-build-url");
 const bcrypt = require("bcryptjs");
 const db = require("../db/queries");
 const { attachMyLikesToPost } = require("../utilities/helperFunctions");

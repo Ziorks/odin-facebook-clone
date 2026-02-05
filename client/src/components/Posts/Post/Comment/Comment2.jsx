@@ -8,6 +8,7 @@ import {
   getDuplicatesRemovedMerged,
 } from "../../../../utils/helperFunctions";
 import Modal from "../../../Modal";
+import ImagePreview from "../../../ImagePreview";
 import Likes from "../Likes";
 import LikeButton from "../LikeButton";
 import CommentForm from "../CommentForm";
@@ -105,8 +106,9 @@ function Replies({
   );
 }
 
-function EditForm({ id, content, handleCancel, onSuccess }) {
-  const [formContent, setFormContent] = useState(content);
+function EditForm({ comment, handleCancel, onSuccess }) {
+  const [content, setContent] = useState(comment.content ?? "");
+  const [imageUrl, setImageUrl] = useState(comment.mediaUrl);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const api = useApiPrivate();
@@ -116,8 +118,12 @@ function EditForm({ id, content, handleCancel, onSuccess }) {
     setError(null);
     setIsLoading(true);
 
+    const payload = {};
+    if (content.trim()) payload.content = content;
+    if (imageUrl) payload.imageUrl = imageUrl;
+
     api
-      .put(`/comments/${id}`, { content: formContent })
+      .put(`/comments/${comment.id}`, payload)
       .then((resp) => {
         onSuccess?.(resp.data.comment);
       })
@@ -131,12 +137,19 @@ function EditForm({ id, content, handleCancel, onSuccess }) {
 
   return (
     <form>
-      <textarea
-        onChange={(e) => setFormContent(e.target.value)}
-        value={formContent}
-      />
+      <textarea onChange={(e) => setContent(e.target.value)} value={content} />
+      {imageUrl && (
+        <ImagePreview
+          imageUrl={imageUrl}
+          handleRemove={() => setImageUrl(null)}
+        />
+      )}
       <div>
-        <button type="submit" onClick={handleSubmit} disabled={isLoading}>
+        <button
+          type="submit"
+          onClick={handleSubmit}
+          disabled={isLoading || (!content && !imageUrl)}
+        >
           Save
         </button>
         <button onClick={handleCancel} disabled={isLoading}>
@@ -348,14 +361,18 @@ function Comment({
         </Link>
         {showEditForm ? (
           <EditForm
-            id={comment.id}
-            content={comment.content}
+            comment={comment}
             handleCancel={() => setShowEditForm(false)}
             onSuccess={onEditSuccess}
           />
         ) : (
           <>
-            <p className={styles.commentContent}>{comment.content}</p>
+            {comment.content !== null && (
+              <p className={styles.commentContent}>{comment.content}</p>
+            )}
+            {comment.mediaUrl !== null && (
+              <img className={styles.commentMedia} src={comment.mediaUrl} />
+            )}
             <div>
               <span>
                 {comment.error

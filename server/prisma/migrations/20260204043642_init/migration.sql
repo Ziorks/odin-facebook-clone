@@ -186,7 +186,8 @@ CREATE TABLE "public"."Post" (
 -- CreateTable
 CREATE TABLE "public"."Comment" (
     "id" SERIAL NOT NULL,
-    "content" TEXT NOT NULL,
+    "content" TEXT,
+    "mediaUrl" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
