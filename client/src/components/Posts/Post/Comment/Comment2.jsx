@@ -274,38 +274,36 @@ function Comment({
     setComments((prev) => getEditedComments(prev, parentIdChain));
   };
 
+  const getFormattedComment = (oldComment, newComment) => {
+    const result = { ...newComment };
+    if (Object.hasOwn(oldComment, "replies"))
+      result.replies = oldComment.replies;
+    if (Object.hasOwn(oldComment, "pendingId"))
+      result.pendingId = oldComment.pendingId;
+    return result;
+  };
+
   const onDeleteSuccess = (deletedComment) => {
-    setComment((prev) => {
-      const newComment = { ...deletedComment };
-      if (Object.hasOwn(prev, "replies")) newComment.replies = prev.replies;
-      return newComment;
-    });
+    setComment((prev) => getFormattedComment(prev, deletedComment));
     setShowDeleteModal(false);
   };
 
   const onEditSuccess = (editedComment) => {
-    setComment((prev) => {
-      const newComment = { ...editedComment };
-      if (Object.hasOwn(prev, "replies")) newComment.replies = prev.replies;
-      return newComment;
-    });
+    setComment((prev) => getFormattedComment(prev, editedComment));
     setShowEditForm(false);
   };
 
   const onLikeSuccess = (like) => {
-    const updatedComment = {
-      ...comment,
-      _count: {
-        ...comment._count,
-        likes: comment._count.likes + (like ? 1 : -1),
-      },
-      myLike: like,
-    };
-
     setComment((prev) => {
-      const newComment = { ...updatedComment };
-      if (Object.hasOwn(prev, "replies")) newComment.replies = prev.replies;
-      return newComment;
+      const updatedComment = {
+        ...prev,
+        _count: {
+          ...prev._count,
+          likes: prev._count.likes + (like ? 1 : -1),
+        },
+        myLike: like,
+      };
+      return getFormattedComment(prev, updatedComment);
     });
   };
 
