@@ -37,12 +37,12 @@ function CommentForm({
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append("postId", post.id);
 
+    formData.append("postId", post.id);
     if (parentComment?.id) {
       formData.append("parentId", parentComment.id);
     }
-    if (content.trim()) {
+    if (content) {
       formData.append("content", content);
     }
     if (image.file) {
@@ -64,6 +64,7 @@ function CommentForm({
     });
 
     setContent("");
+    closePopups();
     removeImage();
     onSubmit?.(pendingComment);
 
@@ -95,12 +96,25 @@ function CommentForm({
     }
   };
 
+  const closePopups = () => {
+    setActivePopup(POPUPS.NONE);
+  };
+  const toggleGifSelect = () => {
+    setActivePopup((prev) => (prev === POPUPS.GIF ? POPUPS.NONE : POPUPS.GIF));
+  };
+  const toggleEmojiSelect = () => {
+    setActivePopup((prev) =>
+      prev === POPUPS.EMOJI ? POPUPS.NONE : POPUPS.EMOJI,
+    );
+  };
+
   const handleEmojiSelect = (emoji) => {
     setContent((prev) => prev + emoji);
+    closePopups();
   };
   const handleGifSelect = (gif) => {
     setImage({ file: null, previewURL: gif.images.original.webp });
-    setActivePopup(POPUPS.NONE);
+    closePopups();
   };
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -137,6 +151,7 @@ function CommentForm({
           value={content}
           onChange={handleInputChange}
           onKeyDown={onTextareaKeyDown}
+          onFocus={closePopups}
         />
         <input
           hidden
@@ -162,11 +177,7 @@ function CommentForm({
                 <button
                   className={styles.actionBtn}
                   type="button"
-                  onClick={() =>
-                    setActivePopup((prev) =>
-                      prev === POPUPS.EMOJI ? POPUPS.NONE : POPUPS.EMOJI,
-                    )
-                  }
+                  onClick={toggleEmojiSelect}
                 >
                   <BsEmojiSmileFill />
                 </button>
@@ -178,16 +189,16 @@ function CommentForm({
                 <button
                   className={styles.actionBtn}
                   type="button"
-                  onClick={() =>
-                    setActivePopup((prev) =>
-                      prev === POPUPS.GIF ? POPUPS.NONE : POPUPS.GIF,
-                    )
-                  }
+                  onClick={toggleGifSelect}
                 >
                   <PiGifFill />
                 </button>
               </span>
-              <label htmlFor={imageInputId} className={styles.actionBtn}>
+              <label
+                htmlFor={imageInputId}
+                className={styles.actionBtn}
+                onClick={closePopups}
+              >
                 <AiOutlinePicture />
               </label>
             </div>
@@ -195,7 +206,7 @@ function CommentForm({
               <button
                 className={styles.actionBtn}
                 type="submit"
-                disabled={!content && !image.previewURL}
+                disabled={!content.trim() && !image.previewURL}
               >
                 <LuSendHorizontal />
               </button>
