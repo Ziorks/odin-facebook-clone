@@ -11,7 +11,7 @@ function EmojiSection({ search, group, onSelect, sectionRef }) {
         </p>
       )}
       {group.emojis.map((emoji) => {
-        if (search && !emoji.name.includes(search)) return;
+        if (search && !emoji.name.toLowerCase().includes(search)) return;
         return (
           <button
             key={emoji.name}
@@ -43,7 +43,7 @@ function EmojiPicker({ onSelect }) {
 
     emojisContainer.scrollTo({
       top: emojisContainer.scrollTop + (sectionTop - containerTop),
-      behavior: "smooth",
+      behavior: "instant",
     });
   }, []);
 
@@ -71,7 +71,7 @@ function EmojiPicker({ onSelect }) {
           <EmojiSection
             key={group.slug}
             group={group}
-            search={search}
+            search={search.toLowerCase()}
             onSelect={onSelect}
             sectionRef={
               selectedSection === group.slug ? scrollToSelected : undefined

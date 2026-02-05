@@ -43,5 +43,14 @@
   background: none;
   border: none;
   cursor: pointer;
+}
+
+.emojisContainer > button {
+  display: inline-block;
+  margin: 0 0.2rem;
+  font-size: 1.5em;
+}
+
+.groupNav > button {
   font-size: 1rem;
 }
