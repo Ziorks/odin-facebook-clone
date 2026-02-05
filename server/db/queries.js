@@ -438,6 +438,7 @@ async function getCommentReplies(commentId, { page, resultsPerPage } = {}) {
   };
   const queryOptions = {
     where,
+    orderBy: { createdAt: "desc" },
     ...commentOptions,
   };
 
@@ -535,7 +536,7 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
     if (post.comments.length > 0) {
       const comment = post.comments[0];
       prev.push(comment);
-      if (comment.replies.length > 0) {
+      if (comment._count.replies === 1) {
         prev.push(comment.replies[0]);
       }
     }
@@ -563,10 +564,11 @@ async function getWall(wallId, { page, resultsPerPage } = {}) {
   //reconstruct posts with new comments/replies
   posts.forEach((post) => {
     const topComment = commentsByPost[post.id]?.comment;
+    const reply = commentsByPost[post.id]?.reply;
     if (topComment) {
-      delete topComment.replies;
-      topComment.reply = commentsByPost[post.id].reply ?? null;
+      topComment.replies = reply ? [reply] : [];
     }
+
     delete post.comments;
     post.topComment = topComment ?? null;
   });
@@ -878,15 +880,14 @@ async function createProfilePicUpdatePost(wallId, mediaUrl) {
   return post;
 }
 
-async function createComment(authorId, postId, content, parentId) {
-  const parent = parentId !== null ? { connect: { id: parentId } } : {};
-
+async function createComment(authorId, postId, content, mediaUrl, parentId) {
   const comment = await prisma.comment.create({
     data: {
       author: { connect: { id: authorId } },
       post: { connect: { id: postId } },
       content,
-      parent,
+      mediaUrl,
+      parent: parentId !== undefined ? { connect: { id: parentId } } : {},
     },
     ...commentOptions,
   });
@@ -1044,10 +1045,13 @@ async function updatePost(postId, { content }) {
   return post;
 }
 
-async function updateComment(commentId, { content }) {
+async function updateComment(commentId, { content, mediaUrl }) {
   const comment = await prisma.comment.update({
     where: { id: commentId },
-    data: { content },
+    data: {
+      content,
+      mediaUrl,
+    },
     ...commentOptions,
   });
 

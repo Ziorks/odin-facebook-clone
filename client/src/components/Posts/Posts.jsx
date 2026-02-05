@@ -3,7 +3,7 @@ import useIntersection from "../../hooks/useIntersection";
 import Post from "./Post";
 // import styles from "./Posts.module.css";
 
-function Posts({ posts, removePost, disableCommentForms = false, fetchNext }) {
+function Posts({ posts, removePost, disableComments = false, fetchNext }) {
   const { ref, isVisible } = useIntersection("50px");
   const fetchNextRef = useRef(fetchNext);
 
@@ -24,7 +24,7 @@ function Posts({ posts, removePost, disableCommentForms = false, fetchNext }) {
           <Post
             post={post}
             removePost={removePost}
-            disableCommentForm={disableCommentForms}
+            disableComments={disableComments}
           />
         </li>
       ))}

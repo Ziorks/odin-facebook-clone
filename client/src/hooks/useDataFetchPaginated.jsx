@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import axios from "axios";
 import useApiPrivate from "./useApiPrivate";
+import { getDuplicatesRemovedMerged } from "../utils/helperFunctions";
 
 function useDataFetchPaginated(
   path,
@@ -25,7 +26,7 @@ function useDataFetchPaginated(
 
   const fetchData = useCallback(
     (page) => {
-      if (page < 1 || (data && page > nPages)) return;
+      if (page < 1) return;
 
       abortRef.current?.();
 
@@ -44,9 +45,12 @@ function useDataFetchPaginated(
         )
         .then((resp) => {
           const { results, count } = resp.data;
+
           setData((prev) => {
             const newData =
-              prev && !overwriteDataOnFetch ? [...prev, ...results] : results;
+              prev && !overwriteDataOnFetch
+                ? getDuplicatesRemovedMerged(prev, results)
+                : results;
             if (!dataLengthLimit) return newData;
             return newData.length > dataLengthLimit
               ? newData.slice(newData.length - dataLengthLimit)
@@ -63,16 +67,7 @@ function useDataFetchPaginated(
           setIsLoading(false);
         });
     },
-    [
-      api,
-      data,
-      nPages,
-      path,
-      resultsPerPage,
-      query,
-      overwriteDataOnFetch,
-      dataLengthLimit,
-    ],
+    [api, path, resultsPerPage, query, overwriteDataOnFetch, dataLengthLimit],
   );
 
   useEffect(() => {

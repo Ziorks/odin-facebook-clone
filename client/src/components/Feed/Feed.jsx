@@ -48,7 +48,7 @@ function Feed() {
           <Posts
             posts={posts}
             removePost={removePost}
-            disableCommentForms={true}
+            disableComments={true}
             fetchNext={fetchNext}
           />
         ) : (

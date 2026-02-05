@@ -1,0 +1,56 @@
+.container {
+  background-color: black;
+  position: absolute;
+  bottom: calc(100% + 20px);
+  right: 0;
+  padding: 0.8rem;
+  border-radius: 10px;
+  width: 250px;
+}
+
+.input {
+  width: 100%;
+  background-color: #444;
+  color: #eee;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  padding: 0.2rem 0.4rem;
+}
+
+.input:focus {
+  outline: 3px solid #777;
+}
+
+.emojisContainer {
+  margin: 10px 0;
+  height: 15rem;
+  overflow-y: auto;
+  padding-right: 20px;
+}
+
+.groupTitle {
+  margin: 10px 0;
+}
+
+.groupNav {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.emojisContainer > button,
+.groupNav > button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.emojisContainer > button {
+  display: inline-block;
+  margin: 0 0.2rem;
+  font-size: 1.5em;
+}
+
+.groupNav > button {
+  font-size: 1rem;
+}

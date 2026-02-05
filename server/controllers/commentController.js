@@ -1,4 +1,6 @@
 const { validationResult } = require("express-validator");
+const cloudinary = require("../utilities/cloudinary");
+const { extractPublicId } = require("cloudinary-build-url");
 const db = require("../db/queries");
 const {
   getComment,
@@ -11,9 +13,11 @@ const {
 } = require("../utilities/validators");
 const { formatComment } = require("../utilities/helperFunctions");
 
+const UPLOADS_FOLDER = "facebook_clone_comment_pics";
+
 const commentPost = [
   validateCommentCreate,
-  async (req, res) => {
+  async (req, res, next) => {
     //Create a comment
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -22,13 +26,48 @@ const commentPost = [
         .json({ message: "validation failed", errors: errors.array() });
     }
 
+    //if picture was sent => upload to cloudinary
+    if (req.file) {
+      const { buffer, mimetype } = req.file;
+      const b64 = Buffer.from(buffer).toString("base64");
+      const dataURI = "data:" + mimetype + ";base64," + b64;
+      const result = await cloudinary.uploader.upload(dataURI, {
+        resource_type: "auto",
+        folder: UPLOADS_FOLDER,
+      });
+      req.body.imageUrl = result.secure_url;
+      req.body.imagePublicId = result.public_id;
+    }
+
     const authorId = req.user.id;
-    const { postId, content, parentId } = req.body;
+    const { postId, content, parentId, imageUrl, imagePublicId } = req.body;
 
-    const comment = await db.createComment(authorId, postId, content, parentId);
-    await formatComment(comment, req.user.id);
+    try {
+      const comment = await db.createComment(
+        authorId,
+        postId,
+        content,
+        imageUrl,
+        parentId,
+      );
+      await formatComment(comment, req.user.id);
 
-    return res.json({ message: "comment created", comment });
+      return res.json({ message: "comment created", comment });
+    } catch (err) {
+      //delete new pic if user update fails
+      if (imagePublicId) {
+        try {
+          await cloudinary.uploader.destroy(imagePublicId);
+        } catch (err) {
+          console.error(
+            `Cloudinary file with public id: '${imagePublicId}' not deleted. You will need to delete it manually.`,
+          );
+          return next(err);
+        }
+      }
+
+      return next(err);
+    }
   },
 ];
 
@@ -43,7 +82,7 @@ const commentEditPut = [
   getComment,
   commentEditAuth,
   validateCommentEdit,
-  async (req, res) => {
+  async (req, res, next) => {
     //Edit a comment
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -52,8 +91,27 @@ const commentEditPut = [
         .json({ message: "validation failed", errors: errors.array() });
     }
 
-    const { content } = req.body;
-    const comment = await db.updateComment(req.comment.id, { content });
+    const oldMediaUrl = req.comment.mediaUrl;
+    const { content, imageUrl } = req.body;
+
+    const comment = await db.updateComment(req.comment.id, {
+      content: content ?? null,
+      mediaUrl: imageUrl ?? null,
+    });
+
+    if (oldMediaUrl && !imageUrl) {
+      const publicId = extractPublicId(oldMediaUrl);
+      if (publicId.split("/")[0] !== UPLOADS_FOLDER) return;
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch (err) {
+        console.error(
+          `Cloudinary file with public id: '${publicId}' not deleted. You will need to delete it manually.`,
+        );
+        return next(err);
+      }
+    }
+
     await formatComment(comment, req.user.id);
 
     return res.json({ message: "comment edited", comment });

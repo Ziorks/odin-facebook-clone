@@ -201,7 +201,8 @@ model Post {
 
 model Comment {
   id        Int       @id @default(autoincrement())
-  content   String
+  content   String?
+  mediaUrl  String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   isDeleted Boolean   @default(false)
