@@ -13,7 +13,6 @@ function Wall() {
   const {
     data: posts,
     setData: setPosts,
-    count,
     isLoading,
     error,
     fetchNext,
@@ -21,11 +20,10 @@ function Wall() {
 
   const handleClose = () => setShowPostModal(false);
   const onSuccess = (post) => {
-    setPosts((prev) => [post, ...prev]);
+    setPosts((prev) => (prev ? [post, ...prev] : [post]));
     handleClose();
   };
   const removePost = (postId) => {
-    if (!Array.isArray(posts)) return;
     setPosts((prev) => prev.filter((post) => post.id !== postId));
   };
 
@@ -48,12 +46,12 @@ function Wall() {
         </button>
       </div>
       {posts &&
-        (count > 0 ? (
+        (posts.length > 0 ? (
           <Posts posts={posts} removePost={removePost} fetchNext={fetchNext} />
         ) : (
           <p>
-            There are no posts on{" "}
-            {isCurrentUser ? "your" : `${user.username}'s`} wall
+            There are no posts on
+            {isCurrentUser ? " your" : ` ${user.username}'s`} wall
           </p>
         ))}
       {isLoading && <p>Loading...</p>}

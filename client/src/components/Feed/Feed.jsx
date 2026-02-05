@@ -11,7 +11,6 @@ function Feed() {
   const {
     data: posts,
     setData: setPosts,
-    count,
     isLoading,
     error,
     fetchNext,
@@ -21,11 +20,10 @@ function Feed() {
 
   const handleClose = () => setShowPostModal(false);
   const onSuccess = (post) => {
-    setPosts((prev) => [post, ...prev]);
+    setPosts((prev) => (prev ? [post, ...prev] : [post]));
     handleClose();
   };
   const removePost = (postId) => {
-    if (!Array.isArray(posts)) return;
     setPosts((prev) => prev.filter((post) => post.id !== postId));
   };
 
@@ -44,7 +42,7 @@ function Feed() {
         </button>
       </div>
       {posts &&
-        (count > 0 ? (
+        (posts.length > 0 ? (
           <Posts
             posts={posts}
             removePost={removePost}
