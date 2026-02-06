@@ -836,12 +836,13 @@ async function createFriendship(senderId, recipientId) {
   return friendship;
 }
 
-async function createRegularPost(authorId, wallId, content) {
+async function createRegularPost(authorId, wallId, content, mediaUrl) {
   const post = await prisma.post.create({
     data: {
       author: { connect: { id: authorId } },
       wall: { connect: { id: wallId } },
       content,
+      mediaUrl,
       type: "REGULAR",
     },
     include: {
@@ -1034,10 +1035,13 @@ async function updateFriendship(friendshipId, { accepted }) {
   return friendship;
 }
 
-async function updatePost(postId, { content }) {
+async function updatePost(postId, { content, mediaUrl }) {
   const post = await prisma.post.update({
     where: { id: postId },
-    data: { content },
+    data: {
+      content,
+      mediaUrl,
+    },
     ...postOptions,
   });
   await attachLikesCountToPost(post);
@@ -1054,10 +1058,6 @@ async function updateComment(commentId, { content, mediaUrl }) {
     },
     ...commentOptions,
   });
-
-  if (!comment) {
-    return null;
-  }
   await attachLikesCountToComment(comment);
 
   return comment;

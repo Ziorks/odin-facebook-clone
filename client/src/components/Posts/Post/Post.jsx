@@ -6,16 +6,17 @@ import PostContext from "../../../contexts/PostContext";
 import useApiPrivate from "../../../hooks/useApiPrivate";
 import useDataFetchPaginated from "../../../hooks/useDataFetchPaginated";
 import Modal from "../../Modal";
+import ImagePreview from "../../ImagePreview";
 import LikeButton from "./LikeButton";
-import Comment from "./Comment";
 import Comments from "./Comments";
 import CommentForm from "./CommentForm";
+import Likes from "./Likes";
 import styles from "./Post.module.css";
-import Likes from "./Likes/Likes";
 
 function EditForm({ handleClose }) {
   const { post, onPostEdit } = useContext(PostContext);
-  const [formContent, setFormContent] = useState(post.content);
+  const [content, setContent] = useState(post.content ?? "");
+  const [imageUrl, setImageUrl] = useState(post.mediaUrl);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const api = useApiPrivate();
@@ -25,8 +26,12 @@ function EditForm({ handleClose }) {
     setError(null);
     setIsLoading(true);
 
+    const payload = {};
+    if (content.trim()) payload.content = content;
+    if (imageUrl) payload.imageUrl = imageUrl;
+
     api
-      .put(`/posts/${post.id}`, { content: formContent })
+      .put(`/posts/${post.id}`, payload)
       .then((resp) => {
         handleClose();
         onPostEdit(resp.data.post);
@@ -41,12 +46,19 @@ function EditForm({ handleClose }) {
 
   return (
     <form>
-      <textarea
-        onChange={(e) => setFormContent(e.target.value)}
-        value={formContent}
-      />
+      <textarea onChange={(e) => setContent(e.target.value)} value={content} />{" "}
+      {imageUrl && (
+        <ImagePreview
+          imageUrl={imageUrl}
+          handleRemove={() => setImageUrl(null)}
+        />
+      )}
       <div>
-        <button type="submit" onClick={handleSubmit} disabled={isLoading}>
+        <button
+          type="submit"
+          onClick={handleSubmit}
+          disabled={isLoading || (!content && !imageUrl)}
+        >
           Save
         </button>
         <button onClick={handleClose} disabled={isLoading}>

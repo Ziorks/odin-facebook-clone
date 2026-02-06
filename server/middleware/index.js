@@ -1,4 +1,5 @@
 const passport = require("passport");
+const cloudinary = require("../utilities/cloudinary");
 const db = require("../db/queries");
 const {
   formatComment,
@@ -163,6 +164,23 @@ const getPaginationQuery = async (req, res, next) => {
   return next();
 };
 
+const uploadFileToCloudinary = (folderName) => {
+  return async (req, res, next) => {
+    if (req.file) {
+      const { buffer, mimetype } = req.file;
+      const b64 = Buffer.from(buffer).toString("base64");
+      const dataURI = "data:" + mimetype + ";base64," + b64;
+      const result = await cloudinary.uploader.upload(dataURI, {
+        resource_type: "auto",
+        folder: folderName,
+      });
+      req.body.uploadedFileUrl = result.secure_url;
+    }
+
+    return next();
+  };
+};
+
 module.exports = {
   notFoundHandler,
   errorHandler,
@@ -178,4 +196,5 @@ module.exports = {
   getSchool,
   getCity,
   getPaginationQuery,
+  uploadFileToCloudinary,
 };

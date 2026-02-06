@@ -2,6 +2,12 @@ require("dotenv").config();
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { extractPublicId } = require("cloudinary-build-url");
+const cloudinary = require("../utilities/cloudinary");
+const {
+  POST_UPLOAD_FOLDER,
+  COMMENT_UPLOAD_FOLDER,
+} = require("../utilities/constants");
 const db = require("../db/queries");
 
 const ACCESS_SECRET = process.env.ACCESS_TOKEN_SECRET;
@@ -96,6 +102,81 @@ async function getAuthObject(userId) {
   };
 }
 
+async function deleteFromCloudinary(url, cloudinaryFolderName) {
+  if (!url || !cloudinaryFolderName) return;
+
+  const publicId = extractPublicId(url);
+  if (publicId.split("/")[0] !== cloudinaryFolderName) return;
+
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (err) {
+    console.error(
+      `Cloudinary file with public id: '${publicId}' not deleted. You will need to delete it manually.`,
+      err,
+    );
+    throw new Error(err);
+  }
+}
+
+async function deleteUploadedFilesFromPost(post) {
+  //destroy media on post
+  if (post.type === "REGULAR") {
+    await deleteFromCloudinary(post.mediaUrl, POST_UPLOAD_FOLDER);
+  }
+
+  const mediaUrls = [];
+
+  //loop through each depth of comments/replies accumulating mediaUrls
+  let comments = [];
+  if (post._count.comments > 0) {
+    const initialComments = await db.getPostComments(post.id);
+    comments.push(...initialComments.results);
+  }
+
+  while (comments.length > 0) {
+    const commentIdsWithReplies = [];
+
+    comments.forEach((comment) => {
+      if (comment._count.replies > 0) {
+        commentIdsWithReplies.push(comment.id);
+      }
+      if (comment.mediaUrl) {
+        mediaUrls.push(comment.mediaUrl);
+      }
+    });
+
+    const nextComments = [];
+    await Promise.all(
+      commentIdsWithReplies.map(async (id) => {
+        try {
+          const replies = await db.getCommentReplies(id);
+          nextComments.push(...replies.results);
+        } catch (err) {
+          console.error(
+            `an error occured getting replies for comment with id:${id} in function 'deleteUploadedFilesFromPost'`,
+            err,
+          );
+          return;
+        }
+      }),
+    );
+
+    comments = nextComments;
+  }
+
+  //destroy all accumulated mediaUrls
+  await Promise.all(
+    mediaUrls.map(async (url) => {
+      try {
+        await deleteFromCloudinary(url, COMMENT_UPLOAD_FOLDER);
+      } catch (err) {
+        return;
+      }
+    }),
+  );
+}
+
 module.exports = {
   generateAccessToken,
   generateRefreshToken,
@@ -105,4 +186,6 @@ module.exports = {
   attachMyLikesToPost,
   getRandomNumber,
   getAuthObject,
+  deleteFromCloudinary,
+  deleteUploadedFilesFromPost,
 };

@@ -2,27 +2,39 @@ import { useState, useContext } from "react";
 import useApiPrivate from "../../hooks/useApiPrivate";
 import AuthContext from "../../contexts/AuthContext";
 import Modal from "../Modal";
+import TextAndImageForm from "../TextAndImageForm";
 import styles from "./PostCreationModal.module.css";
 
 function PostCreationModal({ handleClose, wallId, onSuccess }) {
-  const [content, setContent] = useState("");
+  const { auth } = useContext(AuthContext);
+  const api = useApiPrivate();
+
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState(null);
-  const api = useApiPrivate();
-  const { auth } = useContext(AuthContext);
 
-  const handlePostSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (content, file, imageUrl) => {
     setIsLoading(true);
     setErrors(null);
 
+    const formData = new FormData();
+
+    formData.append("wallId", wallId);
+    if (content) {
+      formData.append("content", content);
+    }
+    if (file) {
+      formData.append("image", file);
+    } else if (imageUrl) {
+      formData.append("imageUrl", imageUrl);
+    }
+
     api
-      .post("/posts", { content, wallId })
+      .post("/posts", formData)
       .then((resp) => {
-        onSuccess(resp.data.post);
+        const { post } = resp.data;
+        onSuccess?.(post);
       })
       .catch((err) => {
-        setIsLoading(false);
         console.error("post creation error", err);
 
         if (err.response?.status === 400) {
@@ -32,7 +44,8 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
             { msg: err.response?.data?.message || "Something went wrong." },
           ]);
         }
-      });
+      })
+      .finally(() => setIsLoading(false));
   };
 
   return (
@@ -43,6 +56,12 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
         <span>{auth.user.username}</span>
       </div>
       {/* TODO: consider adding post privacy settings*/}
+      <TextAndImageForm
+        handleSubmit={handleSubmit}
+        placeholderText={`What's on your mind, ${auth.user.username}`}
+        imageInputId={"post-image-input"}
+      />
+      {isLoading && <p>Posting...</p>}
       {errors && (
         <ul>
           {errors.map((error, i) => (
@@ -50,17 +69,6 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
           ))}
         </ul>
       )}
-      <form onSubmit={handlePostSubmit}>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
-        <div>
-          <button type="submit" disabled={!content || isLoading}>
-            Post
-          </button>
-        </div>
-      </form>
     </Modal>
   );
 }

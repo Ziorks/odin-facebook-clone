@@ -177,21 +177,61 @@ const validateUserUpdate = [
 
 const validatePostEdit = [
   body("content")
-    .exists()
-    .withMessage("'content'" + existsMessage)
-    .trim()
+    .optional()
     .isString()
-    .withMessage("Content must be a string"),
+    .withMessage("'content' must be a string")
+    .trim(),
+  body("imageUrl")
+    .optional()
+    .isURL()
+    .withMessage("'imageUrl' must be a valid URL"),
 ];
 
 const validatePostCreate = [
+  (req, res, next) => {
+    upload.single("image")(req, res, (err) => {
+      if (err) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          req.fileValidationError = {
+            msg: "File too large. Max 2MB allowed.",
+          };
+        } else {
+          return next(err);
+        }
+      }
+
+      return next();
+    });
+  },
   ...validatePostEdit,
   body("wallId")
     .exists()
     .withMessage("'wallId'" + existsMessage)
+    .bail()
     .isInt()
-    .withMessage("WallId must be an integer")
+    .withMessage("'wallId' must be an integer")
     .toInt(),
+  async (req, res, next) => {
+    const { wallId } = req.body;
+
+    if (wallId) {
+      const isWallIdValid = await db.getUserById(wallId);
+      if (!isWallIdValid) {
+        req.wallIdValidationError = {
+          msg: "'wallId' is not a valid user id",
+        };
+      }
+    }
+
+    return next();
+  },
+  body("wallId").custom((_, { req }) => {
+    if (req.wallIdValidationError) {
+      throw new Error(req.wallIdValidationError.msg);
+    }
+
+    return true;
+  }),
 ];
 
 const validateCommentEdit = [
