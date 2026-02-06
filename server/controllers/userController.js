@@ -1,8 +1,10 @@
 const { validationResult } = require("express-validator");
-const cloudinary = require("../utilities/cloudinary");
 const bcrypt = require("bcryptjs");
 const db = require("../db/queries");
-const { attachMyLikesToPost } = require("../utilities/helperFunctions");
+const {
+  attachMyLikesToPost,
+  deleteFromCloudinary,
+} = require("../utilities/helperFunctions");
 const {
   validateWork,
   validateSchool,
@@ -18,7 +20,9 @@ const {
   getSchool,
   getCity,
   getPaginationQuery,
+  uploadFileToCloudinary,
 } = require("../middleware");
+const { PROFILE_PICS_UPLOAD_FOLDER } = require("../utilities/constants");
 
 const usersSearch = [
   getPaginationQuery,
@@ -50,6 +54,7 @@ const userPut = [
   getUser,
   profileEditAuth,
   validateUserUpdate,
+  uploadFileToCloudinary(PROFILE_PICS_UPLOAD_FOLDER),
   async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -58,23 +63,9 @@ const userPut = [
         .json({ message: "validation failed", errors: errors.array() });
     }
 
-    //if picture was sent => upload to cloudinary
-    if (req.file) {
-      const { buffer, mimetype } = req.file;
-      const b64 = Buffer.from(buffer).toString("base64");
-      const dataURI = "data:" + mimetype + ";base64," + b64;
-      const result = await cloudinary.uploader.upload(dataURI, {
-        resource_type: "auto",
-        folder: "facebook_clone_profile_pics",
-      });
-      req.body.avatarURL = result.secure_url;
-      req.body.avatarPublicId = result.public_id;
-    }
-
     const user = req.paramsUser;
     const {
-      avatarURL,
-      avatarPublicId,
+      uploadedFileUrl,
       username,
       email,
       newPassword,
@@ -88,27 +79,22 @@ const userPut = [
           username,
           hashedPassword,
           email,
-          avatar: avatarURL,
+          avatar: uploadedFileUrl,
           firstName,
           lastName,
         });
       } catch (err) {
         //delete new pic if user update fails
-        if (avatarPublicId) {
-          try {
-            await cloudinary.uploader.destroy(avatarPublicId);
-          } catch (err) {
-            console.error(
-              `Cloudinary file with public id: '${avatarPublicId}' not deleted. You will need to delete it manually.`,
-            );
-            return next(err);
-          }
-        }
-        return next(err);
+        await deleteFromCloudinary(uploadedFileUrl, PROFILE_PICS_UPLOAD_FOLDER);
+
+        throw new Error(err);
       }
 
       //create profile pic update post if avatar uploaded
-      if (req.file) await db.createProfilePicUpdatePost(user.id, avatarURL);
+      //DON'T delete old pic because it probably still exists in pfp update post
+      if (uploadedFileUrl) {
+        await db.createProfilePicUpdatePost(user.id, uploadedFileUrl);
+      }
 
       return res.json({ message: "user updated" });
     };
