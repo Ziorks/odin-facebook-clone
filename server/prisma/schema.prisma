@@ -188,8 +188,8 @@ enum PostType {
 model Post {
   id        Int       @id @default(autoincrement())
   type      PostType  @default(REGULAR)
-  content   String?
-  mediaUrl  String?
+  content   String?   @db.VarChar(2048)
+  mediaUrl  String?   @db.VarChar(256)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   author    User      @relation(name: "PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
@@ -201,8 +201,8 @@ model Post {
 
 model Comment {
   id        Int       @id @default(autoincrement())
-  content   String?
-  mediaUrl  String?
+  content   String?   @db.VarChar(512)
+  mediaUrl  String?   @db.VarChar(256)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   isDeleted Boolean   @default(false)

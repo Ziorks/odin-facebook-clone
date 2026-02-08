@@ -208,11 +208,17 @@ const validatePostEdit = [
     .optional()
     .isString()
     .withMessage("'content' must be a string")
-    .trim(),
+    .bail()
+    .trim()
+    .isLength({ max: 2048 })
+    .withMessage("'content' must be 2048 characters or less"),
   body("imageUrl")
     .optional()
     .isURL()
-    .withMessage("'imageUrl' must be a valid URL"),
+    .withMessage("'imageUrl' must be a valid URL")
+    .bail()
+    .isLength({ max: 256 })
+    .withMessage("'imageUrl' must be 256 characters or less"),
   body("image").custom((_, { req }) => {
     if (req.fileValidationError) {
       throw new Error(req.fileValidationError.msg);
@@ -284,11 +290,16 @@ const validateCommentEdit = [
     .optional()
     .isString()
     .withMessage("'content' must be a string")
-    .trim(),
+    .trim()
+    .isLength({ max: 512 })
+    .withMessage("'content' must be 512 characters or less"),
   body("imageUrl")
     .optional()
     .isURL()
-    .withMessage("'imageUrl' must be a valid URL"),
+    .withMessage("'imageUrl' must be a valid URL")
+    .bail()
+    .isLength({ max: 256 })
+    .withMessage("'imageUrl' must be 256 characters or less"),
   body("image").custom((_, { req }) => {
     if (req.fileValidationError) {
       throw new Error(req.fileValidationError.msg);

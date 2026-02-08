@@ -152,6 +152,7 @@ function EditForm({ comment, handleCancel, onSuccess }) {
         imageUrl={comment.mediaUrl}
         handleSubmit={handleSubmit}
         placeholderText={"Edit your comment"}
+        charLimit={500}
         imageInputId={`comment-image-input_${comment.id}`}
         disableClearOnSubmit={true}
       />

@@ -67,6 +67,7 @@ function CommentForm({
       handleSubmit={handleSubmit}
       imageInputId={imageInputId}
       placeholderText={placeholderText}
+      charLimit={500}
       setInputRef={setInputRef}
     />
   );

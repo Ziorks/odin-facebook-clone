@@ -60,6 +60,7 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
         handleSubmit={handleSubmit}
         placeholderText={`What's on your mind, ${auth.user.username}`}
         imageInputId={"post-image-input"}
+        charLimit={2000}
       />
       {isLoading && <p>Posting...</p>}
       {errors && (

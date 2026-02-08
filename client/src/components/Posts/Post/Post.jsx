@@ -61,6 +61,7 @@ function EditForm({ handleClose }) {
         imageUrl={post.mediaUrl}
         handleSubmit={handleSubmit}
         placeholderText={"Edit your post"}
+        charLimit={2000}
         imageInputId={`post-image-input_${post.id}`}
         disableClearOnSubmit={true}
       />
