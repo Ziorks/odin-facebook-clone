@@ -1,4 +1,3 @@
-const { validationResult } = require("express-validator");
 const db = require("../db/queries");
 const {
   getComment,
@@ -21,13 +20,6 @@ const commentPost = [
   uploadFileToCloudinary(COMMENT_UPLOAD_FOLDER),
   async (req, res) => {
     //Create a comment
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const authorId = req.user.id;
     const { postId, content, parentId, uploadedFileUrl, imageUrl } = req.body;
 
@@ -64,24 +56,19 @@ const commentEditPut = [
   getComment,
   commentEditAuth,
   validateCommentEdit,
+  uploadFileToCloudinary(COMMENT_UPLOAD_FOLDER),
   async (req, res) => {
     //Edit a comment
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
+    const { content, uploadedFileUrl, imageUrl } = req.body;
     const oldMediaUrl = req.comment.mediaUrl;
-    const { content, imageUrl } = req.body;
+    const newMediaUrl = uploadedFileUrl || imageUrl || null;
 
     const comment = await db.updateComment(req.comment.id, {
       content: content ?? null,
-      mediaUrl: imageUrl ?? null,
+      mediaUrl: newMediaUrl,
     });
 
-    if (oldMediaUrl && !imageUrl) {
+    if (oldMediaUrl && oldMediaUrl !== newMediaUrl) {
       await deleteFromCloudinary(oldMediaUrl, COMMENT_UPLOAD_FOLDER);
     }
 

@@ -1,4 +1,3 @@
-const { validationResult } = require("express-validator");
 const db = require("../db/queries");
 const {
   getPost,
@@ -22,13 +21,6 @@ const postPost = [
   uploadFileToCloudinary(POST_UPLOAD_FOLDER),
   async (req, res) => {
     //Create a regular post
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const authorId = req.user.id;
     const { wallId, content, uploadedFileUrl, imageUrl } = req.body;
 
@@ -65,24 +57,19 @@ const postPut = [
   getPost,
   postEditAuth,
   validatePostEdit,
+  uploadFileToCloudinary(POST_UPLOAD_FOLDER),
   async (req, res) => {
     //Update a post
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
+    const { content, uploadedFileUrl, imageUrl } = req.body;
     const oldMediaUrl = req.post.mediaUrl;
-    const { content, imageUrl } = req.body;
+    const newMediaUrl = uploadedFileUrl || imageUrl || null;
 
     const post = await db.updatePost(req.post.id, {
       content: content ?? null,
-      mediaUrl: imageUrl ?? null,
+      mediaUrl: newMediaUrl,
     });
 
-    if (oldMediaUrl && !imageUrl && post.type === "REGULAR") {
+    if (oldMediaUrl && oldMediaUrl !== newMediaUrl && post.type === "REGULAR") {
       await deleteFromCloudinary(oldMediaUrl, POST_UPLOAD_FOLDER);
     }
 

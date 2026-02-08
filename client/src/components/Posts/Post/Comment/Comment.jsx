@@ -8,7 +8,7 @@ import {
   getDuplicatesRemovedMerged,
 } from "../../../../utils/helperFunctions";
 import Modal from "../../../Modal";
-import ImagePreview from "../../../ImagePreview";
+import TextAndImageForm from "../../../TextAndImageForm";
 import Likes from "../Likes";
 import LikeButton from "../LikeButton";
 import CommentForm from "../CommentForm";
@@ -107,58 +107,66 @@ function Replies({
 }
 
 function EditForm({ comment, handleCancel, onSuccess }) {
-  const [content, setContent] = useState(comment.content ?? "");
-  const [imageUrl, setImageUrl] = useState(comment.mediaUrl);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errors, setErrors] = useState(null);
   const api = useApiPrivate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError(null);
+  const handleSubmit = (content, file, imageUrl) => {
     setIsLoading(true);
+    setErrors(null);
 
-    const payload = {};
-    if (content.trim()) payload.content = content;
-    if (imageUrl) payload.imageUrl = imageUrl;
+    const formData = new FormData();
+
+    if (content) {
+      formData.append("content", content);
+    }
+    if (file) {
+      formData.append("image", file);
+    } else if (imageUrl) {
+      formData.append("imageUrl", imageUrl);
+    }
 
     api
-      .put(`/comments/${comment.id}`, payload)
+      .put(`/comments/${comment.id}`, formData)
       .then((resp) => {
         onSuccess?.(resp.data.comment);
       })
       .catch((err) => {
-        setError(err);
+        console.error("comment edit error", err);
+
+        if (err.response?.status === 400) {
+          setErrors(err.response.data.errors);
+        } else {
+          setErrors([
+            { msg: err.response?.data?.message || "Something went wrong." },
+          ]);
+        }
       })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      .finally(() => setIsLoading(false));
   };
 
   return (
-    <form>
-      <textarea onChange={(e) => setContent(e.target.value)} value={content} />
-      {imageUrl && (
-        <ImagePreview
-          imageUrl={imageUrl}
-          handleRemove={() => setImageUrl(null)}
-        />
+    <>
+      <TextAndImageForm
+        content={comment.content}
+        imageUrl={comment.mediaUrl}
+        handleSubmit={handleSubmit}
+        placeholderText={"Edit your comment"}
+        imageInputId={`comment-image-input_${comment.id}`}
+        disableClearOnSubmit={true}
+      />
+      <button onClick={handleCancel} disabled={isLoading}>
+        Cancel
+      </button>
+      {isLoading && <p>Saving...</p>}
+      {errors && (
+        <ul>
+          {errors.map((error, i) => (
+            <li key={i}>{error.msg}</li>
+          ))}
+        </ul>
       )}
-      <div>
-        <button
-          type="submit"
-          onClick={handleSubmit}
-          disabled={isLoading || (!content && !imageUrl)}
-        >
-          Save
-        </button>
-        <button onClick={handleCancel} disabled={isLoading}>
-          Cancel
-        </button>
-        {isLoading && <span>Saving...</span>}
-        {error && <span>An error occured. Please try again.</span>}
-      </div>
-    </form>
+    </>
   );
 }
 

@@ -2,10 +2,21 @@ const multer = require("multer");
 const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } }); //2MB limit
 const bcrypt = require("bcryptjs");
-const { body } = require("express-validator");
+const { body, validationResult } = require("express-validator");
 const db = require("../db/queries");
 
 const existsMessage = " is required";
+
+const errorHandler = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res
+      .status(400)
+      .json({ message: "validation failed", errors: errors.array() });
+  }
+
+  return next();
+};
 
 const validateRegister = [
   body("username")
@@ -37,6 +48,7 @@ const validateRegister = [
       return value === req.body.password;
     })
     .withMessage("'passwordConfirmation' must match 'password'"),
+  errorHandler,
 ];
 
 const validateUserUpdate = [
@@ -173,21 +185,10 @@ const validateUserUpdate = [
     .bail()
     .isAlpha()
     .withMessage("'lastName' must only contain letters"),
+  errorHandler,
 ];
 
 const validatePostEdit = [
-  body("content")
-    .optional()
-    .isString()
-    .withMessage("'content' must be a string")
-    .trim(),
-  body("imageUrl")
-    .optional()
-    .isURL()
-    .withMessage("'imageUrl' must be a valid URL"),
-];
-
-const validatePostCreate = [
   (req, res, next) => {
     upload.single("image")(req, res, (err) => {
       if (err) {
@@ -203,6 +204,34 @@ const validatePostCreate = [
       return next();
     });
   },
+  body("content")
+    .optional()
+    .isString()
+    .withMessage("'content' must be a string")
+    .trim(),
+  body("imageUrl")
+    .optional()
+    .isURL()
+    .withMessage("'imageUrl' must be a valid URL"),
+  body("image").custom((_, { req }) => {
+    if (req.fileValidationError) {
+      throw new Error(req.fileValidationError.msg);
+    }
+
+    const image = req.file;
+    if (!image) return true;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(image.mimetype)) {
+      throw new Error("'image' must be an image file");
+    }
+
+    return true;
+  }),
+  errorHandler,
+];
+
+const validatePostCreate = [
   ...validatePostEdit,
   body("wallId")
     .exists()
@@ -232,21 +261,10 @@ const validatePostCreate = [
 
     return true;
   }),
+  errorHandler,
 ];
 
 const validateCommentEdit = [
-  body("content")
-    .optional()
-    .isString()
-    .withMessage("'content' must be a string")
-    .trim(),
-  body("imageUrl")
-    .optional()
-    .isURL()
-    .withMessage("'imageUrl' must be a valid URL"),
-];
-
-const validateCommentCreate = [
   (req, res, next) => {
     upload.single("image")(req, res, (err) => {
       if (err) {
@@ -262,6 +280,35 @@ const validateCommentCreate = [
       return next();
     });
   },
+  body("content")
+    .optional()
+    .isString()
+    .withMessage("'content' must be a string")
+    .trim(),
+  body("imageUrl")
+    .optional()
+    .isURL()
+    .withMessage("'imageUrl' must be a valid URL"),
+  body("image").custom((_, { req }) => {
+    if (req.fileValidationError) {
+      throw new Error(req.fileValidationError.msg);
+    }
+
+    const image = req.file;
+    if (!image) return true;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(image.mimetype)) {
+      throw new Error("'image' must be an image file");
+    }
+
+    return true;
+  }),
+  errorHandler,
+];
+
+const validateCommentCreate = [
+  ...validateCommentEdit,
   body("postId")
     .exists()
     .withMessage("'postId'" + existsMessage)
@@ -311,29 +358,7 @@ const validateCommentCreate = [
 
       return true;
     }),
-  body("image")
-    .optional()
-    .custom((_, { req }) => {
-      if (req.fileValidationError) {
-        throw new Error(req.fileValidationError.msg);
-      }
-
-      const image = req.file;
-      if (!image) return true;
-
-      const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-      ];
-      if (!allowedTypes.includes(image.mimetype)) {
-        throw new Error("'image' must be an image file");
-      }
-
-      return true;
-    }),
-  ...validateCommentEdit,
+  errorHandler,
 ];
 
 const validateWork = [
@@ -388,6 +413,7 @@ const validateWork = [
     .withMessage("'currentJob'" + existsMessage)
     .isBoolean()
     .withMessage("CurrentJob must be a boolean"),
+  errorHandler,
 ];
 
 const validateSchool = [
@@ -432,6 +458,7 @@ const validateSchool = [
     .withMessage("'graduated'" + existsMessage)
     .isBoolean()
     .withMessage("Graduated must be a boolean"),
+  errorHandler,
 ];
 
 const validateCity = [
@@ -457,6 +484,7 @@ const validateCity = [
     .optional()
     .isBoolean()
     .withMessage("IsCurrentCity must be a boolean"),
+  errorHandler,
 ];
 
 const validateBasicInfo = [
@@ -577,6 +605,7 @@ const validateBasicInfo = [
     .bail()
     .isLength({ max: 32 })
     .withMessage("Each language must be 32 characters or less"),
+  errorHandler,
 ];
 
 function detailValidationChain(fieldname) {
@@ -600,6 +629,7 @@ const validateDetails = [
   detailValidationChain("movies"),
   detailValidationChain("sports"),
   detailValidationChain("hobbies"),
+  errorHandler,
 ];
 
 module.exports = {

@@ -1,4 +1,3 @@
-const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const db = require("../db/queries");
 const {
@@ -56,13 +55,6 @@ const userPut = [
   validateUserUpdate,
   uploadFileToCloudinary(PROFILE_PICS_UPLOAD_FOLDER),
   async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const user = req.paramsUser;
     const {
       uploadedFileUrl,
@@ -152,13 +144,6 @@ const workPost = [
   },
   validateWork,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const user = req.paramsUser;
     const {
       company,
@@ -190,13 +175,6 @@ const workPut = [
   getWork,
   validateWork,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const {
       company,
       position,
@@ -249,13 +227,6 @@ const schoolPost = [
   },
   validateSchool,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const user = req.paramsUser;
     const { name, description, degree, startYear, endYear, graduated } =
       req.body;
@@ -279,13 +250,6 @@ const schoolPut = [
   getSchool,
   validateSchool,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const { name, description, degree, startYear, endYear, graduated } =
       req.body;
 
@@ -368,13 +332,6 @@ const cityPost = [
   },
   validateCity,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const user = req.paramsUser;
     const { name, yearMoved, isHometown, isCurrentCity } = req.body;
 
@@ -399,13 +356,6 @@ const cityPut = [
   getCity,
   validateCity,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const { name, yearMoved } = req.body;
 
     await db.updateCity(req.city.id, {
@@ -444,13 +394,6 @@ const contactInfoPut = [
   profileEditAuth,
   validateBasicInfo,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const user = req.paramsUser;
     const {
       phoneNumbers,
@@ -492,13 +435,6 @@ const detailsPut = [
   profileEditAuth,
   validateDetails,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const user = req.paramsUser;
     const { aboutMe, quotes, music, books, tv, movies, sports, hobbies } =
       req.body;

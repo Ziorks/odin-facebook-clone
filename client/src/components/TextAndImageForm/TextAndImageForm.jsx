@@ -11,17 +11,20 @@ import styles from "./TextAndImageForm.module.css";
 const POPUPS = { NONE: "NONE", EMOJI: "EMOJI", GIF: "GIF" };
 
 function TextAndImageForm({
+  content: initialContent,
+  imageUrl,
   setInputRef,
   placeholderText,
   handleSubmit,
   imageInputId,
   charLimit,
+  disableClearOnSubmit,
 }) {
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(initialContent ?? "");
   const [activePopup, setActivePopup] = useState(POPUPS.NONE);
   const [image, setImage] = useState({
     file: null,
-    previewURL: null,
+    previewURL: imageUrl ?? null,
   });
   const formRef = useRef();
   const inputRef = useRef();
@@ -30,6 +33,9 @@ function TextAndImageForm({
     inputRef.current.style.height = "auto";
     inputRef.current.style.height = inputRef.current.scrollHeight + "px";
   }, [content]);
+
+  const contentTrimmed = content.trim();
+  const isOverCharLimit = charLimit && contentTrimmed.length > charLimit;
 
   const handleInputChange = (e) => {
     setContent(e.target.value);
@@ -75,14 +81,13 @@ function TextAndImageForm({
 
   const onSubmit = (e) => {
     e.preventDefault();
-    setContent("");
     closePopups();
-    removeImage();
-    handleSubmit?.(content, image.file, image.previewURL);
-  };
+    handleSubmit?.(contentTrimmed, image.file, image.previewURL);
 
-  const contentTrimmed = content.trim();
-  const isOverCharLimit = charLimit && contentTrimmed.length > charLimit;
+    if (disableClearOnSubmit) return;
+    setContent("");
+    removeImage();
+  };
 
   return (
     <>
