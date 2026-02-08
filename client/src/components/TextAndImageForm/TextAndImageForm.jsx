@@ -15,6 +15,7 @@ function TextAndImageForm({
   placeholderText,
   handleSubmit,
   imageInputId,
+  charLimit,
 }) {
   const [content, setContent] = useState("");
   const [activePopup, setActivePopup] = useState(POPUPS.NONE);
@@ -80,6 +81,9 @@ function TextAndImageForm({
     handleSubmit?.(content, image.file, image.previewURL);
   };
 
+  const contentTrimmed = content.trim();
+  const isOverCharLimit = charLimit && contentTrimmed.length > charLimit;
+
   return (
     <>
       <form className={styles.form} ref={formRef} onSubmit={onSubmit}>
@@ -110,6 +114,14 @@ function TextAndImageForm({
               imageUrl={image.previewURL}
               handleRemove={removeImage}
             />
+          )}
+          {charLimit && (
+            <div>
+              <span style={isOverCharLimit ? { color: "red" } : undefined}>
+                {contentTrimmed.length}
+              </span>
+              /{charLimit}
+            </div>
           )}
           <div className={styles.actionsContainer}>
             <div>
@@ -149,7 +161,9 @@ function TextAndImageForm({
               <button
                 className={styles.actionBtn}
                 type="submit"
-                disabled={!content.trim() && !image.previewURL}
+                disabled={
+                  (!contentTrimmed && !image.previewURL) || isOverCharLimit
+                }
               >
                 <LuSendHorizontal />
               </button>
