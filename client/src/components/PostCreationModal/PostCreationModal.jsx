@@ -1,6 +1,7 @@
 import { useState, useContext } from "react";
 import useApiPrivate from "../../hooks/useApiPrivate";
 import AuthContext from "../../contexts/AuthContext";
+import { MAX_UPLOAD_SIZE_POST } from "../../utils/constants";
 import Modal from "../Modal";
 import TextAndImageForm from "../TextAndImageForm";
 import styles from "./PostCreationModal.module.css";
@@ -61,6 +62,7 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
         placeholderText={`What's on your mind, ${auth.user.username}`}
         imageInputId={"post-image-input"}
         charLimit={2000}
+        maxFilesize={MAX_UPLOAD_SIZE_POST}
       />
       {isLoading && <p>Posting...</p>}
       {errors && (

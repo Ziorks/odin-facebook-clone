@@ -5,6 +5,7 @@ import AuthContext from "../../../contexts/AuthContext";
 import PostContext from "../../../contexts/PostContext";
 import useApiPrivate from "../../../hooks/useApiPrivate";
 import useDataFetchPaginated from "../../../hooks/useDataFetchPaginated";
+import { MAX_UPLOAD_SIZE_POST } from "../../../utils/constants";
 import Modal from "../../Modal";
 import TextAndImageForm from "../../TextAndImageForm";
 import LikeButton from "./LikeButton";
@@ -62,6 +63,7 @@ function EditForm({ handleClose }) {
         handleSubmit={handleSubmit}
         placeholderText={"Edit your post"}
         charLimit={2000}
+        maxFilesize={MAX_UPLOAD_SIZE_POST}
         imageInputId={`post-image-input_${post.id}`}
         disableClearOnSubmit={true}
       />

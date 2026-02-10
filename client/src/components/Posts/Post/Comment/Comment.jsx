@@ -7,6 +7,7 @@ import {
   formatDistanceToNowShort,
   getDuplicatesRemovedMerged,
 } from "../../../../utils/helperFunctions";
+import { MAX_UPLOAD_SIZE_COMMENT } from "../../../../utils/constants";
 import Modal from "../../../Modal";
 import TextAndImageForm from "../../../TextAndImageForm";
 import Likes from "../Likes";
@@ -153,6 +154,7 @@ function EditForm({ comment, handleCancel, onSuccess }) {
         handleSubmit={handleSubmit}
         placeholderText={"Edit your comment"}
         charLimit={500}
+        maxFilesize={MAX_UPLOAD_SIZE_COMMENT}
         imageInputId={`comment-image-input_${comment.id}`}
         disableClearOnSubmit={true}
       />

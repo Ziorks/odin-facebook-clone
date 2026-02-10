@@ -3,6 +3,7 @@ import { BsEmojiSmileFill } from "react-icons/bs";
 import { AiOutlinePicture } from "react-icons/ai";
 import { PiGifFill } from "react-icons/pi";
 import { LuSendHorizontal } from "react-icons/lu";
+import { formatBytes } from "../../utils/helperFunctions";
 import EmojiPicker from "../EmojiPicker";
 import ImagePreview from "../ImagePreview";
 import GifSearch from "../GifSearch";
@@ -18,6 +19,7 @@ function TextAndImageForm({
   handleSubmit,
   imageInputId,
   charLimit,
+  maxFilesize,
   disableClearOnSubmit,
 }) {
   const [content, setContent] = useState(initialContent ?? "");
@@ -70,6 +72,11 @@ function TextAndImageForm({
   };
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
+    if (maxFilesize && file.size > maxFilesize) {
+      return alert(
+        `The file you have chosen is too large. The max file size is ${formatBytes(maxFilesize)}.`,
+      );
+    }
     setImage({
       file,
       previewURL: URL.createObjectURL(file),

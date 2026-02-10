@@ -38,3 +38,15 @@ export function getDuplicatesRemovedMerged(...args) {
 
   return result;
 }
+
+const units = ["bytes", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+export function formatBytes(number) {
+  let i = 0;
+  let n = parseInt(number, 10) || 0;
+
+  while (n >= 1024 && ++i) {
+    n = n / 1024;
+  }
+
+  return n.toFixed(i > 0 && !Number.isInteger(n) ? 1 : 0) + " " + units[i];
+}

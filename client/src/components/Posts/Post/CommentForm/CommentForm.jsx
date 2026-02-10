@@ -2,6 +2,7 @@ import { useContext } from "react";
 import AuthContext from "../../../../contexts/AuthContext";
 import PostContext from "../../../../contexts/PostContext";
 import useApiPrivate from "../../../../hooks/useApiPrivate";
+import { MAX_UPLOAD_SIZE_COMMENT } from "../../../../utils/constants";
 import TextAndImageForm from "../../../TextAndImageForm";
 
 function CommentForm({
@@ -68,6 +69,7 @@ function CommentForm({
       imageInputId={imageInputId}
       placeholderText={placeholderText}
       charLimit={500}
+      maxFilesize={MAX_UPLOAD_SIZE_COMMENT}
       setInputRef={setInputRef}
     />
   );
