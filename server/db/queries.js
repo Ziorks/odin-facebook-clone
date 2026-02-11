@@ -25,6 +25,14 @@ const userOptions = {
 const commentOptions = {
   include: {
     author: userOptions,
+    post: {
+      select: {
+        id: true,
+        author: userOptions,
+        wall: userOptions,
+        privacy: true,
+      },
+    },
     _count: { select: { replies: true } },
   },
   omit: { authorId: true },
@@ -506,10 +514,37 @@ async function getLikeByUserAndTarget(userId, targetId, targetType) {
   return like;
 }
 
-async function getWall(wallId, { page, resultsPerPage } = {}) {
+async function getWall(wallId, userId, { page, resultsPerPage } = {}) {
   const where = {
     wallId,
-    //TODO: select by privacy here when/if I add that
+    OR: [
+      { privacy: "PUBLIC" },
+      { authorId: userId },
+      { wallId: userId },
+      {
+        privacy: "FRIENDS_ONLY",
+        author: {
+          OR: [
+            {
+              recievedFriendships: {
+                some: {
+                  accepted: true,
+                  OR: [{ user1Id: userId }, { user2Id: userId }],
+                },
+              },
+            },
+            {
+              sentFrienships: {
+                some: {
+                  accepted: true,
+                  OR: [{ user1Id: userId }, { user2Id: userId }],
+                },
+              },
+            },
+          ],
+        },
+      },
+    ],
   };
   const queryOptions = {
     where,
@@ -727,8 +762,34 @@ async function getDetailsByUserId(userId) {
 
 async function getUsersFeed(userId, { page, resultsPerPage } = {}) {
   const where = {
-    //TODO: select by privacy here when/if I add that
-    //userId parameter is for filtering friends only posts
+    OR: [
+      { privacy: "PUBLIC" },
+      { authorId: userId },
+      { wallId: userId },
+      {
+        privacy: "FRIENDS_ONLY",
+        author: {
+          OR: [
+            {
+              recievedFriendships: {
+                some: {
+                  accepted: true,
+                  OR: [{ user1Id: userId }, { user2Id: userId }],
+                },
+              },
+            },
+            {
+              sentFrienships: {
+                some: {
+                  accepted: true,
+                  OR: [{ user1Id: userId }, { user2Id: userId }],
+                },
+              },
+            },
+          ],
+        },
+      },
+    ],
   };
 
   const queryOptions = {

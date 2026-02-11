@@ -14,6 +14,7 @@ const router = Router();
 router.post("/", postPost);
 router.route("/:postId").get(postGet).put(postPut).delete(postDelete);
 router.get("/:postId/comments", postCommentsGet);
+//TODO: make below both /likes
 router.post("/:postId/like", postLikePost);
 router.get("/:postId/likes", postLikesGet);
 

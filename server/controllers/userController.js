@@ -475,12 +475,18 @@ const wallGet = [
   getUser,
   getPaginationQuery,
   async (req, res) => {
-    const wallUser = req.paramsUser;
+    const wallUserId = req.paramsUser.id;
+    const requestUserId = req.user.id;
     const { page, resultsPerPage } = req.pagination;
 
-    const wall = await db.getWall(wallUser.id, { page, resultsPerPage });
+    const wall = await db.getWall(wallUserId, requestUserId, {
+      page,
+      resultsPerPage,
+    });
     await Promise.all(
-      wall.results.map(async (post) => attachMyLikesToPost(post, req.user.id)),
+      wall.results.map(async (post) =>
+        attachMyLikesToPost(post, requestUserId),
+      ),
     );
 
     return res.json(wall);

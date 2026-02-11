@@ -177,6 +177,24 @@ async function deleteUploadedFilesFromPost(post) {
   );
 }
 
+async function postPrivacyValidation(post, userId) {
+  const authorId = post.author.id;
+  let isAuthorized = authorId === userId || post.wall.id === userId;
+
+  if (!isAuthorized && post.privacy === "PUBLIC") {
+    isAuthorized = true;
+  }
+
+  if (!isAuthorized && post.privacy === "FRIENDS_ONLY") {
+    const friendship = await db.getFriendshipByUserIds(authorId, userId);
+    if (friendship?.accepted) {
+      isAuthorized = true;
+    }
+  }
+
+  return isAuthorized;
+}
+
 module.exports = {
   generateAccessToken,
   generateRefreshToken,
@@ -188,4 +206,5 @@ module.exports = {
   getAuthObject,
   deleteFromCloudinary,
   deleteUploadedFilesFromPost,
+  postPrivacyValidation,
 };

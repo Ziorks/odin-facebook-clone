@@ -53,7 +53,6 @@ const commentGet = [
 ];
 
 const commentEditPut = [
-  getComment,
   commentEditAuth,
   validateCommentEdit,
   uploadFileToCloudinary(COMMENT_UPLOAD_FOLDER),
@@ -100,7 +99,6 @@ const commentRepliesGet = [
 ];
 
 const commentDeletePut = [
-  getComment,
   commentEditAuth,
   async (req, res) => {
     //Soft delete a comment

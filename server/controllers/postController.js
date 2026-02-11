@@ -55,7 +55,6 @@ const postGet = [
 ];
 
 const postPut = [
-  getPost,
   postEditAuth,
   validatePostEdit,
   uploadFileToCloudinary(POST_UPLOAD_FOLDER),
@@ -82,7 +81,6 @@ const postPut = [
 ];
 
 const postDelete = [
-  getPost,
   postEditAuth,
   async (req, res) => {
     //Delete a post

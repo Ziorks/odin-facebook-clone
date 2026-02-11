@@ -4,6 +4,7 @@ const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } }); //2MB
 const bcrypt = require("bcryptjs");
 const { body, validationResult } = require("express-validator");
 const db = require("../db/queries");
+const { postPrivacyValidation } = require("./helperFunctions");
 
 const existsMessage = " is required";
 
@@ -342,9 +343,17 @@ const validateCommentCreate = [
     const { postId, parentId } = req.body;
 
     if (postId) {
-      const isPostIdValid = await db.getPost(postId);
-      if (!isPostIdValid) {
-        req.postIdValidationError = { msg: "postId is not a valid post id" };
+      const post = await db.getPost(postId);
+      if (!post) {
+        req.postIdValidationError = { msg: "'postId' is not a valid post id" };
+      }
+
+      const isAuthorized = await postPrivacyValidation(post, req.user.id);
+
+      if (!isAuthorized) {
+        return res
+          .status(403)
+          .json({ message: "you are not authorized to comment on this post" });
       }
     }
 
@@ -352,7 +361,7 @@ const validateCommentCreate = [
       const isParentIdValid = await db.getComment(parentId);
       if (!isParentIdValid) {
         req.parentIdValidationError = {
-          msg: "parentId is not a valid comment id",
+          msg: "'parentId' is not a valid comment id",
         };
       }
     }
