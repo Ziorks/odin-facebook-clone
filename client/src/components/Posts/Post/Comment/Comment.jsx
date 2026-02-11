@@ -395,7 +395,7 @@ function Comment({
                   {!comment.isDeleted && (
                     <LikeButton
                       like={comment.myLike}
-                      likePath={`comments/${comment.id}/like`}
+                      likePath={`comments/${comment.id}/likes`}
                       onSuccess={onLikeSuccess}
                     />
                   )}

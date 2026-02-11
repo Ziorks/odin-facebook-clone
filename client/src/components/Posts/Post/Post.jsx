@@ -191,7 +191,7 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
           <div>
             <LikeButton
               like={post.myLike}
-              likePath={`/posts/${post.id}/like`}
+              likePath={`/posts/${post.id}/likes`}
               onSuccess={onPostLikeChange}
             />
             <button onClick={handleCommentBtnClick}>Comment</button>
