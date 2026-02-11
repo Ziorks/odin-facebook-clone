@@ -8,13 +8,17 @@ const {
 const {
   validatePostCreate,
   validatePostEdit,
+  validateComment,
 } = require("../utilities/validators");
 const {
   formatComment,
   deleteFromCloudinary,
   deleteUploadedFilesFromPost,
 } = require("../utilities/helperFunctions");
-const { POST_UPLOAD_FOLDER } = require("../utilities/constants");
+const {
+  POST_UPLOAD_FOLDER,
+  COMMENT_UPLOAD_FOLDER,
+} = require("../utilities/constants");
 
 const postPost = [
   validatePostCreate,
@@ -93,6 +97,37 @@ const postDelete = [
   },
 ];
 
+const postCommentPost = [
+  getPost,
+  validateComment,
+  uploadFileToCloudinary(COMMENT_UPLOAD_FOLDER),
+  async (req, res) => {
+    //Create a comment
+    const authorId = req.user.id;
+    const postId = req.post.id;
+    const { content, uploadedFileUrl, imageUrl } = req.body;
+
+    try {
+      const comment = await db.createComment(
+        authorId,
+        postId,
+        content,
+        uploadedFileUrl || imageUrl,
+      );
+      await formatComment(comment, req.user.id);
+
+      return res.json({ message: "comment created", comment });
+    } catch (err) {
+      //delete new pic if user update fails
+      if (uploadedFileUrl) {
+        await deleteFromCloudinary(uploadedFileUrl, COMMENT_UPLOAD_FOLDER);
+      }
+
+      throw new Error(err);
+    }
+  },
+];
+
 const postCommentsGet = [
   getPost,
   getPaginationQuery,
@@ -145,6 +180,7 @@ module.exports = {
   postGet,
   postPut,
   postDelete,
+  postCommentPost,
   postCommentsGet,
   postLikePost,
   postLikesGet,

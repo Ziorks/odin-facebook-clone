@@ -1,8 +1,8 @@
 const { Router } = require("express");
 const {
-  commentPost,
   commentGet,
   commentEditPut,
+  commentReplyPost,
   commentRepliesGet,
   commentDeletePut,
   commentLikePost,
@@ -11,9 +11,11 @@ const {
 
 const router = Router();
 
-router.post("/", commentPost);
 router.route("/:commentId").get(commentGet).put(commentEditPut);
-router.get("/:commentId/replies", commentRepliesGet);
+router
+  .route("/:commentId/replies")
+  .post(commentReplyPost)
+  .get(commentRepliesGet);
 router.put("/:commentId/delete", commentDeletePut);
 router.route("/:commentId/likes").post(commentLikePost).get(commentLikesGet);
 

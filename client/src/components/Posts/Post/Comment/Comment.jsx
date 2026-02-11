@@ -155,7 +155,6 @@ function EditForm({ comment, handleCancel, onSuccess }) {
         placeholderText={"Edit your comment"}
         charLimit={500}
         maxFilesize={MAX_UPLOAD_SIZE_COMMENT}
-        imageInputId={`comment-image-input_${comment.id}`}
         disableClearOnSubmit={true}
       />
       <button onClick={handleCancel} disabled={isLoading}>
@@ -441,8 +440,8 @@ function Comment({
         )}
         {(showReplyForm || hasFetchedReplies) && (
           <CommentForm
-            postId={comment.postId}
-            parentComment={comment}
+            apiPostPath={`/comments/${comment.id}/replies`}
+            placeholderText={`Reply to ${comment.author.username}`}
             setInputRef={setReplyFormRef}
             onSubmit={onReplySubmit}
             onError={onReplyError}

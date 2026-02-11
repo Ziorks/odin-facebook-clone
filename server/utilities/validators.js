@@ -277,7 +277,7 @@ const validatePostCreate = [
   errorHandler,
 ];
 
-const validateCommentEdit = [
+const validateComment = [
   (req, res, next) => {
     upload.single("image")(req, res, (err) => {
       if (err) {
@@ -322,68 +322,6 @@ const validateCommentEdit = [
 
     return true;
   }),
-  errorHandler,
-];
-
-const validateCommentCreate = [
-  ...validateCommentEdit,
-  body("postId")
-    .exists()
-    .withMessage("'postId'" + existsMessage)
-    .bail()
-    .isInt()
-    .withMessage("'postId' must be an integer")
-    .toInt(),
-  body("parentId")
-    .optional()
-    .isInt()
-    .withMessage("'parentId' must be an integer if provided")
-    .toInt(),
-  async (req, res, next) => {
-    const { postId, parentId } = req.body;
-
-    if (postId) {
-      const post = await db.getPost(postId);
-      if (!post) {
-        req.postIdValidationError = { msg: "'postId' is not a valid post id" };
-      }
-
-      const isAuthorized = await postPrivacyValidation(post, req.user.id);
-
-      if (!isAuthorized) {
-        return res
-          .status(403)
-          .json({ message: "you are not authorized to comment on this post" });
-      }
-    }
-
-    if (parentId) {
-      const isParentIdValid = await db.getComment(parentId);
-      if (!isParentIdValid) {
-        req.parentIdValidationError = {
-          msg: "'parentId' is not a valid comment id",
-        };
-      }
-    }
-
-    return next();
-  },
-  body("postId").custom((_, { req }) => {
-    if (req.postIdValidationError) {
-      throw new Error(req.postIdValidationError.msg);
-    }
-
-    return true;
-  }),
-  body("parentId")
-    .optional()
-    .custom((_, { req }) => {
-      if (req.parentIdValidationError) {
-        throw new Error(req.parentIdValidationError.msg);
-      }
-
-      return true;
-    }),
   errorHandler,
 ];
 
@@ -663,8 +601,7 @@ module.exports = {
   validateUserUpdate,
   validatePostCreate,
   validatePostEdit,
-  validateCommentCreate,
-  validateCommentEdit,
+  validateComment,
   validateWork,
   validateSchool,
   validateCity,

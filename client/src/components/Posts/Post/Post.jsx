@@ -82,7 +82,6 @@ function EditForm({ handleClose }) {
         placeholderText={"Edit your post"}
         charLimit={2000}
         maxFilesize={MAX_UPLOAD_SIZE_POST}
-        imageInputId={`post-image-input_${post.id}`}
         disableClearOnSubmit={true}
       />
       <button onClick={handleClose} disabled={isLoading}>
@@ -230,7 +229,9 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
 // };
 
 function PostModal() {
+  const { auth } = useContext(AuthContext);
   const {
+    post,
     toggleDetailsModal,
     onPostCommentSubmit,
     onPostCommentError,
@@ -261,6 +262,8 @@ function PostModal() {
         </div>
         <div>
           <CommentForm
+            apiPostPath={`/posts/${post.id}/comments`}
+            placeholderText={`Comment as ${auth.user.username}`}
             setInputRef={setCommentFormRef}
             onSubmit={onPostCommentSubmit}
             onError={onPostCommentError}
@@ -273,6 +276,7 @@ function PostModal() {
 }
 
 function Post({ post: postObj, removePost, disableComments }) {
+  const { auth } = useContext(AuthContext);
   const [post, setPost] = useState(postObj);
   const [showPostDetails, setShowPostDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -418,6 +422,8 @@ function Post({ post: postObj, removePost, disableComments }) {
         <Comments idWhitelist={commentIdsWhitelist} />
         {!disableComments && (
           <CommentForm
+            apiPostPath={`/posts/${post.id}/comments`}
+            placeholderText={`Comment as ${auth.user.username}`}
             setInputRef={setCommentFormRef}
             onSubmit={(pendingComment) => {
               onPostCommentSubmit(pendingComment);

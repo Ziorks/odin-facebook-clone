@@ -4,6 +4,7 @@ const {
   postGet,
   postPut,
   postDelete,
+  postCommentPost,
   postCommentsGet,
   postLikePost,
   postLikesGet,
@@ -13,7 +14,7 @@ const router = Router();
 
 router.post("/", postPost);
 router.route("/:postId").get(postGet).put(postPut).delete(postDelete);
-router.get("/:postId/comments", postCommentsGet);
+router.route("/:postId/comments").post(postCommentPost).get(postCommentsGet);
 router.route("/:postId/likes").post(postLikePost).get(postLikesGet);
 
 module.exports = router;

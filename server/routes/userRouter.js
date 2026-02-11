@@ -49,6 +49,7 @@ router.route("/:userId/about_details").get(detailsGet).put(detailsPut);
 
 router.get("/:userId/friends", friendsGet);
 
+//TODO: add a wall post, post route
 router.get("/:userId/wall", wallGet);
 
 module.exports = router;

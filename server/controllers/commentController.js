@@ -5,45 +5,12 @@ const {
   getPaginationQuery,
   uploadFileToCloudinary,
 } = require("../middleware");
-const {
-  validateCommentCreate,
-  validateCommentEdit,
-} = require("../utilities/validators");
+const { validateComment } = require("../utilities/validators");
 const {
   formatComment,
   deleteFromCloudinary,
 } = require("../utilities/helperFunctions");
 const { COMMENT_UPLOAD_FOLDER } = require("../utilities/constants");
-
-const commentPost = [
-  validateCommentCreate,
-  uploadFileToCloudinary(COMMENT_UPLOAD_FOLDER),
-  async (req, res) => {
-    //Create a comment
-    const authorId = req.user.id;
-    const { postId, content, parentId, uploadedFileUrl, imageUrl } = req.body;
-
-    try {
-      const comment = await db.createComment(
-        authorId,
-        postId,
-        content,
-        uploadedFileUrl || imageUrl,
-        parentId,
-      );
-      await formatComment(comment, req.user.id);
-
-      return res.json({ message: "comment created", comment });
-    } catch (err) {
-      //delete new pic if user update fails
-      if (uploadedFileUrl) {
-        await deleteFromCloudinary(uploadedFileUrl, COMMENT_UPLOAD_FOLDER);
-      }
-
-      throw new Error(err);
-    }
-  },
-];
 
 const commentGet = [
   getComment,
@@ -54,7 +21,7 @@ const commentGet = [
 
 const commentEditPut = [
   commentEditAuth,
-  validateCommentEdit,
+  validateComment,
   uploadFileToCloudinary(COMMENT_UPLOAD_FOLDER),
   async (req, res) => {
     //Edit a comment
@@ -74,6 +41,38 @@ const commentEditPut = [
     await formatComment(comment, req.user.id);
 
     return res.json({ message: "comment edited", comment });
+  },
+];
+
+const commentReplyPost = [
+  getComment,
+  validateComment,
+  uploadFileToCloudinary(COMMENT_UPLOAD_FOLDER),
+  async (req, res) => {
+    //Create a comment
+    const authorId = req.user.id;
+    const { id: parentId, postId } = req.comment;
+    const { content, uploadedFileUrl, imageUrl } = req.body;
+
+    try {
+      const comment = await db.createComment(
+        authorId,
+        postId,
+        content,
+        uploadedFileUrl || imageUrl,
+        parentId,
+      );
+      await formatComment(comment, authorId);
+
+      return res.json({ message: "comment created", comment });
+    } catch (err) {
+      //delete new pic if user update fails
+      if (uploadedFileUrl) {
+        await deleteFromCloudinary(uploadedFileUrl, COMMENT_UPLOAD_FOLDER);
+      }
+
+      throw new Error(err);
+    }
   },
 ];
 
@@ -147,9 +146,9 @@ const commentLikesGet = [
 ];
 
 module.exports = {
-  commentPost,
   commentGet,
   commentEditPut,
+  commentReplyPost,
   commentRepliesGet,
   commentDeletePut,
   commentLikePost,

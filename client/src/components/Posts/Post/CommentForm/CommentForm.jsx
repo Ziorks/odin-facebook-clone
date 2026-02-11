@@ -6,23 +6,20 @@ import { MAX_UPLOAD_SIZE_COMMENT } from "../../../../utils/constants";
 import TextAndImageForm from "../../../TextAndImageForm";
 
 function CommentForm({
-  parentComment = null,
+  apiPostPath,
+  placeholderText,
   setInputRef,
   onSubmit,
   onError,
   onSuccess,
 }) {
   const { auth } = useContext(AuthContext);
-  const { post, pendingIdCounterRef } = useContext(PostContext);
+  const { pendingIdCounterRef } = useContext(PostContext);
   const api = useApiPrivate();
 
   const handleSubmit = (content, file, imageUrl) => {
     const formData = new FormData();
 
-    formData.append("postId", post.id);
-    if (parentComment?.id) {
-      formData.append("parentId", parentComment.id);
-    }
     if (content) {
       formData.append("content", content);
     }
@@ -47,7 +44,7 @@ function CommentForm({
     onSubmit?.(pendingComment);
 
     api
-      .post("/comments", formData)
+      .post(apiPostPath, formData)
       .then((resp) => {
         const { comment } = resp.data;
         onSuccess?.({ ...comment, pendingId });
@@ -58,15 +55,9 @@ function CommentForm({
       });
   };
 
-  const imageInputId = `image-upload_${post.id}_${parentComment?.id || "x"}`;
-  const placeholderText = parentComment
-    ? `Reply to ${parentComment.author.username}`
-    : `Comment as ${auth.user.username}`;
-
   return (
     <TextAndImageForm
       handleSubmit={handleSubmit}
-      imageInputId={imageInputId}
       placeholderText={placeholderText}
       charLimit={500}
       maxFilesize={MAX_UPLOAD_SIZE_COMMENT}

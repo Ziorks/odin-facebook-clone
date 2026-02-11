@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { AiOutlinePicture } from "react-icons/ai";
 import { PiGifFill } from "react-icons/pi";
@@ -17,7 +17,6 @@ function TextAndImageForm({
   setInputRef,
   placeholderText,
   handleSubmit,
-  imageInputId,
   charLimit,
   maxFilesize,
   disableClearOnSubmit,
@@ -30,6 +29,7 @@ function TextAndImageForm({
   });
   const formRef = useRef();
   const inputRef = useRef();
+  const imageInputId = useId();
 
   useEffect(() => {
     inputRef.current.style.height = "auto";

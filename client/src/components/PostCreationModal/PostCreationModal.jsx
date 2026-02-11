@@ -74,7 +74,6 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
       <TextAndImageForm
         handleSubmit={handleSubmit}
         placeholderText={`What's on your mind, ${auth.user.username}`}
-        imageInputId={"post-image-input"}
         charLimit={2000}
         maxFilesize={MAX_UPLOAD_SIZE_POST}
       />
