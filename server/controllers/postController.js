@@ -5,11 +5,7 @@ const {
   getPaginationQuery,
   uploadFileToCloudinary,
 } = require("../middleware");
-const {
-  validatePostCreate,
-  validatePostEdit,
-  validateComment,
-} = require("../utilities/validators");
+const { validatePost, validateComment } = require("../utilities/validators");
 const {
   formatComment,
   deleteFromCloudinary,
@@ -19,36 +15,6 @@ const {
   POST_UPLOAD_FOLDER,
   COMMENT_UPLOAD_FOLDER,
 } = require("../utilities/constants");
-
-const postPost = [
-  validatePostCreate,
-  uploadFileToCloudinary(POST_UPLOAD_FOLDER),
-  async (req, res) => {
-    //Create a regular post
-    const authorId = req.user.id;
-    const { wallId, content, uploadedFileUrl, imageUrl, privacy } = req.body;
-
-    try {
-      const post = await db.createRegularPost(
-        authorId,
-        wallId,
-        content,
-        uploadedFileUrl || imageUrl,
-        privacy,
-      );
-      post.myLike = null;
-
-      return res.json({ message: "post created", post });
-    } catch (err) {
-      //delete new pic if user update fails
-      if (uploadedFileUrl) {
-        await deleteFromCloudinary(uploadedFileUrl, POST_UPLOAD_FOLDER);
-      }
-
-      throw new Error(err);
-    }
-  },
-];
 
 const postGet = [
   getPost,
@@ -60,7 +26,7 @@ const postGet = [
 
 const postPut = [
   postEditAuth,
-  validatePostEdit,
+  validatePost,
   uploadFileToCloudinary(POST_UPLOAD_FOLDER),
   async (req, res) => {
     //Update a post
@@ -176,7 +142,6 @@ const postLikesGet = [
 ];
 
 module.exports = {
-  postPost,
   postGet,
   postPut,
   postDelete,

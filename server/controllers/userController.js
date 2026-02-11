@@ -11,6 +11,7 @@ const {
   validateBasicInfo,
   validateDetails,
   validateUserUpdate,
+  validatePost,
 } = require("../utilities/validators");
 const {
   getUser,
@@ -21,7 +22,10 @@ const {
   getPaginationQuery,
   uploadFileToCloudinary,
 } = require("../middleware");
-const { PROFILE_PICS_UPLOAD_FOLDER } = require("../utilities/constants");
+const {
+  PROFILE_PICS_UPLOAD_FOLDER,
+  POST_UPLOAD_FOLDER,
+} = require("../utilities/constants");
 
 const usersSearch = [
   getPaginationQuery,
@@ -471,6 +475,36 @@ const friendsGet = [
   },
 ];
 
+const wallPost = [
+  getUser,
+  validatePost,
+  uploadFileToCloudinary(POST_UPLOAD_FOLDER),
+  async (req, res) => {
+    //Create a regular post
+    const { content, uploadedFileUrl, imageUrl, privacy } = req.body;
+
+    try {
+      const post = await db.createRegularPost(
+        req.user.id,
+        req.paramsUser.id,
+        content,
+        uploadedFileUrl || imageUrl,
+        privacy,
+      );
+      post.myLike = null;
+
+      return res.json({ message: "post created", post });
+    } catch (err) {
+      //delete new pic if user update fails
+      if (uploadedFileUrl) {
+        await deleteFromCloudinary(uploadedFileUrl, POST_UPLOAD_FOLDER);
+      }
+
+      throw new Error(err);
+    }
+  },
+];
+
 const wallGet = [
   getUser,
   getPaginationQuery,
@@ -514,5 +548,6 @@ module.exports = {
   detailsGet,
   detailsPut,
   friendsGet,
+  wallPost,
   wallGet,
 };

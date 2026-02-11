@@ -20,7 +20,6 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
 
     const formData = new FormData();
 
-    formData.append("wallId", wallId);
     formData.append("privacy", privacy);
     if (content) {
       formData.append("content", content);
@@ -32,7 +31,7 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
     }
 
     api
-      .post("/posts", formData)
+      .post(`/users/${wallId}/wall`, formData)
       .then((resp) => {
         const { post } = resp.data;
         onSuccess?.(post);

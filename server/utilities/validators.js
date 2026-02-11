@@ -189,7 +189,7 @@ const validateUserUpdate = [
   errorHandler,
 ];
 
-const validatePostEdit = [
+const validatePost = [
   (req, res, next) => {
     upload.single("image")(req, res, (err) => {
       if (err) {
@@ -241,39 +241,6 @@ const validatePostEdit = [
     .withMessage(
       "'privacy' must be one of 'PUBLIC', 'FRIENDS_ONLY', or 'PRIVATE'",
     ),
-  errorHandler,
-];
-
-const validatePostCreate = [
-  ...validatePostEdit,
-  body("wallId")
-    .exists()
-    .withMessage("'wallId'" + existsMessage)
-    .bail()
-    .isInt()
-    .withMessage("'wallId' must be an integer")
-    .toInt(),
-  async (req, res, next) => {
-    const { wallId } = req.body;
-
-    if (wallId) {
-      const isWallIdValid = await db.getUserById(wallId);
-      if (!isWallIdValid) {
-        req.wallIdValidationError = {
-          msg: "'wallId' is not a valid user id",
-        };
-      }
-    }
-
-    return next();
-  },
-  body("wallId").custom((_, { req }) => {
-    if (req.wallIdValidationError) {
-      throw new Error(req.wallIdValidationError.msg);
-    }
-
-    return true;
-  }),
   errorHandler,
 ];
 
@@ -599,8 +566,7 @@ const validateDetails = [
 module.exports = {
   validateRegister,
   validateUserUpdate,
-  validatePostCreate,
-  validatePostEdit,
+  validatePost,
   validateComment,
   validateWork,
   validateSchool,
