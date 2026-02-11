@@ -62,19 +62,6 @@ function EditForm({ handleClose }) {
 
   return (
     <>
-      <div>
-        <label htmlFor={privacyId}>Privacy</label>
-        <select
-          name={privacyId}
-          id={privacyId}
-          value={privacy}
-          onChange={(e) => setPrivacy(e.target.value)}
-        >
-          <option value="PUBLIC">Public</option>
-          <option value="FRIENDS_ONLY">Friends only</option>
-          <option value="PRIVATE">Private</option>
-        </select>
-      </div>
       <TextAndImageForm
         content={post.content}
         imageUrl={post.mediaUrl}
@@ -83,7 +70,21 @@ function EditForm({ handleClose }) {
         charLimit={2000}
         maxFilesize={MAX_UPLOAD_SIZE_POST}
         disableClearOnSubmit={true}
-      />
+      >
+        <div>
+          <label htmlFor={privacyId}>Privacy</label>
+          <select
+            name={privacyId}
+            id={privacyId}
+            value={privacy}
+            onChange={(e) => setPrivacy(e.target.value)}
+          >
+            <option value="PUBLIC">Public</option>
+            <option value="FRIENDS_ONLY">Friends only</option>
+            <option value="PRIVATE">Private</option>
+          </select>
+        </div>
+      </TextAndImageForm>
       <button onClick={handleClose} disabled={isLoading}>
         Cancel
       </button>

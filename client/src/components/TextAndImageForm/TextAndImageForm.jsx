@@ -12,6 +12,7 @@ import styles from "./TextAndImageForm.module.css";
 const POPUPS = { NONE: "NONE", EMOJI: "EMOJI", GIF: "GIF" };
 
 function TextAndImageForm({
+  children,
   content: initialContent,
   imageUrl,
   setInputRef,
@@ -98,87 +99,90 @@ function TextAndImageForm({
 
   return (
     <>
-      <form className={styles.form} ref={formRef} onSubmit={onSubmit}>
-        <textarea
-          className={styles.input}
-          rows={1}
-          ref={(el) => {
-            setInputRef?.(el);
-            inputRef.current = el;
-          }}
-          placeholder={placeholderText}
-          value={content}
-          onChange={handleInputChange}
-          onKeyDown={onTextareaKeyDown}
-          onFocus={closePopups}
-        />
-        <input
-          hidden
-          accept="image/*"
-          type="file"
-          name="image"
-          id={imageInputId}
-          onChange={handleImageUpload}
-        />
-        <div className={styles.bottom}>
-          {image.previewURL && (
-            <ImagePreview
-              imageUrl={image.previewURL}
-              handleRemove={removeImage}
-            />
-          )}
-          {charLimit && (
-            <div>
-              <span style={isOverCharLimit ? { color: "red" } : undefined}>
-                {contentTrimmed.length}
-              </span>
-              /{charLimit}
-            </div>
-          )}
-          <div className={styles.actionsContainer}>
-            <div>
-              <span className={styles.relative}>
-                {activePopup === POPUPS.EMOJI && (
-                  <EmojiPicker onSelect={handleEmojiSelect} />
-                )}
+      <form ref={formRef} onSubmit={onSubmit}>
+        {children}
+        <div className={styles.inputsContainer}>
+          <textarea
+            className={styles.input}
+            rows={1}
+            ref={(el) => {
+              setInputRef?.(el);
+              inputRef.current = el;
+            }}
+            placeholder={placeholderText}
+            value={content}
+            onChange={handleInputChange}
+            onKeyDown={onTextareaKeyDown}
+            onFocus={closePopups}
+          />
+          <input
+            hidden
+            accept="image/*"
+            type="file"
+            name="image"
+            id={imageInputId}
+            onChange={handleImageUpload}
+          />
+          <div className={styles.bottom}>
+            {image.previewURL && (
+              <ImagePreview
+                imageUrl={image.previewURL}
+                handleRemove={removeImage}
+              />
+            )}
+            {charLimit && (
+              <div>
+                <span style={isOverCharLimit ? { color: "red" } : undefined}>
+                  {contentTrimmed.length}
+                </span>
+                /{charLimit}
+              </div>
+            )}
+            <div className={styles.actionsContainer}>
+              <div>
+                <span className={styles.relative}>
+                  {activePopup === POPUPS.EMOJI && (
+                    <EmojiPicker onSelect={handleEmojiSelect} />
+                  )}
+                  <button
+                    className={styles.actionBtn}
+                    type="button"
+                    onClick={toggleEmojiSelect}
+                  >
+                    <BsEmojiSmileFill />
+                  </button>
+                </span>
+                <span className={styles.relative}>
+                  {activePopup === POPUPS.GIF && (
+                    <GifSearch onSelect={handleGifSelect} />
+                  )}
+                  <button
+                    className={styles.actionBtn}
+                    type="button"
+                    onClick={toggleGifSelect}
+                  >
+                    <PiGifFill />
+                  </button>
+                </span>
+                <label
+                  htmlFor={imageInputId}
+                  className={styles.actionBtn}
+                  onClick={closePopups}
+                >
+                  <AiOutlinePicture />
+                </label>
+              </div>
+              <div>
                 <button
                   className={styles.actionBtn}
-                  type="button"
-                  onClick={toggleEmojiSelect}
+                  type="submit"
+                  disabled={
+                    (!contentTrimmed && !image.previewURL) || isOverCharLimit
+                  }
                 >
-                  <BsEmojiSmileFill />
+                  <LuSendHorizontal />
                 </button>
-              </span>
-              <span className={styles.relative}>
-                {activePopup === POPUPS.GIF && (
-                  <GifSearch onSelect={handleGifSelect} />
-                )}
-                <button
-                  className={styles.actionBtn}
-                  type="button"
-                  onClick={toggleGifSelect}
-                >
-                  <PiGifFill />
-                </button>
-              </span>
-              <label
-                htmlFor={imageInputId}
-                className={styles.actionBtn}
-                onClick={closePopups}
-              >
-                <AiOutlinePicture />
-              </label>
-            </div>
-            <div>
-              <button
-                className={styles.actionBtn}
-                type="submit"
-                disabled={
-                  (!contentTrimmed && !image.previewURL) || isOverCharLimit
-                }
-              >
-                <LuSendHorizontal />
-              </button>
+              </div>
             </div>
           </div>
         </div>

@@ -53,30 +53,31 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
 
   return (
     <Modal handleClose={handleClose}>
-      <h2>Create Post</h2>
-      <div>
-        <img src={auth.user.profile.avatar} className={styles.avatar} />
-        <span>{auth.user.username}</span>
-      </div>
-      <div>
-        <label htmlFor="new-post-privacy">Privacy</label>
-        <select
-          name="new-post-privacy"
-          id="new-post-privacy"
-          value={privacy}
-          onChange={(e) => setPrivacy(e.target.value)}
-        >
-          <option value="PUBLIC">Public</option>
-          <option value="FRIENDS_ONLY">Friends only</option>
-          <option value="PRIVATE">Private</option>
-        </select>
-      </div>
       <TextAndImageForm
         handleSubmit={handleSubmit}
         placeholderText={`What's on your mind, ${auth.user.username}`}
         charLimit={2000}
         maxFilesize={MAX_UPLOAD_SIZE_POST}
-      />
+      >
+        <h2>Create Post</h2>
+        <div>
+          <img src={auth.user.profile.avatar} className={styles.avatar} />
+          <span>{auth.user.username}</span>
+        </div>
+        <div>
+          <label htmlFor="new-post-privacy">Privacy</label>
+          <select
+            name="new-post-privacy"
+            id="new-post-privacy"
+            value={privacy}
+            onChange={(e) => setPrivacy(e.target.value)}
+          >
+            <option value="PUBLIC">Public</option>
+            <option value="FRIENDS_ONLY">Friends only</option>
+            <option value="PRIVATE">Private</option>
+          </select>
+        </div>
+      </TextAndImageForm>
       {isLoading && <p>Posting...</p>}
       {errors && (
         <ul>
