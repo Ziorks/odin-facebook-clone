@@ -16,6 +16,8 @@ import styles from "./Post.module.css";
 
 function EditForm({ handleClose }) {
   const { post, onPostEdit } = useContext(PostContext);
+
+  const [privacy, setPrivacy] = useState(post.privacy);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState(null);
   const api = useApiPrivate();
@@ -26,6 +28,7 @@ function EditForm({ handleClose }) {
 
     const formData = new FormData();
 
+    formData.append("privacy", privacy);
     if (content) {
       formData.append("content", content);
     }
@@ -55,8 +58,23 @@ function EditForm({ handleClose }) {
       .finally(() => setIsLoading(false));
   };
 
+  const privacyId = `post-privacy_${post.id}`;
+
   return (
     <>
+      <div>
+        <label htmlFor={privacyId}>Privacy</label>
+        <select
+          name={privacyId}
+          id={privacyId}
+          value={privacy}
+          onChange={(e) => setPrivacy(e.target.value)}
+        >
+          <option value="PUBLIC">Public</option>
+          <option value="FRIENDS_ONLY">Friends only</option>
+          <option value="PRIVATE">Private</option>
+        </select>
+      </div>
       <TextAndImageForm
         content={post.content}
         imageUrl={post.mediaUrl}

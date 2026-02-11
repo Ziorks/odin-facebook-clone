@@ -10,6 +10,7 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
   const { auth } = useContext(AuthContext);
   const api = useApiPrivate();
 
+  const [privacy, setPrivacy] = useState("PUBLIC");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState(null);
 
@@ -20,6 +21,7 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
     const formData = new FormData();
 
     formData.append("wallId", wallId);
+    formData.append("privacy", privacy);
     if (content) {
       formData.append("content", content);
     }
@@ -56,7 +58,19 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
         <img src={auth.user.profile.avatar} className={styles.avatar} />
         <span>{auth.user.username}</span>
       </div>
-      {/* TODO: consider adding post privacy settings*/}
+      <div>
+        <label htmlFor="new-post-privacy">Privacy</label>
+        <select
+          name="new-post-privacy"
+          id="new-post-privacy"
+          value={privacy}
+          onChange={(e) => setPrivacy(e.target.value)}
+        >
+          <option value="PUBLIC">Public</option>
+          <option value="FRIENDS_ONLY">Friends only</option>
+          <option value="PRIVATE">Private</option>
+        </select>
+      </div>
       <TextAndImageForm
         handleSubmit={handleSubmit}
         placeholderText={`What's on your mind, ${auth.user.username}`}

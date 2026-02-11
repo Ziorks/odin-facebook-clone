@@ -836,7 +836,7 @@ async function createFriendship(senderId, recipientId) {
   return friendship;
 }
 
-async function createRegularPost(authorId, wallId, content, mediaUrl) {
+async function createRegularPost(authorId, wallId, content, mediaUrl, privacy) {
   const post = await prisma.post.create({
     data: {
       author: { connect: { id: authorId } },
@@ -844,6 +844,7 @@ async function createRegularPost(authorId, wallId, content, mediaUrl) {
       content,
       mediaUrl,
       type: "REGULAR",
+      privacy,
     },
     include: {
       author: userOptions,
@@ -866,6 +867,7 @@ async function createProfilePicUpdatePost(wallId, mediaUrl) {
       wall: { connect: { id: wallId } },
       mediaUrl,
       type: "PROFILE_PIC_UPDATE",
+      privacy: "FRIENDS_ONLY",
     },
     include: {
       author: userOptions,
@@ -1035,12 +1037,13 @@ async function updateFriendship(friendshipId, { accepted }) {
   return friendship;
 }
 
-async function updatePost(postId, { content, mediaUrl }) {
+async function updatePost(postId, { content, mediaUrl, privacy }) {
   const post = await prisma.post.update({
     where: { id: postId },
     data: {
       content,
       mediaUrl,
+      privacy,
     },
     ...postOptions,
   });

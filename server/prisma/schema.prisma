@@ -185,16 +185,23 @@ enum PostType {
   PROFILE_PIC_UPDATE
 }
 
+enum PostPrivacy {
+  PUBLIC
+  FRIENDS_ONLY
+  PRIVATE
+}
+
 model Post {
-  id        Int       @id @default(autoincrement())
-  type      PostType  @default(REGULAR)
-  content   String?   @db.VarChar(2048)
-  mediaUrl  String?   @db.VarChar(256)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  author    User      @relation(name: "PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  id        Int         @id @default(autoincrement())
+  type      PostType    @default(REGULAR)
+  privacy   PostPrivacy @default(PUBLIC)
+  content   String?     @db.VarChar(2048)
+  mediaUrl  String?     @db.VarChar(256)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  author    User        @relation(name: "PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   authorId  Int
-  wall      User      @relation(name: "PostWall", fields: [wallId], references: [id], onDelete: Cascade)
+  wall      User        @relation(name: "PostWall", fields: [wallId], references: [id], onDelete: Cascade)
   wallId    Int
   comments  Comment[]
 }

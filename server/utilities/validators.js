@@ -234,6 +234,12 @@ const validatePostEdit = [
 
     return true;
   }),
+  body("privacy")
+    .optional()
+    .isIn(["PUBLIC", "FRIENDS_ONLY", "PRIVATE"])
+    .withMessage(
+      "'privacy' must be one of 'PUBLIC', 'FRIENDS_ONLY', or 'PRIVATE'",
+    ),
   errorHandler,
 ];
 

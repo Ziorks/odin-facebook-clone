@@ -22,7 +22,7 @@ const postPost = [
   async (req, res) => {
     //Create a regular post
     const authorId = req.user.id;
-    const { wallId, content, uploadedFileUrl, imageUrl } = req.body;
+    const { wallId, content, uploadedFileUrl, imageUrl, privacy } = req.body;
 
     try {
       const post = await db.createRegularPost(
@@ -30,6 +30,7 @@ const postPost = [
         wallId,
         content,
         uploadedFileUrl || imageUrl,
+        privacy,
       );
       post.myLike = null;
 
@@ -60,13 +61,14 @@ const postPut = [
   uploadFileToCloudinary(POST_UPLOAD_FOLDER),
   async (req, res) => {
     //Update a post
-    const { content, uploadedFileUrl, imageUrl } = req.body;
+    const { content, uploadedFileUrl, imageUrl, privacy } = req.body;
     const oldMediaUrl = req.post.mediaUrl;
     const newMediaUrl = uploadedFileUrl || imageUrl || null;
 
     const post = await db.updatePost(req.post.id, {
       content: content ?? null,
       mediaUrl: newMediaUrl,
+      privacy,
     });
 
     if (oldMediaUrl && oldMediaUrl !== newMediaUrl && post.type === "REGULAR") {

@@ -5,6 +5,9 @@ CREATE TYPE "public"."Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
 CREATE TYPE "public"."PostType" AS ENUM ('REGULAR', 'PROFILE_PIC_UPDATE');
 
 -- CreateEnum
+CREATE TYPE "public"."PostPrivacy" AS ENUM ('PUBLIC', 'FRIENDS_ONLY', 'PRIVATE');
+
+-- CreateEnum
 CREATE TYPE "public"."LikeTargetType" AS ENUM ('POST', 'COMMENT');
 
 -- CreateTable
@@ -173,6 +176,7 @@ CREATE TABLE "public"."Details" (
 CREATE TABLE "public"."Post" (
     "id" SERIAL NOT NULL,
     "type" "public"."PostType" NOT NULL DEFAULT 'REGULAR',
+    "privacy" "public"."PostPrivacy" NOT NULL DEFAULT 'PUBLIC',
     "content" VARCHAR(2048),
     "mediaUrl" VARCHAR(256),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
