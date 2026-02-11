@@ -3,7 +3,10 @@ import { useOutletContext } from "react-router-dom";
 import useRefreshToken from "../../../hooks/useRefreshToken";
 import AuthContext from "../../../contexts/AuthContext";
 import AboutForm from "../../../components/AboutForm";
+import { formatBytes } from "../../../utils/helperFunctions";
 import styles from "./Avatar.module.css";
+
+const maxFilesize = 1024 * 1024 * 2;
 
 function Avatar() {
   const refresh = useRefreshToken();
@@ -13,6 +16,20 @@ function Avatar() {
     file: null,
     previewURL: auth.user.profile.avatar,
   });
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files[0];
+    if (file.size > maxFilesize) {
+      return alert(
+        `The file you have chosen is too large. The max file size is ${formatBytes(maxFilesize)}.`,
+      );
+    }
+    setAvatar({
+      file,
+      previewURL: URL.createObjectURL(file),
+    });
+    if (!changesMade) setChangesMade(true);
+  };
 
   const formData = new FormData();
   formData.append("avatar", avatar.file);
@@ -44,14 +61,7 @@ function Avatar() {
           type="file"
           name="avatar"
           id="avatar"
-          onChange={(e) => {
-            const file = e.target.files[0];
-            setAvatar({
-              file,
-              previewURL: URL.createObjectURL(file),
-            });
-            if (!changesMade) setChangesMade(true);
-          }}
+          onChange={handleFileInputChange}
         />
       </div>
     </AboutForm>

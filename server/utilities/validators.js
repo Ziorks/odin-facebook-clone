@@ -2,10 +2,22 @@ const multer = require("multer");
 const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } }); //2MB limit
 const bcrypt = require("bcryptjs");
-const { body } = require("express-validator");
+const { body, validationResult } = require("express-validator");
 const db = require("../db/queries");
+const { postPrivacyValidation } = require("./helperFunctions");
 
 const existsMessage = " is required";
+
+const errorHandler = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res
+      .status(400)
+      .json({ message: "validation failed", errors: errors.array() });
+  }
+
+  return next();
+};
 
 const validateRegister = [
   body("username")
@@ -37,6 +49,7 @@ const validateRegister = [
       return value === req.body.password;
     })
     .withMessage("'passwordConfirmation' must match 'password'"),
+  errorHandler,
 ];
 
 const validateUserUpdate = [
@@ -173,40 +186,10 @@ const validateUserUpdate = [
     .bail()
     .isAlpha()
     .withMessage("'lastName' must only contain letters"),
+  errorHandler,
 ];
 
 const validatePostEdit = [
-  body("content")
-    .exists()
-    .withMessage("'content'" + existsMessage)
-    .trim()
-    .isString()
-    .withMessage("Content must be a string"),
-];
-
-const validatePostCreate = [
-  ...validatePostEdit,
-  body("wallId")
-    .exists()
-    .withMessage("'wallId'" + existsMessage)
-    .isInt()
-    .withMessage("WallId must be an integer")
-    .toInt(),
-];
-
-const validateCommentEdit = [
-  body("content")
-    .optional()
-    .isString()
-    .withMessage("'content' must be a string")
-    .trim(),
-  body("imageUrl")
-    .optional()
-    .isURL()
-    .withMessage("'imageUrl' must be a valid URL"),
-];
-
-const validateCommentCreate = [
   (req, res, next) => {
     upload.single("image")(req, res, (err) => {
       if (err) {
@@ -222,6 +205,128 @@ const validateCommentCreate = [
       return next();
     });
   },
+  body("content")
+    .optional()
+    .isString()
+    .withMessage("'content' must be a string")
+    .bail()
+    .trim()
+    .isLength({ max: 2048 })
+    .withMessage("'content' must be 2048 characters or less"),
+  body("imageUrl")
+    .optional()
+    .isURL()
+    .withMessage("'imageUrl' must be a valid URL")
+    .bail()
+    .isLength({ max: 256 })
+    .withMessage("'imageUrl' must be 256 characters or less"),
+  body("image").custom((_, { req }) => {
+    if (req.fileValidationError) {
+      throw new Error(req.fileValidationError.msg);
+    }
+
+    const image = req.file;
+    if (!image) return true;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(image.mimetype)) {
+      throw new Error("'image' must be an image file");
+    }
+
+    return true;
+  }),
+  body("privacy")
+    .optional()
+    .isIn(["PUBLIC", "FRIENDS_ONLY", "PRIVATE"])
+    .withMessage(
+      "'privacy' must be one of 'PUBLIC', 'FRIENDS_ONLY', or 'PRIVATE'",
+    ),
+  errorHandler,
+];
+
+const validatePostCreate = [
+  ...validatePostEdit,
+  body("wallId")
+    .exists()
+    .withMessage("'wallId'" + existsMessage)
+    .bail()
+    .isInt()
+    .withMessage("'wallId' must be an integer")
+    .toInt(),
+  async (req, res, next) => {
+    const { wallId } = req.body;
+
+    if (wallId) {
+      const isWallIdValid = await db.getUserById(wallId);
+      if (!isWallIdValid) {
+        req.wallIdValidationError = {
+          msg: "'wallId' is not a valid user id",
+        };
+      }
+    }
+
+    return next();
+  },
+  body("wallId").custom((_, { req }) => {
+    if (req.wallIdValidationError) {
+      throw new Error(req.wallIdValidationError.msg);
+    }
+
+    return true;
+  }),
+  errorHandler,
+];
+
+const validateCommentEdit = [
+  (req, res, next) => {
+    upload.single("image")(req, res, (err) => {
+      if (err) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          req.fileValidationError = {
+            msg: "File too large. Max 2MB allowed.",
+          };
+        } else {
+          return next(err);
+        }
+      }
+
+      return next();
+    });
+  },
+  body("content")
+    .optional()
+    .isString()
+    .withMessage("'content' must be a string")
+    .trim()
+    .isLength({ max: 512 })
+    .withMessage("'content' must be 512 characters or less"),
+  body("imageUrl")
+    .optional()
+    .isURL()
+    .withMessage("'imageUrl' must be a valid URL")
+    .bail()
+    .isLength({ max: 256 })
+    .withMessage("'imageUrl' must be 256 characters or less"),
+  body("image").custom((_, { req }) => {
+    if (req.fileValidationError) {
+      throw new Error(req.fileValidationError.msg);
+    }
+
+    const image = req.file;
+    if (!image) return true;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(image.mimetype)) {
+      throw new Error("'image' must be an image file");
+    }
+
+    return true;
+  }),
+  errorHandler,
+];
+
+const validateCommentCreate = [
+  ...validateCommentEdit,
   body("postId")
     .exists()
     .withMessage("'postId'" + existsMessage)
@@ -238,9 +343,17 @@ const validateCommentCreate = [
     const { postId, parentId } = req.body;
 
     if (postId) {
-      const isPostIdValid = await db.getPost(postId);
-      if (!isPostIdValid) {
-        req.postIdValidationError = { msg: "postId is not a valid post id" };
+      const post = await db.getPost(postId);
+      if (!post) {
+        req.postIdValidationError = { msg: "'postId' is not a valid post id" };
+      }
+
+      const isAuthorized = await postPrivacyValidation(post, req.user.id);
+
+      if (!isAuthorized) {
+        return res
+          .status(403)
+          .json({ message: "you are not authorized to comment on this post" });
       }
     }
 
@@ -248,7 +361,7 @@ const validateCommentCreate = [
       const isParentIdValid = await db.getComment(parentId);
       if (!isParentIdValid) {
         req.parentIdValidationError = {
-          msg: "parentId is not a valid comment id",
+          msg: "'parentId' is not a valid comment id",
         };
       }
     }
@@ -271,29 +384,7 @@ const validateCommentCreate = [
 
       return true;
     }),
-  body("image")
-    .optional()
-    .custom((_, { req }) => {
-      if (req.fileValidationError) {
-        throw new Error(req.fileValidationError.msg);
-      }
-
-      const image = req.file;
-      if (!image) return true;
-
-      const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-      ];
-      if (!allowedTypes.includes(image.mimetype)) {
-        throw new Error("'image' must be an image file");
-      }
-
-      return true;
-    }),
-  ...validateCommentEdit,
+  errorHandler,
 ];
 
 const validateWork = [
@@ -348,6 +439,7 @@ const validateWork = [
     .withMessage("'currentJob'" + existsMessage)
     .isBoolean()
     .withMessage("CurrentJob must be a boolean"),
+  errorHandler,
 ];
 
 const validateSchool = [
@@ -392,6 +484,7 @@ const validateSchool = [
     .withMessage("'graduated'" + existsMessage)
     .isBoolean()
     .withMessage("Graduated must be a boolean"),
+  errorHandler,
 ];
 
 const validateCity = [
@@ -417,6 +510,7 @@ const validateCity = [
     .optional()
     .isBoolean()
     .withMessage("IsCurrentCity must be a boolean"),
+  errorHandler,
 ];
 
 const validateBasicInfo = [
@@ -537,6 +631,7 @@ const validateBasicInfo = [
     .bail()
     .isLength({ max: 32 })
     .withMessage("Each language must be 32 characters or less"),
+  errorHandler,
 ];
 
 function detailValidationChain(fieldname) {
@@ -560,6 +655,7 @@ const validateDetails = [
   detailValidationChain("movies"),
   detailValidationChain("sports"),
   detailValidationChain("hobbies"),
+  errorHandler,
 ];
 
 module.exports = {

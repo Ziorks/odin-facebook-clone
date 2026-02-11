@@ -1,53 +1,34 @@
-const { validationResult } = require("express-validator");
-const cloudinary = require("../utilities/cloudinary");
-const { extractPublicId } = require("cloudinary-build-url");
 const db = require("../db/queries");
 const {
   getComment,
   commentEditAuth,
   getPaginationQuery,
+  uploadFileToCloudinary,
 } = require("../middleware");
 const {
   validateCommentCreate,
   validateCommentEdit,
 } = require("../utilities/validators");
-const { formatComment } = require("../utilities/helperFunctions");
-
-const UPLOADS_FOLDER = "facebook_clone_comment_pics";
+const {
+  formatComment,
+  deleteFromCloudinary,
+} = require("../utilities/helperFunctions");
+const { COMMENT_UPLOAD_FOLDER } = require("../utilities/constants");
 
 const commentPost = [
   validateCommentCreate,
-  async (req, res, next) => {
+  uploadFileToCloudinary(COMMENT_UPLOAD_FOLDER),
+  async (req, res) => {
     //Create a comment
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
-    //if picture was sent => upload to cloudinary
-    if (req.file) {
-      const { buffer, mimetype } = req.file;
-      const b64 = Buffer.from(buffer).toString("base64");
-      const dataURI = "data:" + mimetype + ";base64," + b64;
-      const result = await cloudinary.uploader.upload(dataURI, {
-        resource_type: "auto",
-        folder: UPLOADS_FOLDER,
-      });
-      req.body.imageUrl = result.secure_url;
-      req.body.imagePublicId = result.public_id;
-    }
-
     const authorId = req.user.id;
-    const { postId, content, parentId, imageUrl, imagePublicId } = req.body;
+    const { postId, content, parentId, uploadedFileUrl, imageUrl } = req.body;
 
     try {
       const comment = await db.createComment(
         authorId,
         postId,
         content,
-        imageUrl,
+        uploadedFileUrl || imageUrl,
         parentId,
       );
       await formatComment(comment, req.user.id);
@@ -55,18 +36,11 @@ const commentPost = [
       return res.json({ message: "comment created", comment });
     } catch (err) {
       //delete new pic if user update fails
-      if (imagePublicId) {
-        try {
-          await cloudinary.uploader.destroy(imagePublicId);
-        } catch (err) {
-          console.error(
-            `Cloudinary file with public id: '${imagePublicId}' not deleted. You will need to delete it manually.`,
-          );
-          return next(err);
-        }
+      if (uploadedFileUrl) {
+        await deleteFromCloudinary(uploadedFileUrl, COMMENT_UPLOAD_FOLDER);
       }
 
-      return next(err);
+      throw new Error(err);
     }
   },
 ];
@@ -79,37 +53,22 @@ const commentGet = [
 ];
 
 const commentEditPut = [
-  getComment,
   commentEditAuth,
   validateCommentEdit,
-  async (req, res, next) => {
+  uploadFileToCloudinary(COMMENT_UPLOAD_FOLDER),
+  async (req, res) => {
     //Edit a comment
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
+    const { content, uploadedFileUrl, imageUrl } = req.body;
     const oldMediaUrl = req.comment.mediaUrl;
-    const { content, imageUrl } = req.body;
+    const newMediaUrl = uploadedFileUrl || imageUrl || null;
 
     const comment = await db.updateComment(req.comment.id, {
       content: content ?? null,
-      mediaUrl: imageUrl ?? null,
+      mediaUrl: newMediaUrl,
     });
 
-    if (oldMediaUrl && !imageUrl) {
-      const publicId = extractPublicId(oldMediaUrl);
-      if (publicId.split("/")[0] !== UPLOADS_FOLDER) return;
-      try {
-        await cloudinary.uploader.destroy(publicId);
-      } catch (err) {
-        console.error(
-          `Cloudinary file with public id: '${publicId}' not deleted. You will need to delete it manually.`,
-        );
-        return next(err);
-      }
+    if (oldMediaUrl && oldMediaUrl !== newMediaUrl) {
+      await deleteFromCloudinary(oldMediaUrl, COMMENT_UPLOAD_FOLDER);
     }
 
     await formatComment(comment, req.user.id);
@@ -140,7 +99,6 @@ const commentRepliesGet = [
 ];
 
 const commentDeletePut = [
-  getComment,
   commentEditAuth,
   async (req, res) => {
     //Soft delete a comment

@@ -1,8 +1,9 @@
-const { validationResult } = require("express-validator");
-const cloudinary = require("../utilities/cloudinary");
 const bcrypt = require("bcryptjs");
 const db = require("../db/queries");
-const { attachMyLikesToPost } = require("../utilities/helperFunctions");
+const {
+  attachMyLikesToPost,
+  deleteFromCloudinary,
+} = require("../utilities/helperFunctions");
 const {
   validateWork,
   validateSchool,
@@ -18,7 +19,9 @@ const {
   getSchool,
   getCity,
   getPaginationQuery,
+  uploadFileToCloudinary,
 } = require("../middleware");
+const { PROFILE_PICS_UPLOAD_FOLDER } = require("../utilities/constants");
 
 const usersSearch = [
   getPaginationQuery,
@@ -50,31 +53,11 @@ const userPut = [
   getUser,
   profileEditAuth,
   validateUserUpdate,
+  uploadFileToCloudinary(PROFILE_PICS_UPLOAD_FOLDER),
   async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
-    //if picture was sent => upload to cloudinary
-    if (req.file) {
-      const { buffer, mimetype } = req.file;
-      const b64 = Buffer.from(buffer).toString("base64");
-      const dataURI = "data:" + mimetype + ";base64," + b64;
-      const result = await cloudinary.uploader.upload(dataURI, {
-        resource_type: "auto",
-        folder: "facebook_clone_profile_pics",
-      });
-      req.body.avatarURL = result.secure_url;
-      req.body.avatarPublicId = result.public_id;
-    }
-
     const user = req.paramsUser;
     const {
-      avatarURL,
-      avatarPublicId,
+      uploadedFileUrl,
       username,
       email,
       newPassword,
@@ -88,27 +71,22 @@ const userPut = [
           username,
           hashedPassword,
           email,
-          avatar: avatarURL,
+          avatar: uploadedFileUrl,
           firstName,
           lastName,
         });
       } catch (err) {
         //delete new pic if user update fails
-        if (avatarPublicId) {
-          try {
-            await cloudinary.uploader.destroy(avatarPublicId);
-          } catch (err) {
-            console.error(
-              `Cloudinary file with public id: '${avatarPublicId}' not deleted. You will need to delete it manually.`,
-            );
-            return next(err);
-          }
-        }
-        return next(err);
+        await deleteFromCloudinary(uploadedFileUrl, PROFILE_PICS_UPLOAD_FOLDER);
+
+        throw new Error(err);
       }
 
       //create profile pic update post if avatar uploaded
-      if (req.file) await db.createProfilePicUpdatePost(user.id, avatarURL);
+      //DON'T delete old pic because it probably still exists in pfp update post
+      if (uploadedFileUrl) {
+        await db.createProfilePicUpdatePost(user.id, uploadedFileUrl);
+      }
 
       return res.json({ message: "user updated" });
     };
@@ -166,13 +144,6 @@ const workPost = [
   },
   validateWork,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const user = req.paramsUser;
     const {
       company,
@@ -204,13 +175,6 @@ const workPut = [
   getWork,
   validateWork,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const {
       company,
       position,
@@ -263,13 +227,6 @@ const schoolPost = [
   },
   validateSchool,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const user = req.paramsUser;
     const { name, description, degree, startYear, endYear, graduated } =
       req.body;
@@ -293,13 +250,6 @@ const schoolPut = [
   getSchool,
   validateSchool,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const { name, description, degree, startYear, endYear, graduated } =
       req.body;
 
@@ -382,13 +332,6 @@ const cityPost = [
   },
   validateCity,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const user = req.paramsUser;
     const { name, yearMoved, isHometown, isCurrentCity } = req.body;
 
@@ -413,13 +356,6 @@ const cityPut = [
   getCity,
   validateCity,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const { name, yearMoved } = req.body;
 
     await db.updateCity(req.city.id, {
@@ -458,13 +394,6 @@ const contactInfoPut = [
   profileEditAuth,
   validateBasicInfo,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const user = req.paramsUser;
     const {
       phoneNumbers,
@@ -506,13 +435,6 @@ const detailsPut = [
   profileEditAuth,
   validateDetails,
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const user = req.paramsUser;
     const { aboutMe, quotes, music, books, tv, movies, sports, hobbies } =
       req.body;
@@ -553,12 +475,18 @@ const wallGet = [
   getUser,
   getPaginationQuery,
   async (req, res) => {
-    const wallUser = req.paramsUser;
+    const wallUserId = req.paramsUser.id;
+    const requestUserId = req.user.id;
     const { page, resultsPerPage } = req.pagination;
 
-    const wall = await db.getWall(wallUser.id, { page, resultsPerPage });
+    const wall = await db.getWall(wallUserId, requestUserId, {
+      page,
+      resultsPerPage,
+    });
     await Promise.all(
-      wall.results.map(async (post) => attachMyLikesToPost(post, req.user.id)),
+      wall.results.map(async (post) =>
+        attachMyLikesToPost(post, requestUserId),
+      ),
     );
 
     return res.json(wall);

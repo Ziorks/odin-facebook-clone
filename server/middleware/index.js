@@ -1,8 +1,10 @@
 const passport = require("passport");
+const cloudinary = require("../utilities/cloudinary");
 const db = require("../db/queries");
 const {
   formatComment,
   attachMyLikesToPost,
+  postPrivacyValidation,
 } = require("../utilities/helperFunctions");
 
 const notFoundHandler = (req, res) => {
@@ -21,30 +23,42 @@ const jwtAuth = passport.authenticate("jwt", { session: false });
 
 const getPost = async (req, res, next) => {
   const { postId } = req.params;
+  const userId = req.user.id;
 
   const post = await db.getPost(+postId, { includeTopComment: true });
   if (!post) {
     return res.status(404).json({ message: "post not found" });
   }
 
-  await attachMyLikesToPost(post, req.user.id);
+  const isAuthorized = postPrivacyValidation(post, userId);
+
+  if (!isAuthorized) {
+    return res
+      .status(403)
+      .json({ message: "you are not authorized to access this post" });
+  }
+
+  await attachMyLikesToPost(post, userId);
   req.post = post;
 
   return next();
 };
 
-const postEditAuth = (req, res, next) => {
-  const userId = req.user.id;
-  const authorId = req.post.author.id;
+const postEditAuth = [
+  getPost,
+  (req, res, next) => {
+    const userId = req.user.id;
+    const authorId = req.post.author.id;
 
-  if (userId !== authorId) {
-    return res
-      .status(403)
-      .json({ message: "you are not authorized to edit this post" });
-  }
+    if (userId !== authorId) {
+      return res
+        .status(403)
+        .json({ message: "you are not authorized to edit this post" });
+    }
 
-  return next();
-};
+    return next();
+  },
+];
 
 const getComment = async (req, res, next) => {
   const { commentId } = req.params;
@@ -54,24 +68,36 @@ const getComment = async (req, res, next) => {
     return res.status(404).json({ message: "comment not found" });
   }
 
-  await formatComment(comment, req.user.id);
+  const userId = req.user.id;
+  const isAuthorized = postPrivacyValidation(comment.post, userId);
+
+  if (!isAuthorized) {
+    return res
+      .status(403)
+      .json({ message: "you are not authorized to access this comment" });
+  }
+
+  await formatComment(comment, userId);
   req.comment = comment;
 
   return next();
 };
 
-const commentEditAuth = async (req, res, next) => {
-  const userId = req.user.id;
-  const authorId = req.comment.author.id;
+const commentEditAuth = [
+  getComment,
+  (req, res, next) => {
+    const userId = req.user.id;
+    const authorId = req.comment.author.id;
 
-  if (userId !== authorId) {
-    return res
-      .status(403)
-      .json({ message: "you are not authorized to edit this comment" });
-  }
+    if (userId !== authorId) {
+      return res
+        .status(403)
+        .json({ message: "you are not authorized to edit this comment" });
+    }
 
-  return next();
-};
+    return next();
+  },
+];
 
 const getUser = async (req, res, next) => {
   const { userId } = req.params;
@@ -163,6 +189,23 @@ const getPaginationQuery = async (req, res, next) => {
   return next();
 };
 
+const uploadFileToCloudinary = (folderName) => {
+  return async (req, res, next) => {
+    if (req.file) {
+      const { buffer, mimetype } = req.file;
+      const b64 = Buffer.from(buffer).toString("base64");
+      const dataURI = "data:" + mimetype + ";base64," + b64;
+      const result = await cloudinary.uploader.upload(dataURI, {
+        resource_type: "auto",
+        folder: folderName,
+      });
+      req.body.uploadedFileUrl = result.secure_url;
+    }
+
+    return next();
+  };
+};
+
 module.exports = {
   notFoundHandler,
   errorHandler,
@@ -178,4 +221,5 @@ module.exports = {
   getSchool,
   getCity,
   getPaginationQuery,
+  uploadFileToCloudinary,
 };

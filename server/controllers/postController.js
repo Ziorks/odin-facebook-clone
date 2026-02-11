@@ -1,46 +1,48 @@
-const { validationResult } = require("express-validator");
 const db = require("../db/queries");
-const { getPost, postEditAuth, getPaginationQuery } = require("../middleware");
+const {
+  getPost,
+  postEditAuth,
+  getPaginationQuery,
+  uploadFileToCloudinary,
+} = require("../middleware");
 const {
   validatePostCreate,
   validatePostEdit,
 } = require("../utilities/validators");
-const { formatComment } = require("../utilities/helperFunctions");
+const {
+  formatComment,
+  deleteFromCloudinary,
+  deleteUploadedFilesFromPost,
+} = require("../utilities/helperFunctions");
+const { POST_UPLOAD_FOLDER } = require("../utilities/constants");
 
 const postPost = [
   validatePostCreate,
+  uploadFileToCloudinary(POST_UPLOAD_FOLDER),
   async (req, res) => {
     //Create a regular post
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const authorId = req.user.id;
-    const { wallId, content } = req.body;
+    const { wallId, content, uploadedFileUrl, imageUrl, privacy } = req.body;
 
-    const isWallIdValid = await db.getUserById(wallId);
-    if (!isWallIdValid) {
-      return res.status(400).json({
-        message: "validation failed",
-        errors: [
-          {
-            type: "field",
-            value: wallId,
-            msg: "wallId is not a valid user id",
-            path: "wallId",
-            location: "body",
-          },
-        ],
-      });
+    try {
+      const post = await db.createRegularPost(
+        authorId,
+        wallId,
+        content,
+        uploadedFileUrl || imageUrl,
+        privacy,
+      );
+      post.myLike = null;
+
+      return res.json({ message: "post created", post });
+    } catch (err) {
+      //delete new pic if user update fails
+      if (uploadedFileUrl) {
+        await deleteFromCloudinary(uploadedFileUrl, POST_UPLOAD_FOLDER);
+      }
+
+      throw new Error(err);
     }
-
-    const post = await db.createRegularPost(authorId, wallId, content);
-    post.myLike = null;
-
-    return res.json({ message: "post created", post });
   },
 ];
 
@@ -53,21 +55,25 @@ const postGet = [
 ];
 
 const postPut = [
-  getPost,
   postEditAuth,
   validatePostEdit,
+  uploadFileToCloudinary(POST_UPLOAD_FOLDER),
   async (req, res) => {
     //Update a post
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
+    const { content, uploadedFileUrl, imageUrl, privacy } = req.body;
+    const oldMediaUrl = req.post.mediaUrl;
+    const newMediaUrl = uploadedFileUrl || imageUrl || null;
+
+    const post = await db.updatePost(req.post.id, {
+      content: content ?? null,
+      mediaUrl: newMediaUrl,
+      privacy,
+    });
+
+    if (oldMediaUrl && oldMediaUrl !== newMediaUrl && post.type === "REGULAR") {
+      await deleteFromCloudinary(oldMediaUrl, POST_UPLOAD_FOLDER);
     }
 
-    const { content } = req.body;
-
-    const post = await db.updatePost(req.post.id, { content });
     post.myLike = req.post.myLike;
 
     return res.json({ message: "post edited", post });
@@ -75,10 +81,11 @@ const postPut = [
 ];
 
 const postDelete = [
-  getPost,
   postEditAuth,
   async (req, res) => {
     //Delete a post
+    await deleteUploadedFilesFromPost(req.post);
+
     const post = await db.deletePost(req.post.id);
     post.myLike = req.post.myLike;
 

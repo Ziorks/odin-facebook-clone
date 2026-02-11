@@ -19,3 +19,7 @@ export const MONTHS = [
   { name: "November", nDays: 30 },
   { name: "December", nDays: 31 },
 ];
+
+export const MAX_UPLOAD_SIZE_POST = 1024 * 1024 * 2;
+
+export const MAX_UPLOAD_SIZE_COMMENT = 1024 * 1024 * 2;

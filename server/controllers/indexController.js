@@ -1,6 +1,5 @@
 const passport = require("passport");
 const bcrypt = require("bcryptjs");
-const { validationResult } = require("express-validator");
 const db = require("../db/queries");
 const { validateRegister } = require("../utilities/validators");
 const {
@@ -45,13 +44,6 @@ const loginPost = (req, res, next) => {
 const registerPost = [
   validateRegister,
   async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ message: "validation failed", errors: errors.array() });
-    }
-
     const { username, password, email } = req.body;
 
     const usernameTaken = await db.getUserByUsername(username);

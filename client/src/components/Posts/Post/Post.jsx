@@ -5,57 +5,98 @@ import AuthContext from "../../../contexts/AuthContext";
 import PostContext from "../../../contexts/PostContext";
 import useApiPrivate from "../../../hooks/useApiPrivate";
 import useDataFetchPaginated from "../../../hooks/useDataFetchPaginated";
+import { MAX_UPLOAD_SIZE_POST } from "../../../utils/constants";
 import Modal from "../../Modal";
+import TextAndImageForm from "../../TextAndImageForm";
 import LikeButton from "./LikeButton";
-import Comment from "./Comment";
 import Comments from "./Comments";
 import CommentForm from "./CommentForm";
+import Likes from "./Likes";
 import styles from "./Post.module.css";
-import Likes from "./Likes/Likes";
 
 function EditForm({ handleClose }) {
   const { post, onPostEdit } = useContext(PostContext);
-  const [formContent, setFormContent] = useState(post.content);
+
+  const [privacy, setPrivacy] = useState(post.privacy);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errors, setErrors] = useState(null);
   const api = useApiPrivate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError(null);
+  const handleSubmit = (content, file, imageUrl) => {
     setIsLoading(true);
+    setErrors(null);
+
+    const formData = new FormData();
+
+    formData.append("privacy", privacy);
+    if (content) {
+      formData.append("content", content);
+    }
+    if (file) {
+      formData.append("image", file);
+    } else if (imageUrl) {
+      formData.append("imageUrl", imageUrl);
+    }
 
     api
-      .put(`/posts/${post.id}`, { content: formContent })
+      .put(`/posts/${post.id}`, formData)
       .then((resp) => {
         handleClose();
         onPostEdit(resp.data.post);
       })
       .catch((err) => {
-        setError(err);
+        console.error("post edit error", err);
+
+        if (err.response?.status === 400) {
+          setErrors(err.response.data.errors);
+        } else {
+          setErrors([
+            { msg: err.response?.data?.message || "Something went wrong." },
+          ]);
+        }
       })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      .finally(() => setIsLoading(false));
   };
 
+  const privacyId = `post-privacy_${post.id}`;
+
   return (
-    <form>
-      <textarea
-        onChange={(e) => setFormContent(e.target.value)}
-        value={formContent}
-      />
+    <>
       <div>
-        <button type="submit" onClick={handleSubmit} disabled={isLoading}>
-          Save
-        </button>
-        <button onClick={handleClose} disabled={isLoading}>
-          Cancel
-        </button>
-        {isLoading && <span>Saving...</span>}
-        {error && <span>An error occured. Please try again.</span>}
+        <label htmlFor={privacyId}>Privacy</label>
+        <select
+          name={privacyId}
+          id={privacyId}
+          value={privacy}
+          onChange={(e) => setPrivacy(e.target.value)}
+        >
+          <option value="PUBLIC">Public</option>
+          <option value="FRIENDS_ONLY">Friends only</option>
+          <option value="PRIVATE">Private</option>
+        </select>
       </div>
-    </form>
+      <TextAndImageForm
+        content={post.content}
+        imageUrl={post.mediaUrl}
+        handleSubmit={handleSubmit}
+        placeholderText={"Edit your post"}
+        charLimit={2000}
+        maxFilesize={MAX_UPLOAD_SIZE_POST}
+        imageInputId={`post-image-input_${post.id}`}
+        disableClearOnSubmit={true}
+      />
+      <button onClick={handleClose} disabled={isLoading}>
+        Cancel
+      </button>
+      {isLoading && <p>Saving...</p>}
+      {errors && (
+        <ul>
+          {errors.map((error, i) => (
+            <li key={i}>{error.msg}</li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }
 
@@ -150,7 +191,7 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
           <div>
             <LikeButton
               like={post.myLike}
-              likePath={`/posts/${post.id}/like`}
+              likePath={`/posts/${post.id}/likes`}
               onSuccess={onPostLikeChange}
             />
             <button onClick={handleCommentBtnClick}>Comment</button>
