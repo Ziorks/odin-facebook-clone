@@ -1,0 +1,246 @@
+button {
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+
+.primaryLayout {
+  padding: 2.5rem;
+  text-align: center;
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-700);
+}
+
+.hero {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.title {
+  margin-bottom: 1rem;
+}
+
+.title > p {
+  font-size: 0.7rem;
+}
+
+.title > h1 {
+  color: var(--color-primary-300);
+  font-family: "Righteous", sans-serif;
+  font-size: 3.3rem;
+}
+
+.flavorText {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.actionsContainer {
+  margin: 3rem 0;
+  padding: 1rem;
+  background-color: var(--color-gray-100);
+  border-radius: 8px;
+  box-shadow: 0 0 12px 0 rgba(0, 0, 0, 0.25);
+}
+
+.divider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.divider > span {
+  padding: 0 0.5rem;
+  font-size: 0.8rem;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  border: 1px solid var(--color-gray-200);
+  flex: 1;
+}
+
+.form {
+  text-align: left;
+}
+
+.form > div {
+  margin-bottom: 0.7rem;
+}
+
+.textInput {
+  position: relative;
+}
+
+.textInput > label {
+  position: absolute;
+  top: 25%;
+  left: 2%;
+  color: var(--color-gray-300);
+  background-color: var(--color-gray-100);
+  padding: 0 0.2rem;
+  cursor: text;
+  transition:
+    top 100ms ease-out,
+    font-size 100ms ease-out;
+}
+
+.textInput > input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 4px;
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-700);
+  font-size: 1rem;
+}
+
+.textInput > input::placeholder {
+  color: transparent;
+}
+
+.textInput > input:focus {
+  outline: none;
+  border: 1px solid var(--color-primary-100);
+}
+
+.textInput:focus-within > label {
+  color: var(--color-primary-100);
+}
+
+.textInput:focus-within > label,
+.textInput:has(input:not(:placeholder-shown)) > label {
+  top: -15%;
+  font-size: 0.7rem;
+}
+
+.rememberMeLabel {
+  margin-left: 0.8rem;
+}
+
+.logInBtn {
+  width: 100%;
+  padding: 0.7rem;
+  border: none;
+  border-radius: 6px;
+  background-color: var(--color-primary-300);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.logInBtn:hover {
+  background-color: var(--color-primary-200);
+}
+
+.alternateLoginsContainer button {
+  font-size: 1rem;
+  padding: 0.3rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-gray-400);
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-700);
+}
+
+.alternateLoginsContainer button:hover {
+  background-color: var(--color-gray-200);
+}
+
+.oauthContainer {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.oauthContainer > button {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.demoContainer > button {
+  width: 100%;
+}
+
+.newAccountBtn,
+.signUpBtn {
+  display: block;
+  width: min(225px, 100%);
+  margin: 0 auto;
+  padding: 0.5rem 0.9rem;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  background-color: var(--color-accent-200);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.newAccountBtn:hover,
+.signUpBtn:hover {
+  background-color: var(--color-accent-300);
+}
+
+.toLoginFormBtn {
+  border: none;
+  background-color: transparent;
+  color: var(--color-primary-200);
+  font-size: 1rem;
+  margin: 0.8rem 0;
+}
+
+/* TODO: make errors better 
+    eg: associate error with input */
+.errorsList {
+  color: red;
+  list-style-type: none;
+}
+
+@media (min-width: 700px) {
+  .primaryLayout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    min-height: 85vh;
+  }
+
+  .hero {
+    max-width: 350px;
+    margin: 0;
+  }
+
+  .title,
+  .flavorText {
+    text-align: left;
+  }
+
+  .title > p {
+    font-size: 0.8rem;
+  }
+
+  .title > h1 {
+    font-size: 4rem;
+  }
+
+  .flavorText {
+    font-size: 1.4rem;
+  }
+
+  .actionsContainer {
+    min-width: 350px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .primaryLayout {
+    justify-content: center;
+    gap: 8rem;
+  }
+
+  .actionsContainer {
+    min-width: 450px;
+  }
+}
