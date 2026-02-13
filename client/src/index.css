@@ -1,12 +1,42 @@
+@import url("https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&family=Righteous&display=swap");
+
+:root {
+  --color-primary-100: rgb(125, 151, 238);
+  --color-primary-200: rgb(74, 111, 233);
+  --color-primary-300: rgb(34, 79, 228);
+
+  --color-gray-100: #fff;
+  --color-gray-200: #eee;
+  --color-gray-300: #aaa;
+  --color-gray-400: #777;
+  --color-gray-500: #444;
+  --color-gray-600: #111;
+  --color-gray-700: #000;
+
+  --color-accent-100: rgb(136, 207, 136);
+  --color-accent-200: rgb(15, 192, 15);
+  --color-accent-300: rgb(4, 143, 4);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-family: "Archivo", sans-serif;
+
+  /* TODO: dark theme */
+  /* --color-gray-100: #222;
+  --color-gray-200: #111;
+  --color-gray-300: #666;
+  --color-gray-400: #888;
+  --color-gray-500: #aaa;
+  --color-gray-600: #ddd;
+  --color-gray-700: #fff; */
 }
 
 body {
-  background-color: #333;
-  color: #fff;
+  background-color: #fff;
+  color: #333;
 }
 
 a {
