@@ -44,3 +44,7 @@ a {
   text-decoration: underline;
   cursor: pointer;
 }
+
+button {
+  cursor: pointer;
+}

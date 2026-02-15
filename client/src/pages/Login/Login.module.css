@@ -1,13 +1,12 @@
-button {
-  cursor: pointer;
-  transition: background-color 150ms ease-out;
-}
-
 .primaryLayout {
   padding: 2.5rem;
   text-align: center;
   background-color: var(--color-gray-200);
   color: var(--color-gray-700);
+}
+
+.primaryLayout button {
+  transition: background-color 150ms ease-out;
 }
 
 .hero {
