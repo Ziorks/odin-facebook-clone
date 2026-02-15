@@ -1,8 +1,9 @@
 // import styles from "./Oauth.module.css";
 import { useEffect, useContext, useState, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import AuthContext from "../../contexts/AuthContext";
 import api from "../../api";
+import AuthContext from "../../contexts/AuthContext";
+import LoadingScreen from "../../components/LoadingScreen";
 
 function Oauth() {
   const [searchParams] = useSearchParams();
@@ -45,7 +46,7 @@ function Oauth() {
           <Link to={"/"}>back</Link>.
         </p>
       ) : (
-        <p>Signing you in...</p>
+        <LoadingScreen />
       )}
     </>
   );

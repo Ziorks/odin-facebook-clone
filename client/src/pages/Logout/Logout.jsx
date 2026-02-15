@@ -2,6 +2,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../../contexts/AuthContext";
 import useApiPrivate from "../../hooks/useApiPrivate";
+import LoadingScreen from "../../components/LoadingScreen";
 // import styles from "./Logout.module.css";
 
 function Logout() {
@@ -41,7 +42,7 @@ function Logout() {
           <button onClick={doLogout}>try again</button>
         </p>
       ) : (
-        <p>Logging you out...</p>
+        <LoadingScreen />
       )}
     </>
   );

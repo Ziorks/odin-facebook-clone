@@ -1,0 +1,35 @@
+.primaryContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-700);
+}
+
+.primaryContainer > div:first-child {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.primaryContainer img {
+  display: block;
+}
+
+.primaryContainer > div:last-child {
+  margin-bottom: 3rem;
+  text-align: center;
+  line-height: 2rem;
+}
+
+.primaryContainer > div:last-child > p:first-child {
+  color: var(--color-gray-400);
+}
+
+.primaryContainer > div:last-child > p:last-child {
+  color: var(--color-primary-200);
+  font-weight: bold;
+  font-size: 2rem;
+}

@@ -1,7 +1,9 @@
 import { useContext } from "react";
-import { Outlet, Link } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import AuthContext from "./contexts/AuthContext";
 import usePersistLogin from "./hooks/usePersistLogin";
+import LoadingScreen from "./components/LoadingScreen";
+import SiteNav from "./components/SiteNav";
 import Login from "./pages/Login";
 
 function App() {
@@ -11,28 +13,10 @@ function App() {
   return (
     <>
       {isLoading ? (
-        <p>Fetching your profile...</p>
+        <LoadingScreen />
       ) : auth?.user ? (
         <>
-          <nav>
-            <Link to={"/"}>Home</Link>{" "}
-            {auth.count.incomingFriendRequests > 0 && (
-              <div
-                style={{
-                  display: "inline-block",
-                  width: "5px",
-                  height: "5px",
-                  borderRadius: "50%",
-                  backgroundColor: "red",
-                }}
-              ></div>
-            )}
-            <Link to={"/friends"}>Friends</Link>{" "}
-            <Link to={"/users"}>User Search</Link>{" "}
-            <Link to={`/users/${auth.user.id}`}>My Profile</Link>{" "}
-            <Link to={"/settings"}>Settings</Link>{" "}
-            <Link to={"/logout"}>Logout</Link>
-          </nav>
+          <SiteNav />
           <Outlet />
         </>
       ) : (
