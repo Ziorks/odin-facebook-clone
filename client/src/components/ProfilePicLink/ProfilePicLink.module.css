@@ -1,0 +1,17 @@
+.link {
+  position: relative;
+  display: block;
+}
+
+.link:hover::after,
+.link:focus::after {
+  display: block;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgb(from var(--color-gray-700) r g b / 8%);
+  border-radius: 5rem;
+}

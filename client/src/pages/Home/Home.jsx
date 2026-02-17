@@ -1,13 +1,7 @@
-import Feed from "../../components/Feed/Feed";
-// import styles from "./Home.module.css";
+import Feed from "../../components/Feed";
 
 function Home() {
-  return (
-    <>
-      <h1>Home Page</h1>
-      <Feed />
-    </>
-  );
+  return <Feed />;
 }
 
 export default Home;

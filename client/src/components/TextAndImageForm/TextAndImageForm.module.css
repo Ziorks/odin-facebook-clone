@@ -3,13 +3,12 @@
   width: 100%;
   padding: 0.5rem 0.7rem;
   border-radius: 0.9rem;
-  background-color: #555;
-  color: #fff;
-  border: 1px solid #777;
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-400);
 }
 
 .inputsContainer:focus-within {
-  outline: 2px solid #aaa;
+  outline: 2px solid var(--color-gray-400);
 }
 
 .input {
@@ -18,8 +17,8 @@
   min-height: 1rem;
   max-height: 8rem;
   width: 100%;
+  color: var(--color-gray-700);
   background-color: transparent;
-  color: #fff;
   border: none;
   resize: none;
 }
@@ -36,34 +35,38 @@
 }
 
 .actionsContainer {
+  flex: 1;
   display: flex;
   justify-content: right;
-  flex: 1;
+  align-items: center;
   gap: 1rem;
 }
 
 .actionBtn {
-  padding: 0.3rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
   line-height: 0;
   background: none;
   border: none;
-  color: #bbb;
+  color: var(--color-gray-400);
   font-size: 1.2rem;
-  cursor: pointer;
-  border-radius: 0.5rem;
-}
-
-.actionBtn:focus {
-  outline: 2px solid #aaa;
+  border-radius: 50%;
 }
 
 .actionBtn:focus,
 .actionBtn:hover:not(:disabled) {
-  color: #fff;
+  background-color: rgb(from var(--color-gray-300) r g b / 40%);
 }
 
 .actionBtn:disabled {
   cursor: not-allowed;
+}
+
+.submitBtn:enabled {
+  color: var(--color-primary-200);
 }
 
 .relative {

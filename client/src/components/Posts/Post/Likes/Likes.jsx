@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { AiOutlineLike } from "react-icons/ai";
 import useDataFetchPaginated from "../../../../hooks/useDataFetchPaginated";
 import useIntersection from "../../../../hooks/useIntersection";
 import UserThumbnail from "../../../UserThumbnail";
 import Modal from "../../../Modal";
+import likeGraphic from "../../../../assets/like.svg";
 import styles from "./Likes.module.css";
 
 function LikesModal({ handleClose, myLike, useLikes }) {
@@ -155,9 +155,12 @@ function Likes({ nLikes, myLike, path }) {
           onMouseEnter={openPopup}
           onMouseLeave={closePopup}
         >
-          <button onClick={() => setShowLikesModal(true)}>
+          <button
+            onClick={() => setShowLikesModal(true)}
+            className={styles.likesBtn}
+          >
+            <img src={likeGraphic} />
             {nLikes}
-            <AiOutlineLike />
           </button>
           {showLikesSample && (
             <LikesSample

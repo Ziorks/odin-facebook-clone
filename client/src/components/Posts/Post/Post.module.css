@@ -1,17 +1,176 @@
-.container {
-  background-color: #222;
-  margin: 8px;
-  padding: 16px;
-  border-radius: 8px;
+.primaryPostContainer {
+  background-color: var(--color-gray-100);
+  margin: 1rem 0;
+  padding: 1rem;
+  box-shadow: 0 3px 6px -5px var(--color-gray-700);
+
+  @media (min-width: 700px) {
+    border-radius: 10px;
+  }
 }
 
-.avatar {
-  height: 25px;
+.contentHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.contentDetails {
+  flex: 1;
+  align-self: center;
+}
+
+.contentDetails > p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 1rem;
+}
+
+.contentDetails > p:first-child {
+  column-gap: 0.4rem;
+  color: var(--color-gray-400);
+}
+
+.contentDetails > p:first-child > svg {
+  width: 6px;
+}
+
+.contentDetails a {
+  color: var(--color-gray-700);
+}
+
+.contentDetails a:hover {
+  color: var(--color-gray-700);
+  text-decoration: underline;
+}
+
+.contentDetails > p:last-child {
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--color-gray-400);
+}
+
+.dropdown {
+  position: relative;
+  display: block;
+}
+
+.dropBtn {
+  position: relative;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-gray-400);
+  background-color: unset;
 }
 
-.postContent {
+.dropBtn:hover {
+  background-color: var(--color-gray-200);
+}
+
+.dropdownContent {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 80%;
+  z-index: 1;
+  background-color: var(--color-gray-100);
+  width: calc(100vw - 2rem);
+  padding: 0.6rem;
+  box-shadow: 0 0 5px -1px rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+}
+
+.dropdownContent > button {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  background-color: unset;
+  border: none;
+  border-radius: 5px;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 300;
+  padding: 0.5rem;
+  color: var(--color-gray-700);
+}
+
+.dropdownContent > button:hover {
+  background-color: var(--color-gray-200);
+}
+
+.dropdownContent > button > svg {
+  font-size: 1.5rem;
+}
+
+.show {
+  display: block;
+}
+
+.contentBody {
+  margin: 0.5rem 0;
   white-space: pre-wrap;
+  color: var(--color-gray-700);
+}
+
+.contentBody > p {
+  margin-bottom: 0.5rem;
+}
+
+.contentBody > img {
+  display: block;
+  width: 100%;
+}
+
+.likesAndComments {
+  display: flex;
+  justify-content: space-between;
+}
+
+.likesAndComments > button:nth-child(2) {
+  background-color: unset;
+  border: none;
+  color: var(--color-gray-400);
+  font-size: 1rem;
+}
+
+.likesAndComments > button:nth-child(2):hover {
+  text-decoration: underline;
+}
+
+.contentActions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.contentActions > button {
+  flex: 1;
+  max-width: 250px;
+  min-height: 40px;
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: unset;
+  border: none;
+  border-radius: 4px;
+  color: var(--color-gray-400);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.contentActions > button:hover,
+.contentActions > button:focus {
+  background-color: var(--color-gray-200);
 }
 
 .postModalContainer {
@@ -21,7 +180,17 @@
   gap: 1rem;
 }
 
+.postModalContainer > div {
+  padding: 1.2rem;
+}
+
 .postModalContainer > div:first-child {
   overflow: scroll;
   flex: 1;
+}
+
+@media (min-width: 500px) {
+  .dropdownContent {
+    max-width: 250px;
+  }
 }

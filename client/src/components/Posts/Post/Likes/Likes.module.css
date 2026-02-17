@@ -2,14 +2,34 @@
   position: relative;
   display: inline-block;
 }
+
+.likesBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background-color: unset;
+  border: none;
+  color: var(--color-gray-400);
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.likesBtn:hover {
+  text-decoration: underline;
+}
+
+.likesBtn > img {
+  display: block;
+  height: 18px;
+}
+
 .samplePopup {
   position: absolute;
   width: max-content;
   font-size: 10px;
   text-align: left;
-  background-color: white;
-  opacity: 0.9;
-  color: black;
+  background-color: rgb(from var(--color-gray-700) r g b / 80%);
+  color: var(--color-gray-100);
   padding: 6px;
   border-radius: 5px;
   z-index: 1;

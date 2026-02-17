@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import useIntersection from "../../hooks/useIntersection";
 import Post from "./Post";
-// import styles from "./Posts.module.css";
+import styles from "./Posts.module.css";
 
 function Posts({ posts, removePost, disableComments = false, fetchNext }) {
   const { ref, isVisible } = useIntersection("50px");
@@ -18,7 +18,7 @@ function Posts({ posts, removePost, disableComments = false, fetchNext }) {
   }, [isVisible]);
 
   return (
-    <ol>
+    <ol className={styles.list}>
       {posts.map((post, index) => (
         <li key={post.id} ref={index + 1 === posts.length ? ref : undefined}>
           <Post

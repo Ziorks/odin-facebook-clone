@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useId } from "react";
+import { useState, useRef, useEffect } from "react";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { AiOutlinePicture } from "react-icons/ai";
 import { PiGifFill } from "react-icons/pi";
@@ -29,12 +29,13 @@ function TextAndImageForm({
     previewURL: imageUrl ?? null,
   });
   const formRef = useRef();
-  const inputRef = useRef();
-  const imageInputId = useId();
+  const textInputRef = useRef();
+  const imageInputRef = useRef();
 
   useEffect(() => {
-    inputRef.current.style.height = "auto";
-    inputRef.current.style.height = inputRef.current.scrollHeight + "px";
+    textInputRef.current.style.height = "auto";
+    textInputRef.current.style.height =
+      textInputRef.current.scrollHeight + "px";
   }, [content]);
 
   const contentTrimmed = content.trim();
@@ -107,7 +108,7 @@ function TextAndImageForm({
             rows={1}
             ref={(el) => {
               setInputRef?.(el);
-              inputRef.current = el;
+              textInputRef.current = el;
             }}
             placeholder={placeholderText}
             value={content}
@@ -117,10 +118,10 @@ function TextAndImageForm({
           />
           <input
             hidden
+            ref={imageInputRef}
             accept="image/*"
             type="file"
             name="image"
-            id={imageInputId}
             onChange={handleImageUpload}
           />
           <div className={styles.bottom}>
@@ -164,17 +165,20 @@ function TextAndImageForm({
                     <PiGifFill />
                   </button>
                 </span>
-                <label
-                  htmlFor={imageInputId}
+                <button
                   className={styles.actionBtn}
-                  onClick={closePopups}
+                  type="button"
+                  onClick={() => {
+                    closePopups();
+                    imageInputRef.current.click();
+                  }}
                 >
                   <AiOutlinePicture />
-                </label>
+                </button>
               </div>
               <div>
                 <button
-                  className={styles.actionBtn}
+                  className={`${styles.actionBtn} ${styles.submitBtn}`}
                   type="submit"
                   disabled={
                     (!contentTrimmed && !image.previewURL) || isOverCharLimit

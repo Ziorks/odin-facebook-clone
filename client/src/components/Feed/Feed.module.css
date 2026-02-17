@@ -1,1 +1,35 @@
+.primaryContainer {
+  margin: 0 auto;
+  padding: 1rem 0;
+  max-width: 700px;
+}
 
+.postCreationContainer {
+  display: flex;
+  gap: 0.5rem;
+  background-color: var(--color-gray-100);
+  padding: 1rem 1.5rem;
+  box-shadow: 0 3px 6px -5px var(--color-gray-700);
+
+  @media (min-width: 700px) {
+    border-radius: 10px;
+  }
+}
+
+.postCreationContainer > button {
+  flex: 1;
+  border: none;
+  border-radius: 2rem;
+  padding: 0.2rem 1rem;
+  font-size: 1rem;
+  text-align: left;
+  color: var(--color-gray-400);
+  background-color: var(--color-gray-200);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.postCreationContainer > button:hover {
+  background-color: rgb(from var(--color-gray-300) r g b / 40%);
+}

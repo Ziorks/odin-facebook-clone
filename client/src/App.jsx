@@ -17,7 +17,9 @@ function App() {
       ) : auth?.user ? (
         <>
           <SiteNav />
-          <Outlet />
+          <main>
+            <Outlet />
+          </main>
         </>
       ) : (
         <Login />

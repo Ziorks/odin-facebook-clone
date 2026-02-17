@@ -9,34 +9,49 @@
   width: 100vw;
   height: 100vh;
   overflow: auto;
-  background-color: rgb(0, 0, 0);
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: rgb(from var(--color-gray-100) r g b / 40%);
 }
 
 .modalContent {
   position: relative;
   flex: 1;
-  background-color: #333;
-  padding: 1.3rem;
-  border: 1px solid #888;
-  border-radius: 1rem;
-  max-width: 600px;
+  max-width: 750px;
   max-height: 90vh;
+  border-radius: 10px;
+  background-color: var(--color-gray-100);
+  box-shadow: 0 0 12px -5px var(--color-gray-600);
+
+  /*TODO: test overflow of things before I completely remove this*/
   /* overflow: scroll; */
 }
 
 .close {
   position: absolute;
-  right: 0.5rem;
-  top: 0;
-  color: #aaa;
-  font-size: 28px;
-  font-weight: bold;
+  right: 1rem;
+  top: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gray-400);
+  background-color: var(--color-gray-200);
+  border-radius: 50%;
+  border: none;
+  font-size: 2rem;
 }
 
 .close:hover,
 .close:focus {
-  color: black;
+  background-color: rgb(from var(--color-gray-300) r g b / 50%);
   text-decoration: none;
   cursor: pointer;
+}
+
+.header {
+  text-align: center;
+  padding: 1.5rem 0;
+  font-size: 1.3rem;
+  border-bottom: 1px solid var(--color-gray-300);
+  color: var(--color-gray-700);
 }

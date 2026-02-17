@@ -1,38 +1,41 @@
 .container {
-  background-color: black;
+  background-color: var(--color-gray-100);
   position: absolute;
   bottom: calc(100% + 20px);
   right: 0;
-  padding: 0.8rem;
   width: 320px;
   border-radius: 10px;
+  box-shadow: 0 0 12px -5px var(--color-gray-600);
 }
 
-.input {
+.inputContainer {
+  padding: 0.8rem;
+}
+
+.inputContainer > input {
   width: 100%;
-  background-color: #444;
-  color: #eee;
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-700);
   font-size: 1rem;
   border: none;
   border-radius: 5px;
-  padding: 0.2rem 0.4rem;
+  padding: 0.4rem;
 }
 
-.input:focus {
-  outline: 3px solid #777;
+.inputContainer > input:focus {
+  outline: 3px solid var(--color-gray-400);
 }
 
 .resultContainer {
   overflow-y: auto;
   height: 20rem;
-  margin-top: 1rem;
+  padding: 0.8rem;
 }
 
 .results {
   column-count: 2;
   column-gap: 10px;
   list-style: none;
-  padding: 10px 20px 10px 10px;
 }
 
 .results > li {
@@ -43,7 +46,7 @@
 }
 
 .results > li:hover {
-  outline: 3px solid #ccc;
+  outline: 3px solid var(--color-gray-400);
 }
 
 .results > li > img {

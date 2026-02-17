@@ -52,16 +52,17 @@ function GifSearch({ onSelect }) {
 
   return (
     <div className={styles.container}>
-      <input
-        className={styles.input}
-        ref={inputRef}
-        type="text"
-        name="query"
-        id="query"
-        autoComplete="off"
-        placeholder="Type to search..."
-        onChange={onInputChange}
-      />
+      <div className={styles.inputContainer}>
+        <input
+          ref={inputRef}
+          type="text"
+          name="query"
+          id="query"
+          autoComplete="off"
+          placeholder="Type to search..."
+          onChange={onInputChange}
+        />
+      </div>
       <div className={styles.resultContainer}>
         {status === STATUS.OK &&
           (results.length > 0 ? (

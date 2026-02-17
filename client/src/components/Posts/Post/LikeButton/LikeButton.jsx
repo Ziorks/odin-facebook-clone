@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { FaRegThumbsUp, FaThumbsUp } from "react-icons/fa";
 import useApiPrivate from "../../../../hooks/useApiPrivate";
-// import styles from "./LikeButton.module.css";
+import Spinner from "../../../Spinner";
 
 function LikeButton({ like, likePath, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -29,17 +30,20 @@ function LikeButton({ like, likePath, onSuccess }) {
   };
 
   return (
-    <>
-      {like ? (
-        <button onClick={handleUnlike} disabled={isLoading}>
-          Unlike
-        </button>
+    <button
+      onClick={like ? handleUnlike : handleLike}
+      disabled={isLoading}
+      style={like && { color: "var(--color-primary-200)" }}
+    >
+      {isLoading ? (
+        <Spinner size={20} />
       ) : (
-        <button onClick={handleLike} disabled={isLoading}>
+        <>
+          {like ? <FaThumbsUp /> : <FaRegThumbsUp />}
           Like
-        </button>
+        </>
       )}
-    </>
+    </button>
   );
 }
 

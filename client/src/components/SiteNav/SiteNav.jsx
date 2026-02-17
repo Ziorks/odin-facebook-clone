@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   IoSearchSharp,
@@ -10,8 +10,9 @@ import {
 } from "react-icons/io5";
 import AuthContext from "../../contexts/AuthContext";
 import ProfilePic from "../ProfilePic";
-import logo from "../../../public/logo.svg";
 import styles from "./SiteNav.module.css";
+
+const DROP_CONTENT_ID = "siteNav_dropContent";
 
 function SiteNav() {
   const { auth } = useContext(AuthContext);
@@ -19,31 +20,29 @@ function SiteNav() {
   const location = useLocation();
 
   const toggleShowMenu = () => {
-    setShowMenu((prev) => !prev);
-  };
-
-  useEffect(() => {
     const cb = (e) => {
-      const { classList } = e.target;
-      const ignore =
-        !showMenu ||
-        classList.contains(styles.dropdownContent) ||
-        classList.contains(styles.dropBtn);
-
+      const ignore = e.target.id === DROP_CONTENT_ID;
       if (!ignore) {
-        toggleShowMenu();
+        setShowMenu(false);
+        window.removeEventListener("click", cb);
       }
     };
 
-    window.addEventListener("click", cb);
+    setShowMenu((prev) => {
+      if (!prev) {
+        setTimeout(() => {
+          window.addEventListener("click", cb);
+        }, 0);
+      }
 
-    return () => window.removeEventListener("click", cb);
-  }, [showMenu]);
+      return !prev;
+    });
+  };
 
   return (
     <nav className={styles.primaryContainer}>
       <Link to={"/"}>
-        <ProfilePic src={logo} size={40} />
+        <ProfilePic src={"/logo.svg"} size={40} />
       </Link>
       <div className={styles.primaryLinksContainer}>
         <Link
@@ -80,6 +79,7 @@ function SiteNav() {
         </button>
         <div
           className={`${styles.dropdownContent} ${showMenu ? styles.show : ""}`}
+          id={DROP_CONTENT_ID}
         >
           <Link to={`/users/${auth.user.id}`}>
             <ProfilePic src={auth.user.profile.avatar} size={30} />

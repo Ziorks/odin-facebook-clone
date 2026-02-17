@@ -56,16 +56,17 @@ function EmojiPicker({ onSelect }) {
   };
 
   return (
-    <div className={styles.container}>
-      <input
-        className={styles.input}
-        type="text"
-        name="query"
-        id="query"
-        autoComplete="off"
-        placeholder="Type to search..."
-        onChange={handleInputChange}
-      />
+    <div className={styles.primaryContainer}>
+      <div className={styles.inputContainer}>
+        <input
+          type="text"
+          name="query"
+          id="query"
+          autoComplete="off"
+          placeholder="Type to search..."
+          onChange={handleInputChange}
+        />
+      </div>
       <div className={styles.emojisContainer} ref={emojisContainerRef}>
         {emojiData.map((group) => (
           <EmojiSection

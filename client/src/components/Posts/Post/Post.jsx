@@ -1,5 +1,13 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { FaCaretRight, FaUserFriends, FaRegEdit } from "react-icons/fa";
+import {
+  IoEarth,
+  IoLockClosed,
+  IoChatbubbleOutline,
+  IoEllipsisHorizontal,
+  IoTrashSharp,
+} from "react-icons/io5";
 import { format } from "date-fns";
 import AuthContext from "../../../contexts/AuthContext";
 import PostContext from "../../../contexts/PostContext";
@@ -8,6 +16,7 @@ import useDataFetchPaginated from "../../../hooks/useDataFetchPaginated";
 import { MAX_UPLOAD_SIZE_POST } from "../../../utils/constants";
 import Modal from "../../Modal";
 import TextAndImageForm from "../../TextAndImageForm";
+import ProfilePicLink from "../../ProfilePicLink";
 import LikeButton from "./LikeButton";
 import Comments from "./Comments";
 import CommentForm from "./CommentForm";
@@ -142,41 +151,96 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
   const { auth } = useContext(AuthContext);
   const { post, onPostLikeChange, toggleDeleteModal } = useContext(PostContext);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [showLikesModal, setShowLikesModal] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
+  const DROP_CONTENT_ID = `post-${post.id}_dropContent`;
+
+  const toggleShowMenu = () => {
+    const cb = (e) => {
+      const ignore = e.target.id === DROP_CONTENT_ID;
+      if (!ignore) {
+        setShowMenu(false);
+        window.removeEventListener("click", cb);
+      }
+    };
+
+    setShowMenu((prev) => {
+      if (!prev) {
+        setTimeout(() => {
+          window.addEventListener("click", cb);
+        }, 0);
+      }
+
+      return !prev;
+    });
+  };
 
   return (
     <>
-      {showLikesModal && (
-        <LikesModal handleClose={() => setShowLikesModal(false)} />
-      )}
-      <div>
-        <Link to={`/users/${post.author.id}`}>
-          <img src={post.author.profile.avatar} className={styles.avatar} />
-        </Link>
-        <p>
-          <Link to={`/users/${post.author.id}`}>{post.author.username}</Link>
-          {post.author.id !== post.wall.id && (
-            <>
-              {" "}
-              &gt;{" "}
-              <Link to={`/users/${post.wall.id}`}>{post.wall.username}</Link>
-            </>
-          )}
-        </p>
-        <p>{format(post.createdAt, "MMMM d, yyyy")}</p>
+      <div className={styles.contentHeader}>
+        <ProfilePicLink
+          to={`/users/${post.author.id}`}
+          src={post.author.profile.avatar}
+          size={40}
+        />
+        <div className={styles.contentDetails}>
+          <p>
+            <Link to={`/users/${post.author.id}`}>{post.author.username}</Link>
+            {post.type === "PROFILE_PIC_UPDATE" &&
+              "updated their profile picture"}
+            {post.author.id !== post.wall.id && (
+              <>
+                <FaCaretRight />
+                <Link to={`/users/${post.wall.id}`}>{post.wall.username}</Link>
+              </>
+            )}
+          </p>
+          <p>
+            <time>{format(post.createdAt, "MMMM d, yyyy")}</time>
+            <span>·</span>
+            {post.privacy === "PUBLIC" && <IoEarth />}
+            {post.privacy === "FRIENDS_ONLY" && <FaUserFriends />}
+            {post.privacy === "PRIVATE" && <IoLockClosed />}
+          </p>
+        </div>
+        {auth.user.id === post.author.id && (
+          <div className={styles.dropdown}>
+            <button
+              className={styles.dropBtn}
+              onClick={(e) => {
+                e.target.blur();
+                toggleShowMenu();
+              }}
+            >
+              <IoEllipsisHorizontal />
+            </button>
+            <div
+              className={`${styles.dropdownContent} ${showMenu ? styles.show : ""}`}
+              id={DROP_CONTENT_ID}
+            >
+              {post.type === "REGULAR" && (
+                <button onClick={() => setShowEditForm(true)}>
+                  <FaRegEdit />
+                  Edit post
+                </button>
+              )}
+              <button onClick={toggleDeleteModal}>
+                <IoTrashSharp />
+                Delete post
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       {showEditForm ? (
         <EditForm handleClose={() => setShowEditForm(false)} />
       ) : (
         <>
-          {post.type === "REGULAR" && (
-            <p className={styles.postContent}>{post.content}</p>
-          )}
-          {post.type === "PROFILE_PIC_UPDATE" && (
-            <p>{`${post.author.username} updated their profile picture`}</p>
-          )}
-          {post.mediaUrl && <img src={post.mediaUrl} />}
-          <div>
+          <div className={styles.contentBody}>
+            {post.type === "REGULAR" && <p>{post.content}</p>}
+            {post.mediaUrl && <img src={post.mediaUrl} />}
+          </div>
+          <div className={styles.likesAndComments}>
             <Likes
               nLikes={post._count.likes}
               myLike={post.myLike}
@@ -188,21 +252,16 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
               </button>
             )}
           </div>
-          <div>
+          <div className={styles.contentActions}>
             <LikeButton
               like={post.myLike}
               likePath={`/posts/${post.id}/likes`}
               onSuccess={onPostLikeChange}
             />
-            <button onClick={handleCommentBtnClick}>Comment</button>
-            {auth.user.id === post.author.id && (
-              <>
-                {post.type === "REGULAR" && (
-                  <button onClick={() => setShowEditForm(true)}>Edit</button>
-                )}
-                <button onClick={toggleDeleteModal}>Delete</button>
-              </>
-            )}
+            <button onClick={handleCommentBtnClick}>
+              <IoChatbubbleOutline />
+              Comment
+            </button>
           </div>
         </>
       )}
@@ -252,7 +311,10 @@ function PostModal() {
   };
 
   return (
-    <Modal handleClose={toggleDetailsModal}>
+    <Modal
+      header={`${post.author.username}'s Post`}
+      handleClose={toggleDetailsModal}
+    >
       <div className={styles.postModalContainer}>
         <div>
           <PostContent
@@ -412,7 +474,7 @@ function Post({ post: postObj, removePost, disableComments }) {
           }}
         />
       )}
-      <div className={styles.container}>
+      <article className={styles.primaryPostContainer}>
         <PostContent
           handleNCommentsBtnClick={toggleDetailsModal}
           handleCommentBtnClick={handleCommentBtnClick}
@@ -434,7 +496,7 @@ function Post({ post: postObj, removePost, disableComments }) {
             onSuccess={onPostCommentPosted}
           />
         )}
-      </div>
+      </article>
     </PostContext.Provider>
   );
 }

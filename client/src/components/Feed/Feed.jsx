@@ -1,9 +1,10 @@
 import { useContext, useState } from "react";
 import AuthContext from "../../contexts/AuthContext";
 import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
+import ProfilePicLink from "../ProfilePicLink";
 import PostCreationModal from "../PostCreationModal";
-import Posts from "../Posts/Posts";
-// import styles from "./Feed.module.css";
+import Posts from "../Posts";
+import styles from "./Feed.module.css";
 
 function Feed() {
   const { auth } = useContext(AuthContext);
@@ -28,7 +29,7 @@ function Feed() {
   };
 
   return (
-    <>
+    <div className={styles.primaryContainer}>
       {showPostModal && (
         <PostCreationModal
           handleClose={handleClose}
@@ -36,9 +37,15 @@ function Feed() {
           onSuccess={onSuccess}
         />
       )}
-      <div>
+      <div className={styles.postCreationContainer}>
+        <ProfilePicLink
+          to={`/users/${auth.user.id}`}
+          src={auth.user.profile.avatar}
+          size={40}
+        />
         <button onClick={() => setShowPostModal(true)}>
-          What's on your mind
+          What's on your mind,{" "}
+          {auth.user.profile.firstName || auth.user.username}?
         </button>
       </div>
       {posts &&
@@ -58,7 +65,7 @@ function Feed() {
           An error occured <button onClick={fetchNext}>Try again</button>
         </p>
       )}
-    </>
+    </div>
   );
 }
 

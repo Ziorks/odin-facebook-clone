@@ -39,9 +39,12 @@ body {
   color: #333;
 }
 
+main {
+  background-color: var(--color-gray-200);
+}
+
 a {
-  color: lightskyblue;
-  text-decoration: underline;
+  text-decoration: none;
   cursor: pointer;
 }
 
