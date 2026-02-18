@@ -4,8 +4,8 @@ import AuthContext from "../../contexts/AuthContext";
 import { MAX_UPLOAD_SIZE_POST } from "../../utils/constants";
 import Modal from "../Modal";
 import TextAndImageForm from "../TextAndImageForm";
+import PostPrivacySelect from "../PostPrivacySelect";
 import styles from "./PostCreationModal.module.css";
-import ProfilePic from "../ProfilePic";
 
 function PostCreationModal({ handleClose, wallId, onSuccess }) {
   const { auth } = useContext(AuthContext);
@@ -52,7 +52,7 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
   };
 
   return (
-    <Modal header={"Create Post"} handleClose={handleClose}>
+    <Modal heading={"Create Post"} handleClose={handleClose}>
       <div className={styles.formContainer}>
         <TextAndImageForm
           handleSubmit={handleSubmit}
@@ -60,21 +60,12 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
           charLimit={2000}
           maxFilesize={MAX_UPLOAD_SIZE_POST}
         >
-          <div className={styles.authorInfo}>
-            <ProfilePic src={auth.user.profile.avatar} size={40} />
-            <div>
-              <p>{auth.user.username}</p>
-              <select
-                className={styles.privacy}
-                value={privacy}
-                onChange={(e) => setPrivacy(e.target.value)}
-              >
-                <option value="PUBLIC">Public</option>
-                <option value="FRIENDS_ONLY">Friends only</option>
-                <option value="PRIVATE">Private</option>
-              </select>
-            </div>
-          </div>
+          <PostPrivacySelect
+            value={privacy}
+            onChange={(e) => setPrivacy(e.target.value)}
+            avatar={auth.user.profile.avatar}
+            username={auth.user.username}
+          />
         </TextAndImageForm>
         {isLoading && <p>Posting...</p>}
         {errors && (

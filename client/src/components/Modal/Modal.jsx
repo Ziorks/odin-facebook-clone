@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import styles from "./Modal.module.css";
 
-function Modal({ children, header, handleClose }) {
+function Modal({ children, heading, handleClose }) {
   useEffect(() => {
     document.body.style.overflow = "hidden";
 
@@ -12,12 +12,23 @@ function Modal({ children, header, handleClose }) {
   });
 
   return (
-    <div className={styles.modal} onClick={handleClose}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <button type="button" className={styles.close} onClick={handleClose}>
+    <div
+      className={styles.modal}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose?.();
+        }
+      }}
+    >
+      <div className={styles.modalContent}>
+        <button
+          type="button"
+          className={styles.close}
+          onClick={() => handleClose?.()}
+        >
           <IoCloseOutline />
         </button>
-        {header && <h2 className={styles.header}>{header}</h2>}
+        {heading && <h2 className={styles.header}>{heading}</h2>}
         {children}
       </div>
     </div>

@@ -16,6 +16,8 @@ import useDataFetchPaginated from "../../../hooks/useDataFetchPaginated";
 import { MAX_UPLOAD_SIZE_POST } from "../../../utils/constants";
 import Modal from "../../Modal";
 import TextAndImageForm from "../../TextAndImageForm";
+import PostPrivacySelect from "../../PostPrivacySelect";
+import ProfilePic from "../../ProfilePic";
 import ProfilePicLink from "../../ProfilePicLink";
 import LikeButton from "./LikeButton";
 import Comments from "./Comments";
@@ -23,10 +25,12 @@ import CommentForm from "./CommentForm";
 import Likes from "./Likes";
 import styles from "./Post.module.css";
 
-function EditForm({ handleClose }) {
-  const { post, onPostEdit } = useContext(PostContext);
+function EditModal() {
+  const { auth } = useContext(AuthContext);
+  const { post, onPostEdit, toggleEditModal } = useContext(PostContext);
 
   const [privacy, setPrivacy] = useState(post.privacy);
+  const [changesMade, setChangesMade] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState(null);
   const api = useApiPrivate();
@@ -50,7 +54,7 @@ function EditForm({ handleClose }) {
     api
       .put(`/posts/${post.id}`, formData)
       .then((resp) => {
-        handleClose();
+        toggleEditModal();
         onPostEdit(resp.data.post);
       })
       .catch((err) => {
@@ -67,45 +71,57 @@ function EditForm({ handleClose }) {
       .finally(() => setIsLoading(false));
   };
 
-  const privacyId = `post-privacy_${post.id}`;
+  const handleChange = () => {
+    if (!changesMade) setChangesMade(true);
+  };
 
   return (
-    <>
-      <TextAndImageForm
-        content={post.content}
-        imageUrl={post.mediaUrl}
-        handleSubmit={handleSubmit}
-        placeholderText={"Edit your post"}
-        charLimit={2000}
-        maxFilesize={MAX_UPLOAD_SIZE_POST}
-        disableClearOnSubmit={true}
-      >
-        <div>
-          <label htmlFor={privacyId}>Privacy</label>
-          <select
-            name={privacyId}
-            id={privacyId}
+    <Modal
+      heading="Edit Post"
+      handleClose={() => {
+        let confirmed = true;
+        if (changesMade) {
+          confirmed = confirm(
+            "You have unsaved changes. Are you sure you want to leave?",
+          );
+        }
+        if (confirmed) {
+          toggleEditModal();
+        }
+      }}
+    >
+      <div className={styles.editModalFormContainer}>
+        <TextAndImageForm
+          content={post.content}
+          imageUrl={post.mediaUrl}
+          handleSubmit={handleSubmit}
+          onChange={handleChange}
+          placeholderText={"Edit your post"}
+          charLimit={2000}
+          maxFilesize={MAX_UPLOAD_SIZE_POST}
+          disableClearOnSubmit={true}
+          disableSubmit={!changesMade}
+        >
+          <PostPrivacySelect
             value={privacy}
-            onChange={(e) => setPrivacy(e.target.value)}
-          >
-            <option value="PUBLIC">Public</option>
-            <option value="FRIENDS_ONLY">Friends only</option>
-            <option value="PRIVATE">Private</option>
-          </select>
-        </div>
-      </TextAndImageForm>
-      <button onClick={handleClose} disabled={isLoading}>
-        Cancel
-      </button>
-      {isLoading && <p>Saving...</p>}
-      {errors && (
-        <ul>
-          {errors.map((error, i) => (
-            <li key={i}>{error.msg}</li>
-          ))}
-        </ul>
-      )}
-    </>
+            onChange={(e) => {
+              setPrivacy(e.target.value);
+              handleChange();
+            }}
+            avatar={auth.user.profile.avatar}
+            username={auth.user.username}
+          />
+        </TextAndImageForm>
+        {isLoading && <p>Saving...</p>}
+        {errors && (
+          <ul>
+            {errors.map((error, i) => (
+              <li key={i}>{error.msg}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </Modal>
   );
 }
 
@@ -131,26 +147,28 @@ function DeleteModal() {
   };
 
   return (
-    <Modal handleClose={toggleDeleteModal}>
-      <p>Are you sure you want to delete this post forever?</p>
-      <div>
-        <button onClick={handleDelete} disabled={isLoading}>
-          DELETE
-        </button>
-        <button onClick={toggleDeleteModal} disabled={isLoading}>
-          Cancel
-        </button>
+    <Modal heading="Delete Post" handleClose={toggleDeleteModal}>
+      <div className={styles.deleteModalContainer}>
+        <p>Are you sure you want to delete this post forever?</p>
+        <div className={styles.deleteModalActionsContainer}>
+          <button onClick={toggleDeleteModal} disabled={isLoading}>
+            Cancel
+          </button>
+          <button onClick={handleDelete} disabled={isLoading}>
+            DELETE
+          </button>
+        </div>
+        {isLoading && <p>Deleting post...</p>}
+        {error && <p>An error occured. Please try again.</p>}
       </div>
-      {isLoading && <p>Deleting post...</p>}
-      {error && <p>An error occured. Please try again.</p>}
     </Modal>
   );
 }
 
 function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
   const { auth } = useContext(AuthContext);
-  const { post, onPostLikeChange, toggleDeleteModal } = useContext(PostContext);
-  const [showEditForm, setShowEditForm] = useState(false);
+  const { post, onPostLikeChange, toggleDeleteModal, toggleEditModal } =
+    useContext(PostContext);
   const [showMenu, setShowMenu] = useState(false);
 
   const DROP_CONTENT_ID = `post-${post.id}_dropContent`;
@@ -219,7 +237,7 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
               id={DROP_CONTENT_ID}
             >
               {post.type === "REGULAR" && (
-                <button onClick={() => setShowEditForm(true)}>
+                <button onClick={toggleEditModal}>
                   <FaRegEdit />
                   Edit post
                 </button>
@@ -232,39 +250,33 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
           </div>
         )}
       </div>
-      {showEditForm ? (
-        <EditForm handleClose={() => setShowEditForm(false)} />
-      ) : (
-        <>
-          <div className={styles.contentBody}>
-            {post.type === "REGULAR" && <p>{post.content}</p>}
-            {post.mediaUrl && <img src={post.mediaUrl} />}
-          </div>
-          <div className={styles.likesAndComments}>
-            <Likes
-              nLikes={post._count.likes}
-              myLike={post.myLike}
-              path={`/posts/${post.id}/likes`}
-            />
-            {post._count.comments > 0 && (
-              <button onClick={handleNCommentsBtnClick}>
-                {`${post._count.comments} comment${post._count.comments > 1 ? "s" : ""}`}
-              </button>
-            )}
-          </div>
-          <div className={styles.contentActions}>
-            <LikeButton
-              like={post.myLike}
-              likePath={`/posts/${post.id}/likes`}
-              onSuccess={onPostLikeChange}
-            />
-            <button onClick={handleCommentBtnClick}>
-              <IoChatbubbleOutline />
-              Comment
-            </button>
-          </div>
-        </>
-      )}
+      <div className={styles.contentBody}>
+        {post.type === "REGULAR" && <p>{post.content}</p>}
+        {post.mediaUrl && <img src={post.mediaUrl} />}
+      </div>
+      <div className={styles.likesAndComments}>
+        <Likes
+          nLikes={post._count.likes}
+          myLike={post.myLike}
+          path={`/posts/${post.id}/likes`}
+        />
+        {post._count.comments > 0 && (
+          <button onClick={handleNCommentsBtnClick}>
+            {`${post._count.comments} comment${post._count.comments > 1 ? "s" : ""}`}
+          </button>
+        )}
+      </div>
+      <div className={styles.contentActions}>
+        <LikeButton
+          like={post.myLike}
+          likePath={`/posts/${post.id}/likes`}
+          onSuccess={onPostLikeChange}
+        />
+        <button onClick={handleCommentBtnClick}>
+          <IoChatbubbleOutline />
+          Comment
+        </button>
+      </div>
     </>
   );
 }
@@ -312,7 +324,7 @@ function PostModal() {
 
   return (
     <Modal
-      header={`${post.author.username}'s Post`}
+      heading={`${post.author.username}'s Post`}
       handleClose={toggleDetailsModal}
     >
       <div className={styles.postModalContainer}>
@@ -343,6 +355,7 @@ function Post({ post: postObj, removePost, disableComments }) {
   const [post, setPost] = useState(postObj);
   const [showPostDetails, setShowPostDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [commentIdsWhitelist, setCommentIdsWhitelist] = useState(() => {
     let whitelist = { pendingIds: [], ids: [] };
     const { topComment } = postObj;
@@ -438,6 +451,9 @@ function Post({ post: postObj, removePost, disableComments }) {
   const toggleDeleteModal = () => {
     setShowDeleteModal((prev) => !prev);
   };
+  const toggleEditModal = () => {
+    setShowEditModal((prev) => !prev);
+  };
 
   const handleCommentBtnClick = () => {
     if (commentFormRef.current) {
@@ -459,21 +475,14 @@ function Post({ post: postObj, removePost, disableComments }) {
         addPendingIdToWhitelist,
         toggleDetailsModal,
         toggleDeleteModal,
+        toggleEditModal,
         useComments,
         pendingIdCounterRef,
       }}
     >
       {showPostDetails && <PostModal />}
-      {showDeleteModal && (
-        <DeleteModal
-          id={post.id}
-          handleClose={toggleDeleteModal}
-          onSuccess={() => {
-            setPost(null);
-            toggleDeleteModal();
-          }}
-        />
-      )}
+      {showEditModal && <EditModal />}
+      {showDeleteModal && <DeleteModal />}
       <article className={styles.primaryPostContainer}>
         <PostContent
           handleNCommentsBtnClick={toggleDetailsModal}

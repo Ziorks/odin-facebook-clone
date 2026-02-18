@@ -18,12 +18,14 @@ function TextAndImageForm({
   setInputRef,
   placeholderText,
   handleSubmit,
+  onChange,
   charLimit,
   maxFilesize,
   disableClearOnSubmit,
+  disableSubmit,
 }) {
-  const [content, setContent] = useState(initialContent ?? "");
   const [activePopup, setActivePopup] = useState(POPUPS.NONE);
+  const [content, setContent] = useState(initialContent ?? "");
   const [image, setImage] = useState({
     file: null,
     previewURL: imageUrl ?? null,
@@ -41,17 +43,6 @@ function TextAndImageForm({
   const contentTrimmed = content.trim();
   const isOverCharLimit = charLimit && contentTrimmed.length > charLimit;
 
-  const handleInputChange = (e) => {
-    setContent(e.target.value);
-  };
-
-  const onTextareaKeyDown = (e) => {
-    if (e.key === "Enter" && e.shiftKey === false && content.trim()) {
-      e.preventDefault();
-      formRef.current.requestSubmit();
-    }
-  };
-
   const closePopups = () => {
     setActivePopup(POPUPS.NONE);
   };
@@ -64,12 +55,26 @@ function TextAndImageForm({
     );
   };
 
+  const handleInputChange = (e) => {
+    setContent(e.target.value);
+    onChange?.();
+  };
+
+  const onTextareaKeyDown = (e) => {
+    if (e.key === "Enter" && e.shiftKey === false && content.trim()) {
+      e.preventDefault();
+      formRef.current.requestSubmit();
+    }
+  };
+
   const handleEmojiSelect = (emoji) => {
     setContent((prev) => prev + emoji);
+    onChange?.();
     closePopups();
   };
   const handleGifSelect = (gif) => {
     setImage({ file: null, previewURL: gif.images.original.webp });
+    onChange?.();
     closePopups();
   };
   const handleImageUpload = (e) => {
@@ -83,9 +88,11 @@ function TextAndImageForm({
       file,
       previewURL: URL.createObjectURL(file),
     });
+    onChange?.();
   };
   const removeImage = () => {
     setImage({ file: null, previewURL: null });
+    onChange?.();
   };
 
   const onSubmit = (e) => {
@@ -181,7 +188,9 @@ function TextAndImageForm({
                   className={`${styles.actionBtn} ${styles.submitBtn}`}
                   type="submit"
                   disabled={
-                    (!contentTrimmed && !image.previewURL) || isOverCharLimit
+                    (!contentTrimmed && !image.previewURL) ||
+                    isOverCharLimit ||
+                    disableSubmit
                   }
                 >
                   <LuSendHorizontal />

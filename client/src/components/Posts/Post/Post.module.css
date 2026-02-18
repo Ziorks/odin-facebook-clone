@@ -189,6 +189,51 @@
   flex: 1;
 }
 
+.editModalFormContainer {
+  padding: 1rem;
+}
+
+.deleteModalContainer {
+  text-align: center;
+  padding: 1rem;
+  color: var(--color-gray-700);
+}
+
+.deleteModalActionsContainer {
+  display: flex;
+  justify-content: right;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.deleteModalActionsContainer > button {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 700;
+  max-width: 180px;
+  padding: 0.8rem;
+  border-radius: 10px;
+  border: none;
+}
+
+.deleteModalActionsContainer > button:first-child {
+  background-color: transparent;
+  color: var(--color-primary-200);
+}
+
+.deleteModalActionsContainer > button:first-child:hover {
+  background-color: var(--color-gray-200);
+}
+
+.deleteModalActionsContainer > button:last-child {
+  background-color: var(--color-primary-200);
+  color: #fff;
+}
+
+.deleteModalActionsContainer > button:last-child:hover {
+  background-color: var(--color-primary-300);
+}
+
 @media (min-width: 500px) {
   .dropdownContent {
     max-width: 250px;

@@ -2,24 +2,4 @@
   padding: 1rem;
 }
 
-.authorInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 1rem;
-}
 
-.authorInfo p {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  color: var(--color-gray-700);
-}
-
-.privacy {
-  border: none;
-  border-radius: 5px;
-  padding: 0.3rem;
-  cursor: pointer;
-  font-weight: 500;
-}
