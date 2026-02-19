@@ -1,6 +1,12 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaCaretRight, FaUserFriends, FaRegEdit } from "react-icons/fa";
+import {
+  FaCaretRight,
+  FaUserFriends,
+  FaRegEdit,
+  FaRegThumbsUp,
+  FaThumbsUp,
+} from "react-icons/fa";
 import {
   IoEarth,
   IoLockClosed,
@@ -271,7 +277,9 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
           like={post.myLike}
           likePath={`/posts/${post.id}/likes`}
           onSuccess={onPostLikeChange}
-        />
+        >
+          {post.myLike ? <FaThumbsUp /> : <FaRegThumbsUp />}
+        </LikeButton>
         <button onClick={handleCommentBtnClick}>
           <IoChatbubbleOutline />
           Comment
@@ -329,13 +337,16 @@ function PostModal() {
     >
       <div className={styles.postModalContainer}>
         <div>
-          <PostContent
-            handleNCommentsBtnClick={() => focusRef(commentsSectionRef)}
-            handleCommentBtnClick={() => focusRef(commentFormRef)}
-          />
+          <div>
+            <PostContent
+              handleNCommentsBtnClick={() => focusRef(commentsSectionRef)}
+              handleCommentBtnClick={() => focusRef(commentFormRef)}
+            />
+          </div>
           <Comments setCommentListRef={setCommentsSectionRef} />
         </div>
         <div>
+          <ProfilePic src={auth.user.profile.avatar} size={30} />
           <CommentForm
             apiPostPath={`/posts/${post.id}/comments`}
             placeholderText={`Comment as ${auth.user.username}`}
@@ -489,7 +500,12 @@ function Post({ post: postObj, removePost, disableComments }) {
           handleCommentBtnClick={handleCommentBtnClick}
         />
         {postObj.topComment && post._count.comments > 1 && (
-          <button onClick={toggleDetailsModal}>View more comments</button>
+          <button
+            className={styles.viewMoreCommentsBtn}
+            onClick={toggleDetailsModal}
+          >
+            View more comments
+          </button>
         )}
         <Comments idWhitelist={commentIdsWhitelist} />
         {!disableComments && (

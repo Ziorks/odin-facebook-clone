@@ -10,10 +10,12 @@ import {
 import { MAX_UPLOAD_SIZE_COMMENT } from "../../../../utils/constants";
 import Modal from "../../../Modal";
 import TextAndImageForm from "../../../TextAndImageForm";
+import ProfilePicLink from "../../../ProfilePicLink";
 import Likes from "../Likes";
 import LikeButton from "../LikeButton";
 import CommentForm from "../CommentForm";
 import styles from "./Comment.module.css";
+import ProfilePic from "../../../ProfilePic";
 
 const STATUS = {
   OK: 1,
@@ -63,8 +65,8 @@ function Replies({
 
   return (
     <>
-      {comment.replies?.length > 0 && (
-        <ol className={styles.replyChain}>
+      {!idWhitelist && comment.replies?.length > 0 && (
+        <ol className={styles.replyList}>
           {comment.replies.map((reply) => (
             <li key={reply.pendingId ? `p_${reply.pendingId}` : reply.id}>
               <Comment
@@ -76,6 +78,7 @@ function Replies({
           ))}
         </ol>
       )}
+      {/*TODO: review this, I think something ain't quite right and it could probably be more clear */}
       {status === STATUS.OK &&
         (idWhitelist && replyCount > 1 && !comment.parentId ? (
           <button onClick={toggleDetailsModal}>
@@ -84,17 +87,13 @@ function Replies({
         ) : (
           replyCount > (comment.replies?.length || 0) &&
           (!comment.replies ? (
-            <div>
-              <button onClick={fetchNext}>
-                {replyCount > 1
-                  ? `View all ${replyCount} replies`
-                  : "View 1 reply"}
-              </button>
-            </div>
+            <button onClick={fetchNext}>
+              {replyCount > 1
+                ? `View all ${replyCount} replies`
+                : "View 1 reply"}
+            </button>
           ) : (
-            <div>
-              <button onClick={fetchNext}>View more replies</button>
-            </div>
+            <button onClick={fetchNext}>View more replies</button>
           ))
         ))}
       {status === STATUS.LOADING && <p>Loading replies...</p>}
@@ -108,6 +107,7 @@ function Replies({
 }
 
 function EditForm({ comment, handleCancel, onSuccess }) {
+  const [changesMade, setChangesMade] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState(null);
   const api = useApiPrivate();
@@ -146,18 +146,26 @@ function EditForm({ comment, handleCancel, onSuccess }) {
       .finally(() => setIsLoading(false));
   };
 
+  const handleChange = () => {
+    if (!changesMade) setChangesMade(true);
+  };
+
   return (
-    <>
-      <TextAndImageForm
-        content={comment.content}
-        imageUrl={comment.mediaUrl}
-        handleSubmit={handleSubmit}
-        placeholderText={"Edit your comment"}
-        charLimit={500}
-        maxFilesize={MAX_UPLOAD_SIZE_COMMENT}
-        disableClearOnSubmit={true}
-      />
-      <button onClick={handleCancel} disabled={isLoading}>
+    <div className={styles.editFormContainer}>
+      <div>
+        <TextAndImageForm
+          content={comment.content}
+          imageUrl={comment.mediaUrl}
+          handleSubmit={handleSubmit}
+          onChange={handleChange}
+          placeholderText={"Edit your comment"}
+          charLimit={500}
+          maxFilesize={MAX_UPLOAD_SIZE_COMMENT}
+          disableClearOnSubmit={true}
+          disableSubmit={!changesMade}
+        />
+      </div>
+      <button type="button" onClick={handleCancel} disabled={isLoading}>
         Cancel
       </button>
       {isLoading && <p>Saving...</p>}
@@ -168,7 +176,7 @@ function EditForm({ comment, handleCancel, onSuccess }) {
           ))}
         </ul>
       )}
-    </>
+    </div>
   );
 }
 
@@ -251,6 +259,8 @@ function Comment({
 
   const pending =
     Object.hasOwn(comment, "pendingId") && !Object.hasOwn(comment, "id");
+  const parentPicSize = 30;
+  const childPicSize = 25;
 
   const setComment = (value) => {
     function getEditedComments(commentsArr, parentIds) {
@@ -360,13 +370,14 @@ function Comment({
           onSuccess={onDeleteSuccess}
         />
       )}
-      <div className={styles.container}>
-        <Link to={`/users/${comment.author.id}`}>
-          <img src={comment.author.profile.avatar} className={styles.avatar} />
-        </Link>
-        <Link to={`/users/${comment.author.id}`}>
-          <p>{comment.author.username}</p>
-        </Link>
+      <div className={styles.commentContainer}>
+        <div className={styles.profilePicLinkContainer}>
+          <ProfilePicLink
+            to={`/users/${comment.author.id}`}
+            src={comment.author.profile.avatar}
+            size={parentIdChain.length > 0 ? childPicSize : parentPicSize}
+          />
+        </div>
         {showEditForm ? (
           <EditForm
             comment={comment}
@@ -374,14 +385,17 @@ function Comment({
             onSuccess={onEditSuccess}
           />
         ) : (
-          <>
-            {comment.content !== null && (
-              <p className={styles.commentContent}>{comment.content}</p>
-            )}
+          <div>
+            <div className={styles.commentContent}>
+              <Link to={`/users/${comment.author.id}`}>
+                <p>{comment.author.username}</p>
+              </Link>
+              {comment.content !== null && <p>{comment.content}</p>}
+            </div>
             {comment.mediaUrl !== null && (
               <img className={styles.commentMedia} src={comment.mediaUrl} />
             )}
-            <div>
+            <div className={styles.commentActions}>
               <span>
                 {comment.error
                   ? "Error: comment not posted"
@@ -427,18 +441,38 @@ function Comment({
                 </>
               )}
             </div>
-          </>
+          </div>
         )}
-        {!disableReplies && !pending && !comment.error && (
-          <Replies
-            comment={comment}
-            parentIdChain={parentIdChain}
-            idWhitelist={idWhitelist}
-            setComment={setComment}
-            onFetchSuccess={() => setHasFetchedReplies(true)}
-          />
+      </div>
+      {!disableReplies &&
+        !pending &&
+        !comment.error &&
+        comment._count.replies > 0 && (
+          <div className={styles.repliesContainer}>
+            <div
+              className={styles.spacer}
+              style={{
+                width: parentIdChain.length > 0 ? childPicSize : parentPicSize,
+              }}
+            ></div>
+            <Replies
+              comment={comment}
+              parentIdChain={parentIdChain}
+              idWhitelist={idWhitelist}
+              setComment={setComment}
+              onFetchSuccess={() => setHasFetchedReplies(true)}
+            />
+          </div>
         )}
-        {(showReplyForm || hasFetchedReplies) && (
+      {(showReplyForm || hasFetchedReplies) && (
+        <div className={styles.replyFormContainer}>
+          <div
+            className={styles.spacer}
+            style={{
+              width: parentIdChain.length > 0 ? childPicSize : parentPicSize,
+            }}
+          ></div>
+          <ProfilePic src={auth.user.profile.avatar} size={25} />
           <CommentForm
             apiPostPath={`/comments/${comment.id}/replies`}
             placeholderText={`Reply to ${comment.author.username}`}
@@ -447,8 +481,8 @@ function Comment({
             onError={onReplyError}
             onSuccess={onReplyPosted}
           />
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }

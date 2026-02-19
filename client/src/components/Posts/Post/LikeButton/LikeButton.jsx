@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { FaRegThumbsUp, FaThumbsUp } from "react-icons/fa";
 import useApiPrivate from "../../../../hooks/useApiPrivate";
 import Spinner from "../../../Spinner";
 
-function LikeButton({ like, likePath, onSuccess }) {
+function LikeButton({ children, like, likePath, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
   const api = useApiPrivate();
 
@@ -39,7 +38,7 @@ function LikeButton({ like, likePath, onSuccess }) {
         <Spinner size={20} />
       ) : (
         <>
-          {like ? <FaThumbsUp /> : <FaRegThumbsUp />}
+          {children}
           Like
         </>
       )}
