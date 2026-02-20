@@ -267,7 +267,10 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
           path={`/posts/${post.id}/likes`}
         />
         {post._count.comments > 0 && (
-          <button onClick={handleNCommentsBtnClick}>
+          <button
+            className={styles.commentsBtn}
+            onClick={handleNCommentsBtnClick}
+          >
             {`${post._count.comments} comment${post._count.comments > 1 ? "s" : ""}`}
           </button>
         )}

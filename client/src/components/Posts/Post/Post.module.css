@@ -140,18 +140,24 @@
 }
 
 .likesAndComments {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto;
   justify-content: space-between;
 }
 
-.likesAndComments > button:nth-child(2) {
+.likesAndComments:not(:has(> *)) {
+  display: none;
+}
+
+.likesAndComments > .commentsBtn {
+  grid-column-start: 2;
   background-color: unset;
   border: none;
   color: var(--color-gray-400);
   font-size: 1rem;
 }
 
-.likesAndComments > button:nth-child(2):hover {
+.likesAndComments > .commentsBtn:hover {
   text-decoration: underline;
 }
 
