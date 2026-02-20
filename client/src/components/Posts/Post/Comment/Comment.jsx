@@ -10,12 +10,13 @@ import {
 import { MAX_UPLOAD_SIZE_COMMENT } from "../../../../utils/constants";
 import Modal from "../../../Modal";
 import TextAndImageForm from "../../../TextAndImageForm";
+import ProfilePic from "../../../ProfilePic";
 import ProfilePicLink from "../../../ProfilePicLink";
+import Spinner from "../../../Spinner";
 import Likes from "../Likes";
 import LikeButton from "../LikeButton";
 import CommentForm from "../CommentForm";
 import styles from "./Comment.module.css";
-import ProfilePic from "../../../ProfilePic";
 
 const STATUS = {
   OK: 1,
@@ -62,45 +63,53 @@ function Replies({
   };
 
   const replyCount = comment._count.replies;
+  const nWhitelistedReplies = idWhitelist
+    ? comment.replies?.filter(
+        (reply) =>
+          idWhitelist.ids.includes(reply.id) ||
+          idWhitelist.pendingIds.includes(reply.pendingId),
+      ).length
+    : comment.replies?.length || 0;
 
   return (
     <>
-      {!idWhitelist && comment.replies?.length > 0 && (
+      {nWhitelistedReplies > 0 && (
         <ol className={styles.replyList}>
           {comment.replies.map((reply) => (
             <li key={reply.pendingId ? `p_${reply.pendingId}` : reply.id}>
-              <Comment
-                comment={reply}
-                parentIdChain={[...parentIdChain, comment.id]}
-                idWhitelist={idWhitelist}
-              />
+              <div className={styles.replyContainer}>
+                <Comment
+                  comment={reply}
+                  parentIdChain={[...parentIdChain, comment.id]}
+                  idWhitelist={idWhitelist}
+                />
+              </div>
             </li>
           ))}
         </ol>
       )}
-      {/*TODO: review this, I think something ain't quite right and it could probably be more clear */}
-      {status === STATUS.OK &&
-        (idWhitelist && replyCount > 1 && !comment.parentId ? (
-          <button onClick={toggleDetailsModal}>
-            View all {replyCount} replies
-          </button>
-        ) : (
-          replyCount > (comment.replies?.length || 0) &&
-          (!comment.replies ? (
-            <button onClick={fetchNext}>
-              {replyCount > 1
-                ? `View all ${replyCount} replies`
-                : "View 1 reply"}
+      {replyCount > nWhitelistedReplies && (
+        <div className={styles.repliesViewMore}>
+          {status === STATUS.OK && (
+            <button onClick={idWhitelist ? toggleDetailsModal : fetchNext}>
+              {nWhitelistedReplies > 0
+                ? "View more replies"
+                : replyCount > 1
+                  ? `View all ${replyCount} replies`
+                  : "View 1 reply"}
             </button>
-          ) : (
-            <button onClick={fetchNext}>View more replies</button>
-          ))
-        ))}
-      {status === STATUS.LOADING && <p>Loading replies...</p>}
-      {status === STATUS.ERROR && (
-        <p>
-          An error occurred <button onClick={fetchNext}>Try again</button>
-        </p>
+          )}
+          {status === STATUS.LOADING && (
+            <div>
+              <Spinner size={16} />
+            </div>
+          )}
+          {status === STATUS.ERROR && (
+            <p className={styles.replyFetchError}>
+              An error occurred <button onClick={fetchNext}>Try again</button>
+            </p>
+          )}
+        </div>
       )}
     </>
   );
@@ -260,7 +269,7 @@ function Comment({
   const pending =
     Object.hasOwn(comment, "pendingId") && !Object.hasOwn(comment, "id");
   const parentPicSize = 30;
-  const childPicSize = 25;
+  const childPicSize = 24;
 
   const setComment = (value) => {
     function getEditedComments(commentsArr, parentIds) {
@@ -371,7 +380,7 @@ function Comment({
         />
       )}
       <div className={styles.commentContainer}>
-        <div className={styles.profilePicLinkContainer}>
+        <div>
           <ProfilePicLink
             to={`/users/${comment.author.id}`}
             src={comment.author.profile.avatar}
@@ -448,13 +457,12 @@ function Comment({
         !pending &&
         !comment.error &&
         comment._count.replies > 0 && (
-          <div className={styles.repliesContainer}>
-            <div
-              className={styles.spacer}
-              style={{
-                width: parentIdChain.length > 0 ? childPicSize : parentPicSize,
-              }}
-            ></div>
+          <div
+            className={styles.repliesContainer}
+            style={{
+              paddingLeft: parentIdChain.length === 0 ? 43 : 40,
+            }}
+          >
             <Replies
               comment={comment}
               parentIdChain={parentIdChain}
@@ -465,13 +473,12 @@ function Comment({
           </div>
         )}
       {(showReplyForm || hasFetchedReplies) && (
-        <div className={styles.replyFormContainer}>
-          <div
-            className={styles.spacer}
-            style={{
-              width: parentIdChain.length > 0 ? childPicSize : parentPicSize,
-            }}
-          ></div>
+        <div
+          className={styles.replyFormContainer}
+          style={{
+            paddingLeft: parentIdChain.length === 0 ? 43 : 40,
+          }}
+        >
           <ProfilePic src={auth.user.profile.avatar} size={25} />
           <CommentForm
             apiPostPath={`/comments/${comment.id}/replies`}

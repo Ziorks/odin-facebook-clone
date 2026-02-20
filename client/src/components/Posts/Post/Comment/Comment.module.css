@@ -5,11 +5,11 @@
   gap: 0.5rem;
 }
 
-.profilePicLinkContainer {
+.commentContainer > div:first-child {
   position: relative;
 }
 
-.commentContainer:has(+ div) > .profilePicLinkContainer::before {
+.commentContainer:not(:last-child) > div:first-child::before {
   content: "";
   position: absolute;
   left: calc(50% - 1px);
@@ -20,7 +20,8 @@
 }
 
 .commentContent {
-  padding: 0.6rem;
+  padding: 0.5rem;
+  padding-top: 0.3rem;
   border-radius: 10px;
   margin-bottom: 0.2rem;
   max-width: max-content;
@@ -33,9 +34,8 @@
 .commentContent > a {
   display: inline-block;
   color: var(--color-gray-700);
-  font-weight: 500;
-  font-size: 0.9rem;
-  margin-bottom: 0.2rem;
+  font-weight: 600;
+  font-size: 0.8rem;
 }
 
 .commentContent > p {
@@ -74,23 +74,35 @@
   text-decoration: underline;
 }
 
-.repliesContainer {
+.replyFormContainer {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.5rem;
 }
 
-.repliesContainer:has(+ div) > .spacer::after {
-  content: "";
-  position: absolute;
-  left: calc(50% - 1px);
-  top: 0;
-  bottom: 0;
-  border-left: 2px solid var(--color-gray-400);
+.repliesContainer,
+.replyFormContainer {
+  margin-bottom: 0.4rem;
 }
 
-.repliesContainer > button {
+.replyList {
+  list-style: none;
+}
+
+.replyList > li {
   position: relative;
+}
+
+.replyContainer {
+  position: relative;
+}
+
+.repliesViewMore > * {
+  position: relative;
+}
+
+.repliesViewMore > button {
   padding: 0.4rem 0;
   border: none;
   background-color: transparent;
@@ -100,36 +112,45 @@
   max-width: max-content;
 }
 
-.replyFormContainer {
-  position: relative;
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  gap: 0.5rem;
+.replyFetchError {
+  color: red;
 }
 
-.repliesContainer,
-.replyFormContainer {
-  margin-bottom: 0.4rem;
+.replyFetchError > button {
+  color: var(--color-gray-700);
+  border: none;
+  background-color: transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
-.spacer {
-  position: relative;
-}
-
-.spacer::before {
+.replyList > li:not(:last-child) > .replyContainer::after,
+.replyList:not(:last-child) > li:last-child > .replyContainer::after,
+.repliesContainer:not(:last-child)
+  > .replyList
+  > li:last-child
+  > .replyContainer::after,
+.repliesContainer:not(:last-child) > .repliesViewMore > *::after {
   content: "";
   position: absolute;
-  top: -7px;
-  left: calc(50% - 1px);
-  width: calc(50% + 0.25rem);
+  left: -1.8rem;
+  top: 0;
+  bottom: 0;
+  border-left: 2px solid var(--color-gray-400);
+}
+
+.replyFormContainer > div::before,
+.replyList > li > .replyContainer > .commentContainer::before,
+.repliesViewMore > *::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% - 0.8rem);
+  right: calc(100% + 0.2rem);
+  width: 1.5rem;
   aspect-ratio: 1 / 1;
   border-left: 2px solid var(--color-gray-400);
   border-bottom: 2px solid var(--color-gray-400);
   border-bottom-left-radius: 50%;
-}
-
-.replyList {
-  list-style: none;
 }
 
 .editFormContainer > button {
