@@ -40,6 +40,7 @@ body {
 }
 
 main {
+  min-height: calc(100vh - 3.6rem);
   background-color: var(--color-gray-200);
 }
 

@@ -1,45 +1,46 @@
 import { useState, useContext } from "react";
 import { useOutletContext } from "react-router-dom";
-import useRefreshToken from "../../../hooks/useRefreshToken";
 import AuthContext from "../../../contexts/AuthContext";
+import Modal from "../../../components/Modal";
 import AboutForm from "../../../components/AboutForm";
-// import styles from "./Username.module.css";
+import FormInput from "../../../components/FormInput";
 
 function Username() {
-  const refresh = useRefreshToken();
-  const { closeModal, changesMade, setChangesMade } = useOutletContext();
   const { auth } = useContext(AuthContext);
+  const { handleSuccess, handleClose, changesMade, makeChange } =
+    useOutletContext();
+
   const [username, setUsername] = useState(auth.user.username || "");
 
+  const handleUsernameChange = (e) => {
+    setUsername(e.target.value);
+    makeChange();
+  };
+
   return (
-    <AboutForm
-      method={"PUT"}
-      url={`/users/${auth.user.id}`}
-      data={{ username }}
-      onSuccess={async () => {
-        setChangesMade(false);
-        await refresh();
-        closeModal();
-      }}
-      handleClose={closeModal}
-      disableSave={!changesMade}
-    >
-      <h2>Update Username</h2>
-      <div>
-        <label htmlFor="username">Username: </label>
-        <input
-          type="text"
-          name="username"
-          id="username"
-          autoComplete="off"
-          onChange={(e) => {
-            setUsername(e.target.value);
-            if (!changesMade) setChangesMade(true);
-          }}
-          value={username}
-        />
+    <Modal heading={"Update Username"} handleClose={handleClose}>
+      <div style={{ padding: "1rem" }}>
+        <AboutForm
+          method={"PUT"}
+          url={`/users/${auth.user.id}`}
+          data={{ username }}
+          onSuccess={handleSuccess}
+          handleClose={handleClose}
+          disableSave={!changesMade}
+        >
+          <div style={{ marginBottom: "1rem" }}>
+            <FormInput
+              type="text"
+              value={username}
+              onChange={handleUsernameChange}
+              label="Username"
+              autoComplete="off"
+              required={true}
+            />
+          </div>
+        </AboutForm>
       </div>
-    </AboutForm>
+    </Modal>
   );
 }
 

@@ -17,7 +17,6 @@ import AboutContactInfo from "../components/AboutContactInfo";
 import AboutDetails from "../components/AboutDetails";
 import UsersFriends from "../components/UsersFriends";
 import UserSettings from "../pages/UserSettings";
-import UserSettingsModal from "../pages/UserSettingsModal";
 import Username from "../pages/UserSettingForms/Username";
 import Name from "../pages/UserSettingForms/Name";
 import Email from "../pages/UserSettingForms/Email";
@@ -105,16 +104,11 @@ const routes = [
         path: "settings",
         element: <UserSettings />,
         children: [
-          {
-            element: <UserSettingsModal />,
-            children: [
-              { path: "username", element: <Username /> },
-              { path: "name", element: <Name /> },
-              { path: "email", element: <Email /> },
-              { path: "avatar", element: <Avatar /> },
-              { path: "password", element: <Password /> },
-            ],
-          },
+          { path: "username", element: <Username /> },
+          { path: "name", element: <Name /> },
+          { path: "email", element: <Email /> },
+          { path: "avatar", element: <Avatar /> },
+          { path: "password", element: <Password /> },
         ],
       },
     ],

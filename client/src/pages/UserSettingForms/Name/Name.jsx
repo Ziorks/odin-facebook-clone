@@ -1,60 +1,62 @@
 import { useState, useContext } from "react";
 import { useOutletContext } from "react-router-dom";
-import useRefreshToken from "../../../hooks/useRefreshToken";
 import AuthContext from "../../../contexts/AuthContext";
+import Modal from "../../../components/Modal";
 import AboutForm from "../../../components/AboutForm";
-// import styles from "./Name.module.css";
+import FormInput from "../../../components/FormInput";
 
 function Name() {
-  const refresh = useRefreshToken();
-  const { closeModal, changesMade, setChangesMade } = useOutletContext();
   const { auth } = useContext(AuthContext);
+  const { handleSuccess, handleClose, changesMade, makeChange } =
+    useOutletContext();
+
   const [firstName, setFirstName] = useState(auth.user.profile.firstName || "");
   const [lastName, setLastName] = useState(auth.user.profile.lastName || "");
 
+  const handleFirstNameChange = (e) => {
+    setFirstName(e.target.value);
+    makeChange();
+  };
+
+  const handleLastNameChange = (e) => {
+    setLastName(e.target.value);
+    makeChange();
+  };
+
+  const inputGap = "1rem";
+
   return (
-    <AboutForm
-      method={"PUT"}
-      url={`/users/${auth.user.id}`}
-      data={{ firstName, lastName }}
-      onSuccess={async () => {
-        setChangesMade(false);
-        await refresh();
-        closeModal();
-      }}
-      handleClose={closeModal}
-      disableSave={!changesMade}
-    >
-      <h2>Update Name</h2>
-      <div>
-        <label htmlFor="firstName">First Name: </label>
-        <input
-          type="text"
-          name="firstName"
-          id="firstName"
-          autoComplete="off"
-          onChange={(e) => {
-            setFirstName(e.target.value);
-            if (!changesMade) setChangesMade(true);
-          }}
-          value={firstName}
-        />
+    <Modal heading={"Update Name"} handleClose={handleClose}>
+      <div style={{ padding: "1rem" }}>
+        <AboutForm
+          method={"PUT"}
+          url={`/users/${auth.user.id}`}
+          data={{ firstName, lastName }}
+          onSuccess={handleSuccess}
+          handleClose={handleClose}
+          disableSave={!changesMade}
+        >
+          <div style={{ marginBottom: inputGap }}>
+            <FormInput
+              type="text"
+              value={firstName}
+              onChange={handleFirstNameChange}
+              label="First name"
+              autoComplete="off"
+            />
+          </div>
+          <div style={{ marginBottom: inputGap }}>
+            <FormInput
+              type="text"
+              value={lastName}
+              onChange={handleLastNameChange}
+              label="Last name"
+              autoComplete="off"
+            />
+          </div>
+        </AboutForm>
       </div>
-      <div>
-        <label htmlFor="lastName">Last Name: </label>
-        <input
-          type="text"
-          name="lastName"
-          id="lastName"
-          autoComplete="off"
-          onChange={(e) => {
-            setLastName(e.target.value);
-            if (!changesMade) setChangesMade(true);
-          }}
-          value={lastName}
-        />
-      </div>
-    </AboutForm>
+    </Modal>
   );
 }
 

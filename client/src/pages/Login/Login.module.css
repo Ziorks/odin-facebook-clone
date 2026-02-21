@@ -64,54 +64,8 @@
   text-align: left;
 }
 
-.form > div {
+.form > * {
   margin-bottom: 0.7rem;
-}
-
-.textInput {
-  position: relative;
-}
-
-.textInput > label {
-  position: absolute;
-  top: 25%;
-  left: 2%;
-  color: var(--color-gray-300);
-  background-color: var(--color-gray-100);
-  padding: 0 0.2rem;
-  cursor: text;
-  transition:
-    top 100ms ease-out,
-    font-size 100ms ease-out;
-}
-
-.textInput > input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--color-gray-300);
-  border-radius: 4px;
-  background-color: var(--color-gray-100);
-  color: var(--color-gray-700);
-  font-size: 1rem;
-}
-
-.textInput > input::placeholder {
-  color: transparent;
-}
-
-.textInput > input:focus {
-  outline: none;
-  border: 1px solid var(--color-primary-100);
-}
-
-.textInput:focus-within > label {
-  color: var(--color-primary-100);
-}
-
-.textInput:focus-within > label,
-.textInput:has(input:not(:placeholder-shown)) > label {
-  top: -15%;
-  font-size: 0.7rem;
 }
 
 .rememberMeLabel {

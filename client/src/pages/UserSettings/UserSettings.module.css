@@ -1,0 +1,25 @@
+.primaryContainer {
+  margin: 0 auto;
+  padding: 1rem;
+  max-width: 400px;
+}
+
+.primaryContainer > h1 {
+  margin-bottom: 1rem;
+  color: var(--color-gray-700);
+}
+
+.primaryContainer > nav > a {
+  display: block;
+  padding: 0.5rem;
+  color: var(--color-gray-700);
+  border-top: 1px solid var(--color-gray-700);
+}
+
+.primaryContainer > nav > a:last-child {
+  border-bottom: 1px solid var(--color-gray-700);
+}
+
+.primaryContainer > nav > a:hover {
+  background-color: var(--color-gray-300);
+}

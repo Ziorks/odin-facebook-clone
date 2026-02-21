@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import api from "../../api";
 import AuthContext from "../../contexts/AuthContext";
+import FormInput from "../../components/FormInput";
 const apiHost = import.meta.env.VITE_API_HOST;
 import styles from "./Login.module.css";
 
@@ -55,53 +56,37 @@ function SignUpForm() {
         </ul>
       )}
       <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.textInput}>
-          <label htmlFor="username">Username</label>
-          <input
-            type="text"
-            id="username"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="off"
-            required
-          />
-        </div>
-        <div className={styles.textInput}>
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className={styles.textInput}>
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="new-password"
-            required
-          />
-        </div>
-        <div className={styles.textInput}>
-          <label htmlFor="passwordConfirmation">Confirm password</label>
-          <input
-            type="password"
-            id="passwordConfirmation"
-            placeholder="Confirm password"
-            value={passwordConfirmation}
-            onChange={(e) => setPasswordConfirmation(e.target.value)}
-            autoComplete="off"
-            required
-          />
-        </div>
+        <FormInput
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          label="Username"
+          autoComplete="off"
+          required={true}
+        />
+        <FormInput
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          label="Email"
+          required={true}
+        />
+        <FormInput
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          label="Password"
+          autoComplete="new-password"
+          required={true}
+        />
+        <FormInput
+          type="password"
+          value={passwordConfirmation}
+          onChange={(e) => setPasswordConfirmation(e.target.value)}
+          label="Confirm password"
+          autoComplete="off"
+          required={true}
+        />
         <div>
           <button
             type="submit"
@@ -152,28 +137,20 @@ function LoginForm() {
       {isLoading && <p>Processing...</p>}
       {error && <p>{error}</p>}
       <form onSubmit={handleLoginSubmit} className={styles.form}>
-        <div className={styles.textInput}>
-          <label htmlFor="username">Username or email</label>
-          <input
-            type="text"
-            id="username"
-            placeholder="Username or email"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div className={styles.textInput}>
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
+        <FormInput
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          label="Username or email"
+          required={true}
+        />
+        <FormInput
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          label="Password"
+          required={true}
+        />
         <div>
           <input
             type="checkbox"

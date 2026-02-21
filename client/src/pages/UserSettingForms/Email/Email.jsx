@@ -1,45 +1,49 @@
 import { useState, useContext } from "react";
 import { useOutletContext } from "react-router-dom";
-import useRefreshToken from "../../../hooks/useRefreshToken";
 import AuthContext from "../../../contexts/AuthContext";
+import Modal from "../../../components/Modal";
 import AboutForm from "../../../components/AboutForm";
-// import styles from "./Email.module.css";
+import FormInput from "../../../components/FormInput";
 
 function Email() {
-  const refresh = useRefreshToken();
-  const { closeModal, changesMade, setChangesMade } = useOutletContext();
   const { auth } = useContext(AuthContext);
+  const { handleSuccess, handleClose, changesMade, makeChange } =
+    useOutletContext();
+
   const [email, setEmail] = useState(auth.user.email || "");
 
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    makeChange();
+  };
+
   return (
-    <AboutForm
-      method={"PUT"}
-      url={`/users/${auth.user.id}`}
-      data={{ email }}
-      onSuccess={async () => {
-        setChangesMade(false);
-        await refresh();
-        closeModal();
-      }}
-      handleClose={closeModal}
-      disableSave={!changesMade}
+    <Modal
+      heading={`${auth.user.email ? "Update" : "Add an"} Email`}
+      handleClose={handleClose}
     >
-      <h2>{auth.user.email ? "Update" : "Add an"} Email</h2>
-      <div>
-        <label htmlFor="email">Email: </label>
-        <input
-          type="email"
-          name="email"
-          id="email"
-          autoComplete="off"
-          onChange={(e) => {
-            setEmail(e.target.value);
-            if (!changesMade) setChangesMade(true);
-          }}
-          value={email}
-        />
+      <div style={{ padding: "1rem" }}>
+        <AboutForm
+          method={"PUT"}
+          url={`/users/${auth.user.id}`}
+          data={{ email }}
+          onSuccess={handleSuccess}
+          handleClose={handleClose}
+          disableSave={!changesMade}
+        >
+          <div style={{ marginBottom: "1rem" }}>
+            <FormInput
+              type="email"
+              value={email}
+              onChange={handleEmailChange}
+              label="Email"
+              autoComplete="off"
+              required={true}
+            />
+          </div>
+        </AboutForm>
       </div>
-    </AboutForm>
+    </Modal>
   );
 }
 

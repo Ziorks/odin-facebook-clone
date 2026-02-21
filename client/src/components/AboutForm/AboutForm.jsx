@@ -1,6 +1,7 @@
 import { useState } from "react";
 import useApiPrivate from "../../hooks/useApiPrivate";
-// import styles from "./AboutForm.module.css";
+import Spinner from "../Spinner";
+import styles from "./AboutForm.module.css";
 
 function AboutForm({
   children,
@@ -59,16 +60,15 @@ function AboutForm({
       )}
       <form onSubmit={handleSubmit}>
         {children}
-        <div>
+        <div className={styles.actionsContainer}>
           <button type="button" onClick={handleClose}>
             Cancel
           </button>
           <button type="submit" disabled={disableSave || isLoading}>
-            Save
+            {isLoading ? loadingMsg || <Spinner size={16} /> : "Save"}
           </button>
-          {isLoading && <span>{loadingMsg || "Saving..."}</span>}
-          {isSaved && <span>Saved!</span>}
         </div>
+        {isSaved && <p className={styles.savedMsg}>Saved!</p>}
       </form>
     </>
   );
