@@ -1,0 +1,32 @@
+.primaryContainer {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.primaryContainer > button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.primaryContainer button {
+  padding: 0.4rem;
+  border: none;
+  border-bottom: 2px solid var(--color-gray-100);
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-700);
+  font-size: 1rem;
+}
+
+.primaryContainer button:hover {
+  border-bottom: 2px solid var(--color-gray-700);
+  background-color: rgb(from var(--color-color-200) r g b / 10%);
+}
+
+.pageBtnsContainer > button:disabled {
+  border-bottom: 2px solid var(--color-primary-200);
+}
+
+.pageBtnsContainer > button:disabled:hover {
+  background-color: rgb(from var(--color-primary-300) r g b / 20%);
+}

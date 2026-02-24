@@ -1,4 +1,5 @@
-// import styles from "./PaginationNavigation.module.css";
+import { IoChevronBackSharp, IoChevronForwardSharp } from "react-icons/io5";
+import styles from "./PaginationNavigation.module.css";
 
 function PaginationNavigation({
   currentPage,
@@ -19,25 +20,31 @@ function PaginationNavigation({
     );
 
   return (
-    <nav>
-      <button disabled={currentPage <= 1} onClick={fetchPrev}>
-        Prev
-      </button>
-      {Array.from({ length: Math.min(maxPageBtns, nPages) }, (_, i) => {
-        const n = i + pageOffset;
-        return (
-          <button
-            key={n}
-            disabled={n === currentPage}
-            onClick={() => fetchPage(n)}
-          >
-            {n}
-          </button>
-        );
-      })}
-      <button disabled={currentPage >= nPages} onClick={fetchNext}>
-        Next
-      </button>
+    <nav className={styles.primaryContainer}>
+      {currentPage > 1 && (
+        <button onClick={fetchPrev}>
+          <IoChevronBackSharp /> Prev
+        </button>
+      )}
+      <div className={styles.pageBtnsContainer}>
+        {Array.from({ length: Math.min(maxPageBtns, nPages) }, (_, i) => {
+          const n = i + pageOffset;
+          return (
+            <button
+              key={n}
+              disabled={n === currentPage}
+              onClick={() => fetchPage(n)}
+            >
+              {n}
+            </button>
+          );
+        })}
+      </div>
+      {currentPage < nPages && (
+        <button onClick={fetchNext}>
+          Next <IoChevronForwardSharp />
+        </button>
+      )}
     </nav>
   );
 }

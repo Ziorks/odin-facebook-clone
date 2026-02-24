@@ -3,12 +3,16 @@ import styles from "./UserThumbnail.module.css";
 
 function UserThumbnail({ children, user }) {
   return (
-    <div className={styles.user_card}>
-      <Link to={`/users/${user.id}`} className={styles.user_link}>
-        <img src={user.profile.avatar} />
-        <p> {user.username}</p>
+    <div className={styles.primaryContainer}>
+      <Link to={`/users/${user.id}`}>
+        <img src={user.profile.avatar} className={styles.avatar} />
       </Link>
-      {children}
+      <div className={styles.infoContainer}>
+        <Link to={`/users/${user.id}`} className={styles.usernameLink}>
+          <p> {user.username}</p>
+        </Link>
+        {children}
+      </div>
     </div>
   );
 }

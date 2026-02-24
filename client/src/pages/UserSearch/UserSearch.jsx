@@ -1,11 +1,13 @@
 import { useState, useRef } from "react";
+import { IoSearchSharp } from "react-icons/io5";
 import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import UserThumbnail from "../../components/UserThumbnail";
-import PaginationNavigation from "../../components/PaginationNavigation/PaginationNavigation";
+import PaginationNavigation from "../../components/PaginationNavigation";
 import styles from "./UserSearch.module.css";
 
 function UserSearch() {
   const [query, setQuery] = useState("");
+  const [resultsQuery, setResultsQuery] = useState("");
   const {
     data: users,
     page,
@@ -23,55 +25,62 @@ function UserSearch() {
   });
   const resetTimeout = useRef();
 
+  const handleQueryChange = (e) => {
+    {
+      if (resetTimeout.current) clearTimeout(resetTimeout.current);
+      setQuery(e.target.value);
+      resetTimeout.current = setTimeout(() => {
+        reset();
+        setResultsQuery(e.target.value.trim());
+        resetTimeout.current = null;
+      }, 1000);
+    }
+  };
+
   return (
-    <>
-      <h1>User Search Page</h1>
-      <input
-        type="text"
-        name="query"
-        id="query"
-        value={query}
-        onChange={(e) => {
-          {
-            if (resetTimeout.current) clearTimeout(resetTimeout.current);
-            setQuery(e.target.value);
-            resetTimeout.current = setTimeout(() => {
-              reset();
-              resetTimeout.current = null;
-            }, 1000);
-          }
-        }}
-      />
+    <div className={styles.primaryContainer}>
+      <h1>User Search</h1>
+      <div className={styles.queryContainer}>
+        <IoSearchSharp />
+        <input
+          type="text"
+          placeholder="Type here to search..."
+          value={query}
+          onChange={handleQueryChange}
+        />
+      </div>
+      <h2>
+        {resultsQuery ? `Search results for "${resultsQuery}"` : "All users"}
+      </h2>
       {isLoading && <p>Loading...</p>}
       {error && <p>An error occured</p>}
       {users && (
-        <>
-          <p>{count} results</p>
+        <div className={styles.results}>
+          <p>{count} results found</p>
           {users.length > 0 ? (
-            <ul className={styles.users_list}>
-              {users.map((user) => (
-                <li key={user.id}>
-                  <UserThumbnail user={user} />
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul>
+                {users.map((user) => (
+                  <li key={user.id}>
+                    <UserThumbnail user={user} />
+                  </li>
+                ))}
+              </ul>
+              <PaginationNavigation
+                currentPage={page}
+                nPages={nPages}
+                maxPageBtns={7}
+                fetchNext={fetchNext}
+                fetchPrev={fetchPrev}
+                fetchPage={fetchPage}
+              />
+            </>
           ) : (
-            <p>
-              I'm not sure how you are viewing this because there are no users
-              in the database :P
-            </p>
+            <p>No results</p>
           )}
-          <PaginationNavigation
-            currentPage={page}
-            nPages={nPages}
-            maxPageBtns={7}
-            fetchNext={fetchNext}
-            fetchPrev={fetchPrev}
-            fetchPage={fetchPage}
-          />
-        </>
+        </div>
       )}
-    </>
+    </div>
   );
 }
 
