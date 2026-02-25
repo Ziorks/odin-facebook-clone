@@ -113,13 +113,14 @@
   border-radius: 10px;
 }
 
+.themeBtn,
 .dropdownContent a {
   display: flex;
   align-items: center;
   gap: 0.8rem;
   color: var(--color-gray-700);
-  font-size: 16px;
-  padding: 12px 16px;
+  font-size: 1rem;
+  padding: 0.8rem 1rem;
   text-decoration: none;
   border-radius: 10px;
 }
@@ -128,6 +129,7 @@
   font-weight: bold;
 }
 
+.themeBtn:hover,
 .dropdownContent a:hover {
   background-color: var(--color-gray-200);
 }
@@ -142,6 +144,12 @@
 
 .show {
   display: block;
+}
+
+.themeBtn {
+  width: 100%;
+  background-color: transparent;
+  border: none;
 }
 
 @media (min-width: 600px) {

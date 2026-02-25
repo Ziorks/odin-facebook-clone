@@ -23,3 +23,5 @@ export const MONTHS = [
 export const MAX_UPLOAD_SIZE_POST = 1024 * 1024 * 2;
 
 export const MAX_UPLOAD_SIZE_COMMENT = 1024 * 1024 * 2;
+
+export const THEMES = { LIGHT: "light", DARK: "dark" };

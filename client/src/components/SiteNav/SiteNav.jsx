@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   IoSearchSharp,
@@ -6,22 +6,33 @@ import {
   IoChevronDownSharp,
   IoHome,
   IoSettingsSharp,
+  IoSunnyOutline,
+  IoMoonOutline,
   IoLogOut,
 } from "react-icons/io5";
+import { THEMES } from "../../utils/constants";
 import AuthContext from "../../contexts/AuthContext";
+import ThemeContext from "../../contexts/ThemeContext";
 import ProfilePic from "../ProfilePic";
 import styles from "./SiteNav.module.css";
 
-const DROP_CONTENT_ID = "siteNav_dropContent";
-
 function SiteNav() {
   const { auth } = useContext(AuthContext);
-  const [showMenu, setShowMenu] = useState(false);
+  const { theme, toggleTheme } = useContext(ThemeContext);
+
   const location = useLocation();
+
+  const [showMenu, setShowMenu] = useState(false);
+
+  const dropdownContentRef = useRef();
+  const toggleThemeRef = useRef();
 
   const toggleShowMenu = () => {
     const cb = (e) => {
-      const ignore = e.target.id === DROP_CONTENT_ID;
+      const ignore =
+        e.target === dropdownContentRef.current ||
+        e.composedPath().includes(toggleThemeRef.current);
+
       if (!ignore) {
         setShowMenu(false);
         window.removeEventListener("click", cb);
@@ -79,7 +90,7 @@ function SiteNav() {
         </button>
         <div
           className={`${styles.dropdownContent} ${showMenu ? styles.show : ""}`}
-          id={DROP_CONTENT_ID}
+          ref={dropdownContentRef}
         >
           <Link to={`/users/${auth.user.id}`}>
             <ProfilePic src={auth.user.profile.avatar} size={30} />
@@ -89,6 +100,15 @@ function SiteNav() {
             <IoSettingsSharp />
             Settings
           </Link>
+          <button
+            className={styles.themeBtn}
+            type="button"
+            onClick={toggleTheme}
+            ref={toggleThemeRef}
+          >
+            {theme === THEMES.DARK ? <IoSunnyOutline /> : <IoMoonOutline />}
+            {theme === THEMES.DARK ? "Dark" : "Light"} mode
+          </button>
           <Link to={"/logout"}>
             <IoLogOut />
             Logout
