@@ -61,10 +61,6 @@
   background-color: rgb(from var(--color-gray-300) r g b / 40%);
 }
 
-.actionBtn:disabled {
-  cursor: not-allowed;
-}
-
 .submitBtn:enabled {
   color: var(--color-primary-200);
 }

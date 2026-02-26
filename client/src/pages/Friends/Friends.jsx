@@ -3,7 +3,7 @@ import AuthContext from "../../contexts/AuthContext";
 import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import useIntersection from "../../hooks/useIntersection";
 import FriendList from "../../components/FriendList/FriendList";
-// import styles from "./Friends.module.css";
+import styles from "./Friends.module.css";
 
 function Friends() {
   const { auth } = useContext(AuthContext);
@@ -28,11 +28,11 @@ function Friends() {
   }, [isVisible]);
 
   return (
-    <>
-      <h2>My Friends</h2>
+    <div className={styles.primaryContainer}>
+      <h1>My Friends</h1>
       {friendships &&
         (count > 0 ? (
-          <>
+          <div className={styles.listContainer}>
             <p>
               {count} friend{count !== 1 && "s"}
             </p>
@@ -41,7 +41,7 @@ function Friends() {
               currentUserId={auth.user.id}
               setLastItemRef={visibleRef}
             />
-          </>
+          </div>
         ) : (
           <p>You have no friends</p>
         ))}
@@ -51,7 +51,7 @@ function Friends() {
           An error occured <button onClick={fetchNext}>Try again</button>
         </p>
       )}
-    </>
+    </div>
   );
 }
 

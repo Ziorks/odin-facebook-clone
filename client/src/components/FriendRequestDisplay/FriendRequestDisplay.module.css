@@ -1,0 +1,41 @@
+.primaryContainer {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.acceptBtn,
+.declineBtn {
+  display: block;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.acceptBtn {
+  background-color: var(--color-primary-300);
+  color: #fff;
+}
+
+.acceptBtn:hover {
+  background-color: var(--color-primary-200);
+}
+
+.declineBtn {
+  background-color: var(--color-gray-300);
+  color: var(--color-gray-700);
+}
+
+.declineBtn:hover {
+  background-color: rgb(from var(--color-gray-400) r g b / 100%);
+}
+
+.infoContainer {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+}

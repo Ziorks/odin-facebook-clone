@@ -1,0 +1,33 @@
+.primaryContainer {
+  padding: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.navContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  background-color: var(--color-gray-100);
+  margin-bottom: 2rem;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.navContainer > a {
+  padding: 1rem;
+  border: 2px solid var(--color-gray-100);
+  border-radius: 10px;
+  color: var(--color-gray-700);
+}
+
+.navContainer > a:not(.active):hover {
+  background-color: var(--color-gray-200);
+}
+
+.navContainer > a.active {
+  font-weight: 700;
+  border: none;
+  border-bottom: 2px solid var(--color-primary-200);
+  border-radius: 0;
+}

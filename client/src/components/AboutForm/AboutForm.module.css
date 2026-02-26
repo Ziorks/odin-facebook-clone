@@ -31,7 +31,6 @@
 }
 
 .actionsContainer > button:last-child:disabled {
-  cursor: not-allowed;
   background-color: var(--color-primary-100);
 }
 

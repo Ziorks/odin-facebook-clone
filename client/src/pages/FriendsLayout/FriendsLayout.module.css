@@ -1,0 +1,95 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  margin-top: 3.6rem;
+  padding: 1rem;
+  background-color: var(--color-gray-100);
+  width: 2.8rem;
+  transition: width 200ms ease-out;
+  box-shadow: -4px 0 8px 0 var(--color-gray-700);
+  overflow-x: hidden;
+}
+
+.sidebar.show {
+  width: 250px;
+}
+
+.sidebar > button {
+  position: absolute;
+  right: 0.2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.2rem;
+  background-color: transparent;
+  color: var(--color-gray-700);
+  border: none;
+  border-radius: 50%;
+  font-size: 2rem;
+}
+
+.sidebar > button:hover {
+  background-color: var(--color-gray-200);
+}
+
+.linksContainer {
+  display: none;
+}
+
+.linksContainer.show {
+  display: block;
+}
+
+.linksContainer > h1 {
+  margin-bottom: 1rem;
+  color: var(--color-gray-700);
+}
+
+.linksContainer > a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  margin-bottom: 0.2rem;
+  color: var(--color-gray-700);
+  font-size: 1.1rem;
+  border-radius: 5px;
+  min-width: max-content;
+}
+
+.linksContainer > a.active {
+  background-color: var(--color-gray-200);
+}
+
+.linksContainer > a.active > svg {
+  color: var(--color-primary-300);
+}
+
+.linksContainer > a:hover {
+  background-color: var(--color-gray-200);
+}
+
+.outletContainer {
+  margin-left: 2.8rem;
+}
+
+@media (min-width: 600px) {
+  .sidebar {
+    width: 250px;
+    transition: unset;
+  }
+
+  .sidebar > button {
+    display: none;
+  }
+
+  .linksContainer {
+    display: block;
+  }
+
+  .outletContainer {
+    margin-left: 250px;
+  }
+}

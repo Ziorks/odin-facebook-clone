@@ -1,11 +1,16 @@
 import { useContext, useState } from "react";
+import { formatDistanceToNowShort } from "../../utils/helperFunctions";
 import AuthContext from "../../contexts/AuthContext";
 import useFriendshipActions from "../../hooks/useFriendshipActions";
 import UserThumbnail from "../UserThumbnail";
-import { formatDistanceToNowShort } from "../../utils/helperFunctions";
-// import styles from "./FriendRequestDisplay.module.css";
+import Spinner from "../Spinner";
+import styles from "./FriendRequestDisplay.module.css";
 
-const REQUEST_STATUS = { PENDING: 0, ACCEPTED: 1, DECLINED: 2 };
+const REQUEST_STATUS = {
+  PENDING: "pending",
+  ACCEPTED: "accepted",
+  DECLINED: "declined",
+};
 
 function FriendRequestDisplay({ request }) {
   const { auth } = useContext(AuthContext);
@@ -30,35 +35,37 @@ function FriendRequestDisplay({ request }) {
 
   return (
     <UserThumbnail user={isIncoming ? request.user1 : request.user2}>
-      {isIncoming ? (
-        <>
-          {status === REQUEST_STATUS.PENDING && (
-            <>
-              <button onClick={handleAccept} disabled={isLoading}>
+      <div className={styles.primaryContainer}>
+        {status === REQUEST_STATUS.PENDING && (
+          <>
+            {isIncoming && (
+              <button
+                className={styles.acceptBtn}
+                onClick={handleAccept}
+                disabled={isLoading}
+              >
                 Accept
               </button>
-              <button onClick={handleRemove} disabled={isLoading}>
-                Decline
-              </button>
-            </>
-          )}
-          {status === REQUEST_STATUS.ACCEPTED && <p>Accepted</p>}
-          {status === REQUEST_STATUS.DECLINED && <p>Declined</p>}
-        </>
-      ) : (
-        <>
-          {status === REQUEST_STATUS.PENDING && (
-            <>
-              <button onClick={handleRemove} disabled={isLoading}>
-                Cancel
-              </button>
-            </>
-          )}
-          {status === REQUEST_STATUS.DECLINED && <p>Canceled</p>}
-        </>
-      )}
-      {error && <p>An error occurred</p>}
-      <p>{formatDistanceToNowShort(request.createdAt)}</p>
+            )}
+            <button
+              className={styles.declineBtn}
+              onClick={handleRemove}
+              disabled={isLoading}
+            >
+              {isIncoming ? "Decline" : "Cancel"}
+            </button>
+            <div className={styles.infoContainer}>
+              <p>{formatDistanceToNowShort(request.createdAt)}</p>{" "}
+              {isLoading && <Spinner size={15} />}
+              {error && <p>An error occurred</p>}
+            </div>
+          </>
+        )}
+        {status === REQUEST_STATUS.ACCEPTED && <p>Accepted</p>}
+        {status === REQUEST_STATUS.DECLINED && (
+          <p>{isIncoming ? "Declined" : "Canceled"}</p>
+        )}
+      </div>
     </UserThumbnail>
   );
 }
