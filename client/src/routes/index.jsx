@@ -7,7 +7,7 @@ import PendingRequestsLayout from "../pages/PendingRequestsLayout";
 import PendingRequestsIncoming from "../pages/PendingRequestsIncoming";
 import PendingRequestsOutgoing from "../pages/PendingRequestsOutgoing";
 import UserSearch from "../pages/UserSearch/UserSearch";
-import UserProfile from "../pages/UserProfile";
+import UserProfileLayout from "../pages/UserProfileLayout";
 import Wall from "../components/Wall";
 import AboutLayout from "../pages/AboutLayout";
 import AboutOverview from "../components/AboutOverview";
@@ -69,7 +69,7 @@ const routes = [
           },
           {
             path: ":userId",
-            element: <UserProfile />,
+            element: <UserProfileLayout />,
             children: [
               { index: true, element: <Wall /> },
               {

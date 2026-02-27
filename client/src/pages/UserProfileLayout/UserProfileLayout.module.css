@@ -1,0 +1,110 @@
+.primaryContainer {
+  background-color: var(--color-gray-100);
+  padding: 3rem 1rem 0 1rem;
+}
+
+.userInfo,
+.nav {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.userInfo > p {
+  color: var(--color-gray-700);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.ownerActions,
+.friendshipActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ownerActions > *,
+.friendshipActions > button {
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 10px;
+}
+
+.ownerActions > button,
+.friendshipActions > .addBtn {
+  color: #fff;
+  background-color: var(--color-primary-300);
+}
+
+.ownerActions > button:hover,
+.ownerActions > button:focus,
+.friendshipActions > .addBtn:hover,
+.friendshipActions > .addBtn:focus {
+  background-color: var(--color-primary-200);
+}
+
+.ownerActions > a,
+.friendshipActions > button {
+  color: var(--color-gray-700);
+  background-color: var(--color-gray-300);
+}
+
+.ownerActions > a:hover,
+.ownerActions > a:focus,
+.friendshipActions > button:hover,
+.friendshipActions > button:focus {
+  background-color: var(--color-gray-400);
+}
+
+.nav {
+  border-top: 1px solid var(--color-gray-400);
+  width: 100%;
+}
+
+.nav > a {
+  display: inline-block;
+  padding: 1rem 0.8rem;
+  color: var(--color-gray-500);
+  font-size: 1rem;
+  font-weight: 500;
+  border-top: 3px solid var(--color-gray-100);
+  border-bottom: 3px solid var(--color-gray-100);
+  border-radius: 8px;
+}
+
+.nav > a:not(.active):hover,
+.nav > a:not(.active):focus {
+  background-color: rgb(from var(--color-gray-400) r g b / 20%);
+}
+
+.nav > a.active {
+  color: var(--color-primary-200);
+  border-radius: 0;
+  border-bottom: 3px solid var(--color-primary-300);
+}
+
+@media (min-width: 800px) {
+  .userInfo {
+    flex-direction: row;
+    align-items: start;
+  }
+
+  .userInfo > *:not(:first-child) {
+    padding-top: 2rem;
+  }
+
+  .userInfo > p {
+    flex: 1;
+  }
+}

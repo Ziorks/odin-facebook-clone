@@ -26,6 +26,7 @@
 }
 
 .navContainer > a.active {
+  color: var(--color-primary-200);
   font-weight: 700;
   border: none;
   border-bottom: 2px solid var(--color-primary-200);
