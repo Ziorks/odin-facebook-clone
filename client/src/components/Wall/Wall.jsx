@@ -8,7 +8,7 @@ import Posts from "../Posts";
 import styles from "./Wall.module.css";
 
 function Wall() {
-  const { auth } = useContext(AuthContext);
+  const { auth, isCurrentUser } = useContext(AuthContext);
   const { user } = useOutletContext();
   const [showPostModal, setShowPostModal] = useState(false);
   const {
@@ -27,8 +27,6 @@ function Wall() {
   const removePost = (postId) => {
     setPosts((prev) => prev.filter((post) => post.id !== postId));
   };
-
-  const isCurrentUser = auth.user.id === user.id;
 
   return (
     <div className={styles.primaryContainer}>

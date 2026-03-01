@@ -1,5 +1,4 @@
 import UserThumbnail from "../UserThumbnail";
-// import styles from "./FriendList.module.css";
 
 function FriendList({ friendships, currentUserId, setLastItemRef }) {
   return (

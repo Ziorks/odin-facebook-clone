@@ -91,6 +91,7 @@ function UserProfileLayout() {
   const { auth } = useContext(AuthContext);
   const { data, setData, isLoading, error } = useDataFetch(`/users/${userId}`);
 
+  const isCurrentUser = auth.user.id === data?.user.id;
   const currentPath = location.pathname.split("/").at(-1);
   let activeLink = LOCATIONS.POSTS;
   if (currentPath === "friends") {
@@ -110,7 +111,7 @@ function UserProfileLayout() {
               <ProfilePic src={data.user.profile.avatar} size={150} />
               <p>{data.user.username}</p>
               {/* TODO: show nFriends? */}
-              {auth.user.id === data.user.id ? (
+              {isCurrentUser ? (
                 <div className={styles.ownerActions}>
                   <button type="button">
                     <FaPlus />
@@ -152,7 +153,7 @@ function UserProfileLayout() {
               </Link>
             </nav>
           </div>
-          <Outlet context={{ user: data.user }} />
+          <Outlet context={{ user: data.user, isCurrentUser }} />
         </>
       )}
     </>
