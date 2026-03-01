@@ -3,8 +3,9 @@ import { useOutletContext } from "react-router-dom";
 import AuthContext from "../../contexts/AuthContext";
 import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import PostCreationModal from "../PostCreationModal";
+import ProfilePicLink from "../ProfilePicLink";
 import Posts from "../Posts";
-// import styles from "./Wall.module.css";
+import styles from "./Wall.module.css";
 
 function Wall() {
   const { auth } = useContext(AuthContext);
@@ -30,7 +31,7 @@ function Wall() {
   const isCurrentUser = auth.user.id === user.id;
 
   return (
-    <>
+    <div className={styles.primaryContainer}>
       {showPostModal && (
         <PostCreationModal
           handleClose={handleClose}
@@ -38,11 +39,16 @@ function Wall() {
           onSuccess={onSuccess}
         />
       )}
-      <div>
+      <div className={styles.postCreationContainer}>
+        <ProfilePicLink
+          to={`/users/${auth.user.id}`}
+          src={auth.user.profile.avatar}
+          size={40}
+        />
         <button onClick={() => setShowPostModal(true)}>
           {isCurrentUser
             ? "What's on your mind"
-            : `Write something to ${user.username}`}
+            : `Write something to ${user.profile.firstName || user.username}`}
         </button>
       </div>
       {posts &&
@@ -60,7 +66,7 @@ function Wall() {
           An error occured <button onClick={fetchNext}>Try again</button>
         </p>
       )}
-    </>
+    </div>
   );
 }
 
