@@ -1,0 +1,151 @@
+.aboutContainer,
+.friendsContainer {
+  margin: 2rem auto 0 auto;
+  max-width: 1000px;
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-700);
+  box-shadow: 0 0 4px -2px var(--color-gray-700);
+
+  @media (min-width: 1000px) {
+    border-radius: 10px;
+  }
+}
+
+.aboutHeader {
+  border-bottom: 1px solid var(--color-gray-400);
+}
+
+.aboutHeader,
+.outletContainer {
+  padding: 1rem;
+}
+
+.aboutHeader > h2 {
+  padding-left: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.aboutHeader > nav > a {
+  display: block;
+  padding: 0.5rem;
+  color: var(--color-gray-400);
+  font-weight: 500;
+  border-radius: 5px;
+}
+
+.aboutHeader > nav > a:not(:last-child) {
+  margin-bottom: 0.5rem;
+}
+
+.aboutHeader > nav > a.active {
+  color: var(--color-primary-200);
+  background-color: rgb(from var(--color-primary-100) r g b / 15%);
+}
+
+.aboutHeader > nav > a:not(.active):hover,
+.aboutHeader > nav > a:not(.active):focus {
+  background-color: rgb(from var(--color-gray-300) r g b / 15%);
+}
+
+.friendsContainer {
+  padding: 1rem;
+}
+
+.friendsContainer > h2 {
+  margin-bottom: 2rem;
+}
+
+.friendsHeader {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.friendsHeader a {
+  display: inline-block;
+  color: var(--color-primary-200);
+  font-weight: 500;
+  padding: 0.5rem;
+  border-radius: 10px;
+}
+
+.friendsHeader a:hover,
+.friendsHeader a:focus {
+  background-color: var(--color-gray-200);
+}
+
+.friendsListContainer {
+  margin-bottom: 1rem;
+}
+
+.friendsListContainer > p {
+  margin-bottom: 1rem;
+}
+
+.friendsListContainer > ul {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(50px, 1fr));
+  justify-content: center;
+  gap: 1rem;
+}
+
+.friendsListContainer > ul > li > div {
+  border: none;
+  border-radius: 0;
+}
+
+.friendsListContainer > ul > li > div > a {
+  display: block;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.friendsListContainer > ul > li > div > a:hover::after,
+.friendsListContainer > ul > li > div > a:focus::after {
+  position: absolute;
+  content: "";
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgb(from var(--color-gray-700) r g b / 10%);
+}
+
+.friendsListContainer > ul > li > div > div > a {
+  font-size: 0.7rem;
+  text-wrap: nowrap;
+}
+
+.seeAllFriendsLink {
+  display: block;
+  padding: 0.5rem;
+  background-color: var(--color-gray-300);
+  border-radius: 5px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--color-gray-700);
+}
+
+.seeAllFriendsLink:hover,
+.seeAllFriendsLink:focus {
+  background-color: var(--color-gray-400);
+}
+
+@media (min-width: 600px) {
+  .aboutContainer {
+    display: flex;
+  }
+
+  .aboutHeader {
+    flex-basis: 300px;
+    border: none;
+    border-right: 1px solid var(--color-gray-400);
+  }
+
+  .outletContainer {
+    flex: 1;
+  }
+}
