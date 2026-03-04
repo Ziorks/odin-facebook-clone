@@ -1,11 +1,17 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import AuthContext from "../../contexts/AuthContext";
+import { FaPhone } from "react-icons/fa6";
+import { MdOutlineEmail, MdOutlineWeb } from "react-icons/md";
+import { PiLinkSimple } from "react-icons/pi";
+import { TbCirclesRelation } from "react-icons/tb";
+import { LuCake } from "react-icons/lu";
+import { GrLanguage } from "react-icons/gr";
+import { YEARS, MONTHS } from "../../utils/constants";
 import useDataFetch from "../../hooks/useDataFetch";
 import AboutForm from "../AboutForm";
+import FormInput from "../FormInput";
 import AboutDisplay from "../AboutDisplay";
-import { YEARS, MONTHS } from "../../utils/constants";
-// import styles from "./AboutContactInfo.module.css";
+import styles from "./AboutContactInfo.module.css";
 
 function MultiStringForm({
   handleClose,
@@ -14,6 +20,7 @@ function MultiStringForm({
   label,
   fieldName,
   inputType,
+  img,
   max,
 }) {
   const { user } = useOutletContext();
@@ -35,33 +42,31 @@ function MultiStringForm({
       loadingMsg={loadingMsg}
       disableSave={!changesMade}
     >
-      {values.map((value, i) => {
-        const id = `${fieldName}_${i}`;
-        return (
-          <div key={i}>
-            <label htmlFor={id}>{label}</label>{" "}
-            <input
-              type={inputType}
-              name={id}
-              id={id}
-              value={value}
-              autoComplete="off"
-              onChange={(e) => {
-                setValues((prev) => prev.toSpliced(i, 1, e.target.value));
-                if (!changesMade) setChangesMade(true);
-              }}
-            />
-          </div>
-        );
-      })}
-      {values.length < max && (
-        <button
-          type="button"
-          onClick={() => setValues((prev) => [...prev, ""])}
-        >
-          Add {label}
-        </button>
-      )}
+      <div className={styles.formContentContainer}>
+        {values.map((value, i) => (
+          <FormInput
+            key={i}
+            type={inputType}
+            label={label}
+            value={value}
+            autoComplete="off"
+            onChange={(e) => {
+              setValues((prev) => prev.toSpliced(i, 1, e.target.value));
+              if (!changesMade) setChangesMade(true);
+            }}
+          />
+        ))}
+        {values.length < max && (
+          <button
+            className={styles.addBtn}
+            type="button"
+            onClick={() => setValues((prev) => [...prev, ""])}
+          >
+            {img}
+            Add {label}
+          </button>
+        )}
+      </div>
     </AboutForm>
   );
 }
@@ -72,11 +77,12 @@ function MultiStringDisplay({
   label,
   fieldName,
   inputType,
+  img,
   max,
 }) {
-  const { user } = useOutletContext();
-  const { auth } = useContext(AuthContext);
+  const { isCurrentUser } = useOutletContext();
   const [showForm, setShowForm] = useState(false);
+
   const renderEditForm = (handleClose) => (
     <MultiStringForm
       onSuccess={() => {
@@ -88,10 +94,10 @@ function MultiStringDisplay({
       label={label}
       fieldName={fieldName}
       inputType={inputType}
+      img={img}
       max={max}
     />
   );
-  const isCurrentUser = user.id === auth.user.id;
   const lowerLabel = label.toLowerCase();
   const handleClose = () => setShowForm(false);
   const onSuccess = () => {
@@ -103,13 +109,19 @@ function MultiStringDisplay({
     <>
       {stringArr.length > 0 ? (
         <AboutDisplay renderEditForm={renderEditForm}>
-          <p>{label}s</p>
-          {stringArr.map((string, i) => (
-            <p key={i}>{string}</p>
-          ))}
+          <div className={styles.displayContentContainer}>
+            {img}
+            <div>
+              {stringArr.map((string, i) => (
+                <p key={i}>{string}</p>
+              ))}
+              <p>{label}s</p>
+            </div>
+          </div>
         </AboutDisplay>
-      ) : isCurrentUser ? (
-        showForm ? (
+      ) : (
+        isCurrentUser &&
+        (showForm ? (
           <MultiStringForm
             handleClose={handleClose}
             onSuccess={onSuccess}
@@ -119,12 +131,11 @@ function MultiStringDisplay({
             max={max}
           />
         ) : (
-          <button onClick={() => setShowForm(true)}>
+          <button className={styles.addBtn} onClick={() => setShowForm(true)}>
+            {img}
             Add {/[aeiou]/i.test(label[0]) ? "an" : "a"} {lowerLabel}
           </button>
-        )
-      ) : (
-        <p>No {lowerLabel}s to show</p>
+        ))
       )}
     </>
   );
@@ -151,31 +162,32 @@ function GenderForm({ handleClose, onSuccess, gender }) {
       loadingMsg={loadingMsg}
       disableSave={!changesMade}
     >
-      <div>
-        <label htmlFor="value">Gender</label>
-        <select
-          name="value"
-          id="value"
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value || undefined);
-            if (!changesMade) setChangesMade(true);
-          }}
-        >
-          <option value={""}>Gender</option>
-          <option value={"MALE"}>Male</option>
-          <option value={"FEMALE"}>Female</option>
-          <option value={"OTHER"}>Other</option>
-        </select>
+      <div className={styles.formContentContainer}>
+        <div className={styles.selectInputContainer}>
+          <label htmlFor="value">Gender</label>
+          <FormInput
+            type="select"
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value || undefined);
+              if (!changesMade) setChangesMade(true);
+            }}
+          >
+            <option value={""}>Gender</option>
+            <option value={"MALE"}>Male</option>
+            <option value={"FEMALE"}>Female</option>
+            <option value={"OTHER"}>Other</option>
+          </FormInput>
+        </div>
       </div>
     </AboutForm>
   );
 }
 
 function GenderDisplay({ gender, refetch }) {
-  const { user } = useOutletContext();
-  const { auth } = useContext(AuthContext);
+  const { isCurrentUser } = useOutletContext();
   const [showForm, setShowForm] = useState(false);
+
   const renderEditForm = (handleClose) => (
     <GenderForm
       onSuccess={() => {
@@ -186,7 +198,6 @@ function GenderDisplay({ gender, refetch }) {
       gender={gender}
     />
   );
-  const isCurrentUser = user.id === auth.user.id;
   const handleClose = () => setShowForm(false);
   const onSuccess = () => {
     refetch();
@@ -197,19 +208,27 @@ function GenderDisplay({ gender, refetch }) {
     <>
       {gender ? (
         <AboutDisplay renderEditForm={renderEditForm}>
-          <p>
-            {gender.slice(0, 1).toUpperCase() + gender.slice(1).toLowerCase()}
-          </p>
-          <p>Gender</p>
+          <div className={styles.displayContentContainer}>
+            <TbCirclesRelation />
+            <div>
+              <p>
+                {gender.slice(0, 1).toUpperCase() +
+                  gender.slice(1).toLowerCase()}
+              </p>
+              <p>Gender</p>
+            </div>
+          </div>
         </AboutDisplay>
-      ) : isCurrentUser ? (
-        showForm ? (
+      ) : (
+        isCurrentUser &&
+        (showForm ? (
           <GenderForm handleClose={handleClose} onSuccess={onSuccess} />
         ) : (
-          <button onClick={() => setShowForm(true)}>Add your gender</button>
-        )
-      ) : (
-        <p>No gender to show</p>
+          <button className={styles.addBtn} onClick={() => setShowForm(true)}>
+            <TbCirclesRelation />
+            Add your gender
+          </button>
+        ))
       )}
     </>
   );
@@ -244,78 +263,77 @@ function BirthdayForm({ handleClose, onSuccess, birthday }) {
       loadingMsg={loadingMsg}
       disableSave={!changesMade}
     >
-      <div>
-        <label htmlFor="month">Month</label>
-        <select
-          name="month"
-          id="month"
-          value={month}
-          onChange={(e) => {
-            const value = +e.target.value || undefined;
-            const nDays = value ? MONTHS[value - 1].nDays : undefined;
-            setMonth(value);
-            if (day > nDays || !value) {
-              setDay(nDays);
-            }
-            if (!changesMade) setChangesMade(true);
-          }}
-        >
-          <option value={""}>Month</option>
-          {MONTHS.map((month, i) => (
-            <option key={i} value={i + 1}>
-              {month.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      {month && (
-        <div>
-          <label htmlFor="day">Day</label>
-          <select
-            name="day"
-            id="day"
-            value={day}
+      <div className={`${styles.formContentContainer} ${styles.birthdayForm}`}>
+        <div className={styles.selectInputContainer}>
+          <label htmlFor="month">Month</label>
+          <FormInput
+            type="select"
+            value={month}
             onChange={(e) => {
-              setDay(+e.target.value || undefined);
+              const value = +e.target.value || undefined;
+              const nDays = value ? MONTHS[value - 1].nDays : undefined;
+              setMonth(value);
+              if (day > nDays || !value) {
+                setDay(nDays);
+              }
               if (!changesMade) setChangesMade(true);
             }}
           >
-            <option value={""}>Day</option>
-            {Array.from({ length: MONTHS[month - 1].nDays }).map((_, i) => (
+            <option value={""}>Month</option>
+            {MONTHS.map((month, i) => (
               <option key={i} value={i + 1}>
-                {i + 1}
+                {month.name}
               </option>
             ))}
-          </select>
+          </FormInput>
         </div>
-      )}
-      <div>
-        <label htmlFor="year">Year</label>
-        <select
-          name="year"
-          id="year"
-          value={year}
-          onChange={(e) => {
-            setYear(+e.target.value || undefined);
-            if (!changesMade) setChangesMade(true);
-          }}
-        >
-          <option value={""}>Year</option>
-          {YEARS.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
+        {month && (
+          <div className={styles.selectInputContainer}>
+            <label htmlFor="day">Day</label>
+            <FormInput
+              type="select"
+              value={day}
+              onChange={(e) => {
+                setDay(+e.target.value || undefined);
+                if (!changesMade) setChangesMade(true);
+              }}
+            >
+              <option value={""}>Day</option>
+              {Array.from({ length: MONTHS[month - 1].nDays }).map((_, i) => (
+                <option key={i} value={i + 1}>
+                  {i + 1}
+                </option>
+              ))}
+            </FormInput>
+          </div>
+        )}
+        <div className={styles.selectInputContainer}>
+          <label htmlFor="year">Year</label>
+          <FormInput
+            type="select"
+            value={year}
+            onChange={(e) => {
+              setYear(+e.target.value || undefined);
+              if (!changesMade) setChangesMade(true);
+            }}
+          >
+            <option value={""}>Year</option>
+            {YEARS.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </FormInput>
+        </div>
       </div>
     </AboutForm>
   );
 }
 
 function BirthdayDisplay({ birthday, refetch }) {
-  const { user } = useOutletContext();
-  const { auth } = useContext(AuthContext);
+  const { isCurrentUser } = useOutletContext();
   const [showForm, setShowForm] = useState(false);
+
   const renderEditForm = (handleClose) => (
     <BirthdayForm
       onSuccess={() => {
@@ -326,7 +344,6 @@ function BirthdayDisplay({ birthday, refetch }) {
       birthday={birthday}
     />
   );
-  const isCurrentUser = user.id === auth.user.id;
   const handleClose = () => setShowForm(false);
   const onSuccess = () => {
     refetch();
@@ -337,35 +354,42 @@ function BirthdayDisplay({ birthday, refetch }) {
     <>
       {birthday.month || birthday.year ? (
         <AboutDisplay renderEditForm={renderEditForm}>
-          <p>
-            {birthday.month && MONTHS[birthday.month - 1].name}
-            {birthday.day && ` ${birthday.day}`}
-            {birthday.month && birthday.year && ", "}
-            {birthday.year}
-          </p>
-          <p>Birthday</p>
+          <div className={styles.displayContentContainer}>
+            <LuCake />
+            <div>
+              <p>
+                {birthday.month && MONTHS[birthday.month - 1].name}
+                {birthday.day && ` ${birthday.day}`}
+                {birthday.month && birthday.year && ", "}
+                {birthday.year}
+              </p>
+              <p>Birthday</p>
+            </div>
+          </div>
         </AboutDisplay>
-      ) : isCurrentUser ? (
-        showForm ? (
+      ) : (
+        isCurrentUser &&
+        (showForm ? (
           <BirthdayForm handleClose={handleClose} onSuccess={onSuccess} />
         ) : (
-          <button onClick={() => setShowForm(true)}>Add your birthday</button>
-        )
-      ) : (
-        <p>No birthday to show</p>
+          <button className={styles.addBtn} onClick={() => setShowForm(true)}>
+            <LuCake />
+            Add your birthday
+          </button>
+        ))
       )}
     </>
   );
 }
 
 function AboutContactInfo() {
-  const { user } = useOutletContext();
+  const { user, isCurrentUser } = useOutletContext();
   const { data, isLoading, error, refetch } = useDataFetch(
     `/users/${user.id}/about_contact_info`,
   );
 
   return (
-    <>
+    <div className={styles.primaryContainer}>
       {isLoading && <p>Loading...</p>}
       {error && <p>An error occured while fetching data. Please try again</p>}
       {data && (
@@ -377,6 +401,7 @@ function AboutContactInfo() {
             fieldName={"phoneNumbers"}
             label={"Phone Number"}
             inputType={"tel"}
+            img={<FaPhone />}
             max={5}
           />
           <MultiStringDisplay
@@ -385,8 +410,12 @@ function AboutContactInfo() {
             fieldName={"emails"}
             label={"Email"}
             inputType={"email"}
+            img={<MdOutlineEmail />}
             max={5}
           />
+          {!isCurrentUser &&
+            !data.phoneNumbers.length > 0 &&
+            !data.emails.length > 0 && <p>No contact info to show</p>}
 
           <h3>Websites and social links</h3>
           <MultiStringDisplay
@@ -395,6 +424,7 @@ function AboutContactInfo() {
             fieldName={"websites"}
             label={"Website"}
             inputType={"url"}
+            img={<MdOutlineWeb />}
             max={5}
           />
           <MultiStringDisplay
@@ -403,25 +433,34 @@ function AboutContactInfo() {
             fieldName={"socialLinks"}
             label={"Social Link"}
             inputType={"url"}
+            img={<PiLinkSimple />}
             max={5}
           />
+          {!isCurrentUser &&
+            !data.websites.length > 0 &&
+            !data.socialLinks.length > 0 && (
+              <p>No websites or social links to show</p>
+            )}
 
           <h3>Basic info</h3>
           <GenderDisplay gender={data.gender} refetch={refetch} />
-
           <BirthdayDisplay birthday={data.birthday} refetch={refetch} />
-
           <MultiStringDisplay
             stringArr={data.languages}
             refetch={refetch}
             fieldName={"languages"}
             label={"Language"}
             inputType={"text"}
+            img={<GrLanguage />}
             max={20}
           />
+          {!isCurrentUser &&
+            !data.gender &&
+            !(data.birthday.month || data.birthday.year) &&
+            !data.languages.length > 0 && <p>No basic info to show</p>}
         </>
       )}
-    </>
+    </div>
   );
 }
 

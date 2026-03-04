@@ -102,6 +102,7 @@ const guestLoginGet = async (req, res, next) => {
     "https://res.cloudinary.com/dwf29bnr3/image/upload/v1754109878/messaging_app_profile_pics/icsll72wpxwcku6gb1by.jpg";
 
   try {
+    //TODO: fix this, getting by username is no good since username can be changed
     let user = await db.getUserByUsername(DEMO_ACCOUNT_USERNAME);
     if (!user) {
       user = await db.createUser(DEMO_ACCOUNT_USERNAME, undefined, undefined, {
