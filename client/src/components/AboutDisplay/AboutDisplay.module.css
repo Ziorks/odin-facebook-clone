@@ -1,0 +1,79 @@
+.displayContainer {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+.displayChildrenContainer {
+  flex: 1;
+}
+
+.displayContainer > button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  font-size: 1rem;
+  color: var(--color-gray-500);
+  border: none;
+  border-radius: 50%;
+  background-color: unset;
+}
+
+.displayContainer > button:hover,
+.displayContainer > button:focus {
+  background-color: var(--color-gray-200);
+}
+
+.deleteModalContentContainer {
+  padding: 1rem;
+}
+
+.deleteModalContentContainer > *:not(:last-child) {
+  margin-bottom: 1rem;
+}
+
+.deleteError {
+  color: red;
+  font-weight: 600;
+}
+
+.deleteLoading {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-weight: 500;
+}
+
+.deleteActionsContainer {
+  display: flex;
+  justify-content: right;
+  gap: 1rem;
+}
+
+.deleteActionsContainer > button {
+  flex: 1;
+  max-width: 200px;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 5px;
+  background-color: unset;
+  color: var(--color-primary-200);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.deleteActionsContainer > button:hover,
+.deleteActionsContainer > button:focus {
+  background-color: rgb(from var(--color-gray-700) r g b / 5%);
+}
+
+.deleteActionsContainer > button:last-child {
+  color: #fff;
+  background-color: var(--color-primary-200);
+}
+
+.deleteActionsContainer > button:last-child:hover,
+.deleteActionsContainer > button:last-child:focus {
+  background-color: var(--color-primary-300);
+}
