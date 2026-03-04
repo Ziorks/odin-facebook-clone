@@ -1,10 +1,20 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import AuthContext from "../../contexts/AuthContext";
+import {
+  IoChatboxOutline,
+  IoMusicalNotesOutline,
+  IoBookOutline,
+  IoTvOutline,
+  IoFilmOutline,
+} from "react-icons/io5";
+import { IoMdQuote } from "react-icons/io";
+import { TbShirtSport } from "react-icons/tb";
+import { GiSteampunkGoggles } from "react-icons/gi";
 import useDataFetch from "../../hooks/useDataFetch";
 import AboutForm from "../AboutForm";
+import FormInput from "../FormInput";
 import AboutDisplay from "../AboutDisplay";
-// import styles from "./AboutDetails.module.css";
+import styles from "./AboutDetails.module.css";
 
 function DetailForm({ handleClose, onSuccess, detail, label, fieldName }) {
   const { user } = useOutletContext();
@@ -25,12 +35,11 @@ function DetailForm({ handleClose, onSuccess, detail, label, fieldName }) {
       loadingMsg={loadingMsg}
       disableSave={!changesMade}
     >
-      <div>
-        <label htmlFor={fieldName}>{label}</label>{" "}
-        <textarea
+      <div className={styles.formContentContainer}>
+        <FormInput
+          type="textarea"
+          label={label}
           maxLength={512}
-          name={fieldName}
-          id={fieldName}
           value={value}
           onChange={(e) => {
             setValue(e.target.value);
@@ -42,9 +51,8 @@ function DetailForm({ handleClose, onSuccess, detail, label, fieldName }) {
   );
 }
 
-function DetailDisplay({ detail, label, fieldName, addBtnText, refetch }) {
-  const { user } = useOutletContext();
-  const { auth } = useContext(AuthContext);
+function DetailDisplay({ detail, label, fieldName, img, refetch }) {
+  const { isCurrentUser } = useOutletContext();
   const [showForm, setShowForm] = useState(false);
   const renderEditForm = (handleClose) => (
     <DetailForm
@@ -58,7 +66,7 @@ function DetailDisplay({ detail, label, fieldName, addBtnText, refetch }) {
       fieldName={fieldName}
     />
   );
-  const isCurrentUser = user.id === auth.user.id;
+
   const handleClose = () => setShowForm(false);
   const onSuccess = () => {
     refetch();
@@ -66,10 +74,14 @@ function DetailDisplay({ detail, label, fieldName, addBtnText, refetch }) {
   };
 
   return (
-    <>
+    <div className={styles.detailsDisplayContainer}>
+      <h3>{label}</h3>
       {detail ? (
         <AboutDisplay renderEditForm={renderEditForm}>
-          <p>{detail}</p>
+          <div className={styles.displayContentContainer}>
+            {img}
+            <p>{detail}</p>
+          </div>
         </AboutDisplay>
       ) : isCurrentUser ? (
         showForm ? (
@@ -80,103 +92,96 @@ function DetailDisplay({ detail, label, fieldName, addBtnText, refetch }) {
             fieldName={fieldName}
           />
         ) : (
-          <button onClick={() => setShowForm(true)}>{addBtnText}</button>
+          <button className={styles.addBtn} onClick={() => setShowForm(true)}>
+            {img}
+            {label}
+          </button>
         )
       ) : (
         <p>No {label.toLowerCase()} to show</p>
       )}
-    </>
+    </div>
   );
 }
 
 function AboutDetails() {
-  const { user } = useOutletContext();
-  const { auth } = useContext(AuthContext);
+  const { user, isCurrentUser } = useOutletContext();
   const { data, isLoading, error, refetch } = useDataFetch(
     `/users/${user.id}/about_details`,
   );
-  const isCurrentUser = user.id === auth.user.id;
 
   return (
-    <>
+    <div className={styles.primaryContainer}>
       {isLoading && <p>Loading...</p>}
       {error && <p>An error occured while fetching data. Please try again</p>}
       {data && (
         <>
-          <h3>About {isCurrentUser ? "you" : user.username}</h3>
           <DetailDisplay
             detail={data.aboutMe}
-            label={"About Me"}
+            label={`About ${isCurrentUser ? "you" : "me"}`}
             fieldName={"aboutMe"}
-            addBtnText={"Add an about me"}
+            img={<IoChatboxOutline />}
             refetch={refetch}
           />
 
-          <h3>Favorite quotes</h3>
           <DetailDisplay
             detail={data.quotes}
             label={"Quotes"}
             fieldName={"quotes"}
-            addBtnText={"Add your favorite quotations"}
+            img={<IoMdQuote />}
             refetch={refetch}
           />
 
-          <h3>Music</h3>
           <DetailDisplay
             detail={data.music}
             label={"Music"}
             fieldName={"music"}
-            addBtnText={"Add your favorite music"}
+            img={<IoMusicalNotesOutline />}
             refetch={refetch}
           />
 
-          <h3>Books</h3>
           <DetailDisplay
             detail={data.books}
             label={"Books"}
             fieldName={"books"}
-            addBtnText={"Add your favorite books"}
+            img={<IoBookOutline />}
             refetch={refetch}
           />
 
-          <h3>TV</h3>
           <DetailDisplay
             detail={data.tv}
-            label={"TV Shows"}
+            label={"TV shows"}
             fieldName={"tv"}
-            addBtnText={"Add your favorite tv shows"}
+            img={<IoTvOutline />}
             refetch={refetch}
           />
 
-          <h3>Movies</h3>
           <DetailDisplay
             detail={data.movies}
             label={"Movies"}
             fieldName={"movies"}
-            addBtnText={"Add your favorite movies"}
+            img={<IoFilmOutline />}
             refetch={refetch}
           />
 
-          <h3>Sports</h3>
           <DetailDisplay
             detail={data.sports}
             label={"Sports"}
             fieldName={"sports"}
-            addBtnText={"Add your favorite sports teams/players"}
+            img={<TbShirtSport />}
             refetch={refetch}
           />
 
-          <h3>Hobbies</h3>
           <DetailDisplay
             detail={data.hobbies}
             label={"Hobbies"}
             fieldName={"hobbies"}
-            addBtnText={"Add your hobbies and interests"}
+            img={<GiSteampunkGoggles />}
             refetch={refetch}
           />
         </>
       )}
-    </>
+    </div>
   );
 }
 
