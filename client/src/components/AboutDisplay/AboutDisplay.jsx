@@ -62,10 +62,10 @@ function AboutDisplay({
             </p>
             <div className={styles.deleteActionsContainer}>
               {isLoading ? (
-                <p className={styles.deleteLoading}>
-                  Deleting
+                <>
+                  <p className={styles.deleteLoading}>Deleting</p>
                   <Spinner size={20} />
-                </p>
+                </>
               ) : (
                 <>
                   <button onClick={() => setShowDeleteModal(false)}>
