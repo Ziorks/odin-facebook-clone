@@ -17,8 +17,8 @@
 
 .displayContentContainer {
   display: flex;
-  gap: 0.5rem;
-  font-size: 0.8rem;
+  gap: 1rem;
+  font-size: 0.9rem;
 }
 
 .displayContentContainer > svg {
