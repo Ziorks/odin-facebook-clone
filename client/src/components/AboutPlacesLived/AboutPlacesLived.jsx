@@ -1,12 +1,17 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import AuthContext from "../../contexts/AuthContext";
+import {
+  IoMapOutline,
+  IoLocationOutline,
+  IoHomeOutline,
+} from "react-icons/io5";
+import { YEARS } from "../../utils/constants";
+import { capitalizeFirstLetters } from "../../utils/helperFunctions";
 import useDataFetch from "../../hooks/useDataFetch";
 import AboutForm from "../AboutForm";
+import FormInput from "../FormInput";
 import AboutDisplay from "../AboutDisplay";
-import { capitalizeFirstLetters } from "../../utils/helperFunctions";
-import { YEARS } from "../../utils/constants";
-// import styles from "./AboutPlacesLived.module.css";
+import styles from "./AboutPlacesLived.module.css";
 
 export function CityForm({
   handleClose,
@@ -46,42 +51,41 @@ export function CityForm({
       loadingMsg={loadingMsg}
       disableSave={!changesMade}
     >
-      <div>
-        <label htmlFor="name">City</label>
-        <input
+      <div className={styles.formContentContainer}>
+        <FormInput
           type="text"
-          name="name"
-          id="name"
-          value={name}
+          label={
+            isCurrentCity ? "Current city" : isHometown ? "Hometown" : "City"
+          }
           autoComplete="off"
+          required={true}
+          value={name}
           onChange={(e) => {
             setName(e.target.value);
             if (!changesMade) setChangesMade(true);
           }}
-          required
         />
+        {!(isCurrentCity || isHometown) && (
+          <div className={styles.selectInputContainer}>
+            <span>Year moved</span>
+            <FormInput
+              type="select"
+              value={yearMoved}
+              onChange={(e) => {
+                setYearMoved(+e.target.value || undefined);
+                if (!changesMade) setChangesMade(true);
+              }}
+            >
+              <option value={0}>Year</option>
+              {YEARS.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </FormInput>
+          </div>
+        )}
       </div>
-      {!(isCurrentCity || isHometown) && (
-        <div>
-          {<span>Year moved </span>}
-          <select
-            name="yearMoved"
-            id="yearMoved"
-            value={yearMoved}
-            onChange={(e) => {
-              setYearMoved(+e.target.value || undefined);
-              if (!changesMade) setChangesMade(true);
-            }}
-          >
-            <option value={0}>Year</option>
-            {YEARS.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
     </AboutForm>
   );
 }
@@ -92,12 +96,11 @@ function UniqueCityDisplay({ city, isCurrentCity, isHometown, refetch }) {
       {`ERROR: The 'isCurrentCity' and 'isHometown' props for the UniqueCityDisplay component can't both be true.`}
     </h1>;
   }
-  const { user } = useOutletContext();
-  const { auth } = useContext(AuthContext);
+  const { user, isCurrentUser } = useOutletContext();
   const [showForm, setShowForm] = useState(false);
 
-  const isCurrentUser = user.id === auth.user.id;
   const label = isCurrentCity ? "current city" : "hometown";
+  const img = isCurrentCity ? <IoLocationOutline /> : <IoHomeOutline />;
 
   const renderEditForm = (handleClose) => (
     <CityForm
@@ -125,14 +128,20 @@ function UniqueCityDisplay({ city, isCurrentCity, isHometown, refetch }) {
           onDelete={refetch}
           deleteUrl={`/users/${user.id}/city/${city.id}`}
           deleteErrMsg={`${label} delete error`}
-          deleteConfirmMsg={`Are you sure you want to delete '${city.name}' forever?`}
+          deleteConfirmMsg={`Are you sure you want to remove '${city.name}' from your profile?`}
           renderEditForm={renderEditForm}
         >
-          <p>{city.name}</p>
-          <p>{capitalizeFirstLetters(label)}</p>
+          <div className={styles.displayContentContainer}>
+            {img}
+            <div>
+              <p>{city.name}</p>
+              <p>{capitalizeFirstLetters(label)}</p>
+            </div>
+          </div>
         </AboutDisplay>
-      ) : isCurrentUser ? (
-        showForm ? (
+      ) : (
+        isCurrentUser &&
+        (showForm ? (
           <CityForm
             handleClose={handleClose}
             onSuccess={onSuccess}
@@ -140,37 +149,41 @@ function UniqueCityDisplay({ city, isCurrentCity, isHometown, refetch }) {
             isHometown={isHometown}
           />
         ) : (
-          <button onClick={() => setShowForm(true)}>Add your {label}</button>
-        )
-      ) : (
-        <p>No {label} to show</p>
+          <button className={styles.addBtn} onClick={() => setShowForm(true)}>
+            {img}
+            Add your {label}
+          </button>
+        ))
       )}
     </>
   );
 }
 
 function PlacesLivedDisplay({ cities, refetch }) {
-  const { user } = useOutletContext();
-  const { auth } = useContext(AuthContext);
+  const { user, isCurrentUser } = useOutletContext();
   const [showForm, setShowForm] = useState(false);
 
-  const isCurrentUser = user.id === auth.user.id;
   const handleClose = () => setShowForm(false);
   const onSuccess = () => {
     refetch();
     handleClose();
   };
+  const getRenderEditForm = (city) => {
+    return (handleClose) => (
+      <CityForm
+        onSuccess={() => {
+          refetch();
+          handleClose();
+        }}
+        handleClose={handleClose}
+        city={city}
+      />
+    );
+  };
 
   return (
     <>
-      {isCurrentUser &&
-        cities.length < 20 &&
-        (showForm ? (
-          <CityForm handleClose={handleClose} onSuccess={onSuccess} />
-        ) : (
-          <button onClick={() => setShowForm(true)}>Add a city</button>
-        ))}
-      {cities.length > 0 ? (
+      {cities.length > 0 && (
         <>
           {cities.map((city) => (
             <AboutDisplay
@@ -178,45 +191,47 @@ function PlacesLivedDisplay({ cities, refetch }) {
               onDelete={refetch}
               deleteUrl={`/users/${user.id}/city/${city.id}`}
               deleteErrMsg={"city delete error"}
-              deleteConfirmMsg={`Are you sure you want to delete '${city.name}' forever?`}
-              renderEditForm={(handleClose) => (
-                <CityForm
-                  onSuccess={() => {
-                    refetch();
-                    handleClose();
-                  }}
-                  handleClose={handleClose}
-                  city={city}
-                />
-              )}
+              deleteConfirmMsg={`Are you sure you want to remove '${city.name}' from your profile?`}
+              renderEditForm={getRenderEditForm(city)}
             >
-              <p>{city.name}</p>
-              {city.yearMoved && <p>Moved in {city.yearMoved}</p>}
+              <div className={styles.displayContentContainer}>
+                <IoMapOutline />
+                <div>
+                  <p>{city.name}</p>
+                  {city.yearMoved && <p>Moved in {city.yearMoved}</p>}
+                </div>
+              </div>
             </AboutDisplay>
           ))}
         </>
-      ) : (
-        <>{!isCurrentUser && <p>No cities to show</p>}</>
       )}
+      {isCurrentUser &&
+        cities.length < 20 &&
+        (showForm ? (
+          <CityForm handleClose={handleClose} onSuccess={onSuccess} />
+        ) : (
+          <button className={styles.addBtn} onClick={() => setShowForm(true)}>
+            <IoMapOutline />
+            Add a city
+          </button>
+        ))}
     </>
   );
 }
 
 function AboutPlacesLived() {
-  const { user } = useOutletContext();
+  const { user, isCurrentUser } = useOutletContext();
   const { data, isLoading, error, refetch } = useDataFetch(
     `/users/${user.id}/about_places_lived`,
   );
 
   return (
-    <>
+    <div className={styles.primaryContainer}>
       {isLoading && <p>Loading...</p>}
       {error && <p>An error occured while fetching data. Please try again</p>}
       {data && (
         <>
-          <h3>Places Lived</h3>
-          <PlacesLivedDisplay cities={data.cities} refetch={refetch} />
-
+          <h3>Places lived</h3>
           <UniqueCityDisplay
             city={data.currentCity}
             isCurrentCity={true}
@@ -228,9 +243,16 @@ function AboutPlacesLived() {
             isHometown={true}
             refetch={refetch}
           />
+
+          <PlacesLivedDisplay cities={data.cities} refetch={refetch} />
+
+          {!isCurrentUser &&
+            !data.currentCity &&
+            !data.hometown &&
+            !data.cities.length > 0 && <p>No cities to show</p>}
         </>
       )}
-    </>
+    </div>
   );
 }
 
