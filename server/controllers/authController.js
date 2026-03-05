@@ -1,6 +1,7 @@
 require("dotenv").config();
 const passport = require("passport");
 const db = require("../db/queries");
+const { DEFAULT_AVATAR_URL } = require("../utilities/constants");
 const {
   generateRefreshToken,
   getRefreshTokenCookieOptions,
@@ -97,18 +98,14 @@ const logoutPost = async (req, res) => {
 };
 
 const guestLoginGet = async (req, res, next) => {
-  const DEMO_ACCOUNT_USERNAME = "Demo_User";
-  const AVATAR_URL =
-    "https://res.cloudinary.com/dwf29bnr3/image/upload/v1754109878/messaging_app_profile_pics/icsll72wpxwcku6gb1by.jpg";
-
   try {
-    //TODO: fix this, getting by username is no good since username can be changed
-    let user = await db.getUserByUsername(DEMO_ACCOUNT_USERNAME);
+    let user = await db.getDemoUser();
     if (!user) {
-      user = await db.createUser(DEMO_ACCOUNT_USERNAME, undefined, undefined, {
+      user = await db.createUser("Demo_User", undefined, undefined, {
+        role: "DEMO",
         firstname: "Demo",
         lastname: "User",
-        avatar: AVATAR_URL,
+        avatar: DEFAULT_AVATAR_URL,
       });
     }
 

@@ -214,6 +214,12 @@ async function getAllUsers({ query = "", page, resultsPerPage } = {}) {
   return { results: users, count: count === undefined ? users.length : count };
 }
 
+async function getDemoUser() {
+  const user = await prisma.user.findFirst({ where: { role: "DEMO" } });
+
+  return user;
+}
+
 async function getValidRefreshTokensByUserId(userId) {
   const refreshToken = await prisma.refreshToken.findMany({
     where: {
@@ -822,10 +828,11 @@ async function createUser(
   username,
   hashedPassword,
   email,
-  { avatar, firstName, lastName } = {},
+  { avatar, firstName, lastName, role } = {},
 ) {
   const user = await prisma.user.create({
     data: {
+      role,
       username,
       password: hashedPassword,
       email,
@@ -1312,6 +1319,7 @@ module.exports = {
   getUserWithProfile,
   getUserSanitized,
   getAllUsers,
+  getDemoUser,
   getValidRefreshTokensByUserId,
   getFederatedCredentials,
   getFriendshipById,

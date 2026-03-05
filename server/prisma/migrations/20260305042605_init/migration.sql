@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "public"."UserRole" AS ENUM ('DEMO', 'USER');
+
+-- CreateEnum
 CREATE TYPE "public"."Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
 
 -- CreateEnum
@@ -13,6 +16,7 @@ CREATE TYPE "public"."LikeTargetType" AS ENUM ('POST', 'COMMENT');
 -- CreateTable
 CREATE TABLE "public"."User" (
     "id" SERIAL NOT NULL,
+    "role" "public"."UserRole" NOT NULL DEFAULT 'USER',
     "username" VARCHAR(128) NOT NULL,
     "password" TEXT,
     "email" TEXT,

@@ -2,6 +2,7 @@ const passport = require("passport");
 const bcrypt = require("bcryptjs");
 const db = require("../db/queries");
 const { validateRegister } = require("../utilities/validators");
+const { DEFAULT_AVATAR_URL } = require("../utilities/constants");
 const {
   generateRefreshToken,
   getRefreshTokenCookieOptions,
@@ -84,11 +85,8 @@ const registerPost = [
       }
 
       try {
-        const AVATAR_URL =
-          "https://res.cloudinary.com/dwf29bnr3/image/upload/v1754109878/messaging_app_profile_pics/icsll72wpxwcku6gb1by.jpg";
-
         const user = await db.createUser(username, hashedPassword, email, {
-          avatar: AVATAR_URL,
+          avatar: DEFAULT_AVATAR_URL,
         });
 
         const refreshToken = await generateRefreshToken(user.id);
