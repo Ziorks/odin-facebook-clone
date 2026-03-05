@@ -1,30 +1,29 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import useDataFetch from "../../hooks/useDataFetch";
+import { FaCity, FaUserGraduate } from "react-icons/fa6";
+import { IoLocationOutline, IoHomeOutline } from "react-icons/io5";
 import { CURRENT_YEAR } from "../../utils/constants";
-import AuthContext from "../../contexts/AuthContext";
+import useDataFetch from "../../hooks/useDataFetch";
 import AboutDisplay from "../AboutDisplay";
 import { CityForm } from "../AboutPlacesLived/AboutPlacesLived";
 import {
   WorkForm,
   SchoolForm,
 } from "../AboutWorkAndEducation/AboutWorkAndEducation";
-// import styles from "./AboutOverview.module.css";
+import styles from "./AboutOverview.module.css";
 
 function OverviewItemDisplay({
   children,
   item,
   label,
+  img,
   deleteUrl,
   deleteConfirmName,
   renderEditForm,
   refetch,
 }) {
-  const { user } = useOutletContext();
-  const { auth } = useContext(AuthContext);
+  const { isCurrentUser } = useOutletContext();
   const [showForm, setShowForm] = useState(false);
-
-  const isCurrentUser = user.id === auth.user.id;
 
   return (
     <>
@@ -33,32 +32,37 @@ function OverviewItemDisplay({
           onDelete={refetch}
           deleteUrl={deleteUrl}
           deleteErrMsg={`${label} delete error`}
-          deleteConfirmMsg={`Are you sure you want to delete '${deleteConfirmName}' forever?`}
+          deleteConfirmMsg={`Are you sure you want to remove '${deleteConfirmName}' from your profile?`}
           renderEditForm={renderEditForm}
         >
-          {children}
+          <div className={styles.displayContentContainer}>
+            {img}
+            <div>{children}</div>
+          </div>
         </AboutDisplay>
-      ) : isCurrentUser ? (
-        showForm ? (
+      ) : (
+        isCurrentUser &&
+        (showForm ? (
           renderEditForm(() => setShowForm(false))
         ) : (
-          <button onClick={() => setShowForm(true)}>Add your {label}</button>
-        )
-      ) : (
-        <p>No {label} to show</p>
+          <button className={styles.addBtn} onClick={() => setShowForm(true)}>
+            {img}
+            Add your {label}
+          </button>
+        ))
       )}
     </>
   );
 }
 
 function AboutOverview() {
-  const { user } = useOutletContext();
+  const { user, isCurrentUser } = useOutletContext();
   const { data, isLoading, error, refetch } = useDataFetch(
     `/users/${user.id}/about_overview`,
   );
 
   return (
-    <>
+    <div className={styles.primaryContainer}>
       {isLoading && <p>Loading...</p>}
       {error && <p>An error occured while fetching data. Please try again</p>}
       {data && (
@@ -67,6 +71,7 @@ function AboutOverview() {
           <OverviewItemDisplay
             item={data.work}
             label={"work"}
+            img={<FaCity />}
             deleteUrl={`/users/${user.id}/work/${data.work?.id}`}
             deleteConfirmName={data.work?.company}
             renderEditForm={(handleClose) => (
@@ -82,7 +87,7 @@ function AboutOverview() {
             refetch={refetch}
           >
             <p>
-              {`${data.work?.position ? `${data.work?.position}` : `Work${data.work?.currentJob ? "s" : "ed"}`} at`}
+              {`${data.work?.position ? `${data.work?.position}` : `Work${data.work?.currentJob ? "s" : "ed"}`} at `}
               {data.work?.company}
             </p>
             {data.work?.startYear && (
@@ -95,6 +100,7 @@ function AboutOverview() {
           <OverviewItemDisplay
             item={data.school}
             label={"school"}
+            img={<FaUserGraduate />}
             deleteUrl={`/users/${user.id}/school/${data.school?.id}`}
             deleteConfirmName={data.school?.name}
             renderEditForm={(handleClose) => (
@@ -127,6 +133,7 @@ function AboutOverview() {
           <OverviewItemDisplay
             item={data.hometown}
             label={"hometown"}
+            img={<IoHomeOutline />}
             deleteUrl={`/users/${user.id}/city/${data.hometown?.id}`}
             deleteConfirmName={data.hometown?.name}
             renderEditForm={(handleClose) => (
@@ -148,6 +155,7 @@ function AboutOverview() {
           <OverviewItemDisplay
             item={data.currentCity}
             label={"current city"}
+            img={<IoLocationOutline />}
             deleteUrl={`/users/${user.id}/city/${data.currentCity?.id}`}
             deleteConfirmName={data.currentCity?.name}
             renderEditForm={(handleClose) => (
@@ -165,9 +173,14 @@ function AboutOverview() {
           >
             <p>{"Lives in " + data.currentCity?.name}</p>
           </OverviewItemDisplay>
+          {!isCurrentUser &&
+            !data.work &&
+            !data.school &&
+            !data.hometown &&
+            !data.currentCity && <p>No overview to show</p>}
         </>
       )}
-    </>
+    </div>
   );
 }
 
