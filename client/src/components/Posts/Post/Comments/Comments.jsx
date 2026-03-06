@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef } from "react";
 import PostContext from "../../../../contexts/PostContext";
 import useIntersection from "../../../../hooks/useIntersection";
+import NoCommentsImage from "../../../../assets/no_comments.svg";
 import Comment from "../Comment";
 import styles from "./Comments.module.css";
 
@@ -56,7 +57,11 @@ function Comments({ setCommentListRef, idWhitelist }) {
             })}
           </ol>
         ) : (
-          <p>No comments yet</p>
+          <div className={styles.noCommentsMsgContainer}>
+            <img src={NoCommentsImage} />
+            <p>No comments yet</p>
+            <p>Be the first to comment.</p>
+          </div>
         ))}
       {isLoading && <p>Loading comments...</p>}
       {error && (

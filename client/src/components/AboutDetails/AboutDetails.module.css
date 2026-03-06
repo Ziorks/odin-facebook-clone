@@ -29,6 +29,7 @@
 
 .displayContentContainer > p {
   align-self: center;
+  white-space: pre-wrap;
 }
 
 .addBtn {

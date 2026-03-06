@@ -43,7 +43,7 @@ const postOptions = {
     author: userOptions,
     wall: userOptions,
     _count: {
-      select: { comments: { where: { parentId: null } } },
+      select: { comments: true },
     },
   },
   omit: {
@@ -146,6 +146,11 @@ async function getUserByOauthToken(tokenId) {
 }
 
 async function getUserWithProfile(userId) {
+  const friendshipWhere = {
+    OR: [{ user1Id: userId }, { user2Id: userId }],
+    accepted: true,
+  };
+
   const user = await prisma.user.findUnique({
     where: {
       id: userId,
@@ -161,8 +166,20 @@ async function getUserWithProfile(userId) {
           details: true,
         },
       },
+      _count: {
+        select: {
+          recievedFriendships: { where: friendshipWhere },
+          sentFrienships: { where: friendshipWhere },
+        },
+      },
     },
   });
+
+  if (user) {
+    user._count = {
+      friends: user._count.recievedFriendships + user._count.sentFrienships,
+    };
+  }
 
   return user;
 }

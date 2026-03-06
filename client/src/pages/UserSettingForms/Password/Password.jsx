@@ -38,7 +38,7 @@ function Password() {
 
   return (
     <Modal
-      heading={`${auth.user.password ? "Update" : "Add a"} Password`}
+      heading={`${auth.user.password ? "Update" : "Add a"} password`}
       handleClose={handleClose}
     >
       <div style={{ padding: "1rem" }}>

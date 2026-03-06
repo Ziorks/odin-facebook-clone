@@ -1,4 +1,5 @@
 .primaryLayout {
+  min-height: 100vh;
   padding: 2.5rem;
   text-align: center;
   background-color: var(--color-gray-200);
@@ -33,12 +34,23 @@
   font-weight: 500;
 }
 
-.actionsContainer {
+.loginContainer,
+.signupContainer {
   margin: 3rem 0;
-  padding: 1rem;
   background-color: var(--color-gray-100);
   border-radius: 8px;
   box-shadow: 0 0 12px 0 rgba(0, 0, 0, 0.25);
+}
+
+.loginContainer,
+.signupContainer > .form {
+  padding: 1rem;
+}
+
+.signupContainer > h2 {
+  text-align: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-gray-400);
 }
 
 .divider {
@@ -65,6 +77,14 @@
 }
 
 .form > * {
+  margin-bottom: 0.7rem;
+}
+
+.formInputsContainer {
+  padding: 1rem;
+}
+
+.formInputsContainer > * {
   margin-bottom: 0.7rem;
 }
 
@@ -118,7 +138,7 @@
 }
 
 .newAccountBtn,
-.signUpBtn {
+.signupBtn {
   display: block;
   width: min(225px, 100%);
   margin: 0 auto;
@@ -132,7 +152,7 @@
 }
 
 .newAccountBtn:hover,
-.signUpBtn:hover {
+.signupBtn:hover {
   background-color: var(--color-accent-300);
 }
 
@@ -141,7 +161,7 @@
   background-color: transparent;
   color: var(--color-primary-200);
   font-size: 1rem;
-  margin: 0.8rem 0;
+  margin-bottom: 1rem;
 }
 
 /* TODO: make errors better 
@@ -157,7 +177,6 @@
     align-items: center;
     justify-content: space-between;
     gap: 2rem;
-    min-height: 85vh;
   }
 
   .hero {
@@ -182,7 +201,8 @@
     font-size: 1.4rem;
   }
 
-  .actionsContainer {
+  .loginContainer,
+  .signupContainer {
     min-width: 350px;
   }
 }
@@ -193,7 +213,8 @@
     gap: 8rem;
   }
 
-  .actionsContainer {
+  .loginContainer,
+  .signupContainer {
     min-width: 450px;
   }
 }

@@ -292,25 +292,6 @@ function PostContent({ handleNCommentsBtnClick, handleCommentBtnClick }) {
   );
 }
 
-//TODO:This maybe useful later
-//get a comments array with pending comments removed
-
-// const getOnlyPostedComments = (comments) => {
-//   return comments.reduce((prev, comment) => {
-//     //Not posted? -> remove it
-//     if (!Object.hasOwn(comment, "id")) return prev;
-
-//     //No replies? -> no need to remove pending comments
-//     if (!Object.hasOwn(comment, "replies")) return [...prev, comment];
-
-//     //Posted & has replies -> recursively remove pending replies
-//     return [
-//       ...prev,
-//       { ...comment, replies: getOnlyPostedComments(comment.replies) },
-//     ];
-//   }, []);
-// };
-
 function PostModal() {
   const { auth } = useContext(AuthContext);
   const {
@@ -502,14 +483,15 @@ function Post({ post: postObj, removePost, disableComments }) {
           handleNCommentsBtnClick={toggleDetailsModal}
           handleCommentBtnClick={handleCommentBtnClick}
         />
-        {postObj.topComment && post._count.comments > 1 && (
-          <button
-            className={styles.viewMoreCommentsBtn}
-            onClick={toggleDetailsModal}
-          >
-            View more comments
-          </button>
-        )}
+        {postObj.topComment &&
+          post._count.comments > postObj.topComment._count.replies + 1 && (
+            <button
+              className={styles.viewMoreCommentsBtn}
+              onClick={toggleDetailsModal}
+            >
+              View more comments
+            </button>
+          )}
         <Comments idWhitelist={commentIdsWhitelist} />
         {!disableComments && (
           <CommentForm

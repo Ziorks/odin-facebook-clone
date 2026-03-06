@@ -38,7 +38,7 @@ function Avatar() {
   formData.append("avatar", avatar.file);
 
   return (
-    <Modal heading={"Update Avatar"} handleClose={handleClose}>
+    <Modal heading={"Update avatar"} handleClose={handleClose}>
       <div style={{ padding: "1rem" }}>
         <AboutForm
           method={"PUT"}

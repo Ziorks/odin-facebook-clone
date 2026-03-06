@@ -17,7 +17,6 @@
 
 .displayContentContainer {
   display: flex;
-  align-items: center;
   gap: 0.5rem;
   font-size: 0.8rem;
 }
@@ -31,6 +30,10 @@
   color: #fff;
 }
 
+.displayContentContainer > div {
+  align-self: center;
+}
+
 .displayContentContainer > div > *:first-child {
   font-size: 1rem;
   font-weight: 500;
@@ -38,6 +41,10 @@
 
 .displayContentContainer > div > *:not(:last-child) {
   margin-bottom: 0.2rem;
+}
+
+.descriptionDisplay {
+  white-space: pre-wrap;
 }
 
 .addBtn {

@@ -17,8 +17,12 @@
   margin-bottom: 2rem;
 }
 
-.userInfo > p {
+.usernameAndnFriends {
   color: var(--color-gray-700);
+  text-align: center;
+}
+
+.usernameAndnFriends > p:first-child {
   font-size: 2rem;
   font-weight: 700;
 }
@@ -104,7 +108,8 @@
     padding-top: 2rem;
   }
 
-  .userInfo > p {
+  .usernameAndnFriends {
+    text-align: left;
     flex: 1;
   }
 }

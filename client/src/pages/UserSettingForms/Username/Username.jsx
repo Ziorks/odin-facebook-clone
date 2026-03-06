@@ -18,7 +18,7 @@ function Username() {
   };
 
   return (
-    <Modal heading={"Update Username"} handleClose={handleClose}>
+    <Modal heading={"Update username"} handleClose={handleClose}>
       <div style={{ padding: "1rem" }}>
         <AboutForm
           method={"PUT"}

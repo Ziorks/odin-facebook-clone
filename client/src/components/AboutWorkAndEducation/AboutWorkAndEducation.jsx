@@ -187,7 +187,11 @@ function WorksDisplay({ works, refetch }) {
                       {work.startYear} - {work.endYear || "Present"}
                     </p>
                   )}
-                  {work.description && <p>{work.description}</p>}
+                  {work.description && (
+                    <p className={styles.descriptionDisplay}>
+                      {work.description}
+                    </p>
+                  )}
                 </div>
               </div>
             </AboutDisplay>
@@ -378,7 +382,11 @@ function SchoolsDisplay({ schools, refetch }) {
                         }`}
                     </p>
                   )}
-                  {school.description && <p>{school.description}</p>}
+                  {school.description && (
+                    <p className={styles.descriptionDisplay}>
+                      {school.description}
+                    </p>
+                  )}
                 </div>
               </div>
             </AboutDisplay>

@@ -6,7 +6,7 @@ import {
   BsPersonFillCheck,
   BsPersonFillX,
 } from "react-icons/bs";
-import { FaPlus, FaPencilAlt } from "react-icons/fa";
+import { FaPencilAlt } from "react-icons/fa";
 import useFriendshipActions from "../../hooks/useFriendshipActions";
 import useDataFetch from "../../hooks/useDataFetch";
 import AuthContext from "../../contexts/AuthContext";
@@ -28,12 +28,10 @@ function Friendship({ friendship, userId, setData }) {
     );
   };
 
-  const handleRemove = () => {
-    removeFriendship("Are you sure you want to remove this friend?").then(
-      (isRemoved) => {
-        if (isRemoved) setData((prev) => ({ ...prev, friendship: null }));
-      },
-    );
+  const handleRemove = (confirmMsg) => {
+    removeFriendship(confirmMsg).then((isRemoved) => {
+      if (isRemoved) setData((prev) => ({ ...prev, friendship: null }));
+    });
   };
 
   return (
@@ -41,7 +39,12 @@ function Friendship({ friendship, userId, setData }) {
       <div className={styles.friendshipActions}>
         {friendship ? (
           friendship.accepted ? (
-            <button onClick={handleRemove} disabled={isLoading}>
+            <button
+              onClick={() =>
+                handleRemove("Are you sure you want to remove this friend?")
+              }
+              disabled={isLoading}
+            >
               <BsPersonFillDash />
               Remove Friend
             </button>
@@ -55,13 +58,27 @@ function Friendship({ friendship, userId, setData }) {
                 <BsPersonFillCheck />
                 Accept Request
               </button>
-              <button onClick={handleRemove} disabled={isLoading}>
+              <button
+                onClick={() =>
+                  handleRemove(
+                    "Are you sure you want to decline this friend request?",
+                  )
+                }
+                disabled={isLoading}
+              >
                 <BsPersonFillX />
-                Deny Request
+                Decline Request
               </button>
             </>
           ) : (
-            <button onClick={handleRemove} disabled={isLoading}>
+            <button
+              onClick={() =>
+                handleRemove(
+                  "Are you sure you want to cancel your friend request?",
+                )
+              }
+              disabled={isLoading}
+            >
               <BsPersonFillX />
               Cancel Request
             </button>
@@ -109,14 +126,17 @@ function UserProfileLayout() {
           <div className={styles.primaryContainer}>
             <div className={styles.userInfo}>
               <ProfilePic src={data.user.profile.avatar} size={150} />
-              <p>{data.user.username}</p>
-              {/* TODO: show nFriends? */}
+              <div className={styles.usernameAndnFriends}>
+                <p>{data.user.username}</p>
+                {data.user._count.friends > 0 && (
+                  <p>
+                    {data.user._count.friends} friend
+                    {data.user._count.friends > 1 && "s"}
+                  </p>
+                )}
+              </div>
               {isCurrentUser ? (
                 <div className={styles.ownerActions}>
-                  <button type="button">
-                    <FaPlus />
-                    Create a post
-                  </button>
                   <Link to={"about"}>
                     <FaPencilAlt />
                     Edit profile

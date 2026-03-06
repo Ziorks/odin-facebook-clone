@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import likeGraphic from "../../../../assets/like.svg";
 import useDataFetchPaginated from "../../../../hooks/useDataFetchPaginated";
 import useIntersection from "../../../../hooks/useIntersection";
 import UserThumbnail from "../../../UserThumbnail";
 import Modal from "../../../Modal";
-import likeGraphic from "../../../../assets/like.svg";
 import styles from "./Likes.module.css";
 
 function LikesModal({ handleClose, myLike, useLikes }) {
@@ -42,8 +42,7 @@ function LikesModal({ handleClose, myLike, useLikes }) {
   }, [isVisible]);
 
   return (
-    <Modal handleClose={handleClose}>
-      <h2>Likes</h2>
+    <Modal heading="Likes" handleClose={handleClose}>
       {likes && (
         <ul className={styles.modalList}>
           {myLike && (

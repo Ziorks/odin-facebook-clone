@@ -20,9 +20,6 @@
   border-radius: 10px;
   background-color: var(--color-gray-100);
   box-shadow: 0 0 12px -5px var(--color-gray-600);
-
-  /*TODO: test overflow of things before I completely remove this*/
-  /* overflow: scroll; */
 }
 
 .close {

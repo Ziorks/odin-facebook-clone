@@ -12,6 +12,7 @@ function Feed() {
   const {
     data: posts,
     setData: setPosts,
+    hasMore,
     isLoading,
     error,
     fetchNext,
@@ -48,17 +49,21 @@ function Feed() {
           {auth.user.profile.firstName || auth.user.username}?
         </button>
       </div>
-      {posts &&
-        (posts.length > 0 ? (
-          <Posts
-            posts={posts}
-            removePost={removePost}
-            disableComments={true}
-            fetchNext={fetchNext}
-          />
-        ) : (
-          <p>There are no posts in your feed</p>
-        ))}
+      {posts && (
+        <>
+          {posts.length > 0 && (
+            <Posts
+              posts={posts}
+              removePost={removePost}
+              disableComments={true}
+              fetchNext={fetchNext}
+            />
+          )}
+          {!hasMore && (
+            <p className={styles.endMsg}>You've reached the end of your feed</p>
+          )}
+        </>
+      )}
       {isLoading && <p>Loading...</p>}
       {error && (
         <p>

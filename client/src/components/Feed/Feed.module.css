@@ -4,16 +4,16 @@
   max-width: 700px;
 }
 
+.primaryContainer > *:not(:last-child) {
+  margin-bottom: 1rem;
+}
+
 .postCreationContainer {
   display: flex;
   gap: 0.5rem;
   background-color: var(--color-gray-100);
   padding: 1rem 1.5rem;
   box-shadow: 0 3px 6px -5px var(--color-gray-700);
-
-  @media (min-width: 700px) {
-    border-radius: 10px;
-  }
 }
 
 .postCreationContainer > button {
@@ -32,4 +32,19 @@
 
 .postCreationContainer > button:hover {
   background-color: rgb(from var(--color-gray-300) r g b / 40%);
+}
+
+.endMsg {
+  color: var(--color-gray-700);
+  text-align: center;
+  background-color: var(--color-gray-100);
+  padding: 1rem 1.5rem;
+  box-shadow: 0 3px 6px -5px var(--color-gray-700);
+}
+
+@media (min-width: 700px) {
+  .postCreationContainer,
+  .endMsg {
+    border-radius: 10px;
+  }
 }

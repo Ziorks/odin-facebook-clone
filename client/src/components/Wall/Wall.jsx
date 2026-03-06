@@ -14,6 +14,7 @@ function Wall() {
   const {
     data: posts,
     setData: setPosts,
+    hasMore,
     isLoading,
     error,
     fetchNext,
@@ -49,15 +50,23 @@ function Wall() {
             : `Write something to ${user.profile.firstName || user.username}`}
         </button>
       </div>
-      {posts &&
-        (posts.length > 0 ? (
-          <Posts posts={posts} removePost={removePost} fetchNext={fetchNext} />
-        ) : (
-          <p>
-            There are no posts on
-            {isCurrentUser ? " your" : ` ${user.username}'s`} wall
-          </p>
-        ))}
+      {posts && (
+        <>
+          {posts.length > 0 && (
+            <Posts
+              posts={posts}
+              removePost={removePost}
+              fetchNext={fetchNext}
+            />
+          )}
+          {!hasMore && (
+            <p className={styles.endMsg}>
+              You've reached the end of{" "}
+              {isCurrentUser ? "your" : `${user.username}'s`} wall
+            </p>
+          )}
+        </>
+      )}
       {isLoading && <p>Loading...</p>}
       {error && (
         <p>

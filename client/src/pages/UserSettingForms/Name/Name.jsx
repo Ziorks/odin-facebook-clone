@@ -26,7 +26,7 @@ function Name() {
   const inputGap = "1rem";
 
   return (
-    <Modal heading={"Update Name"} handleClose={handleClose}>
+    <Modal heading={"Update name"} handleClose={handleClose}>
       <div style={{ padding: "1rem" }}>
         <AboutForm
           method={"PUT"}

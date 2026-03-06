@@ -55,6 +55,7 @@ function SignUpForm() {
           ))}
         </ul>
       )}
+      <h2>Create a new account</h2>
       <form onSubmit={handleSubmit} className={styles.form}>
         <FormInput
           type="text"
@@ -91,7 +92,7 @@ function SignUpForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className={styles.signUpBtn}
+            className={styles.signupBtn}
           >
             Sign Up
           </button>
@@ -254,44 +255,42 @@ function Login() {
           Waste your time and get addicted to endless content on Headlog.
         </h2>
       </div>
-      <div className={styles.actionsContainer}>
-        {showSignUp ? (
-          <>
-            <SignUpForm />
-            <button
-              type="button"
-              onClick={toggleForm}
-              className={styles.toLoginFormBtn}
-            >
-              Already have an account?
-            </button>
-          </>
-        ) : (
-          <>
-            <LoginForm />
-            <div className={styles.divider}>
-              <span>Or continue with</span>
+      {showSignUp ? (
+        <div className={styles.signupContainer}>
+          <SignUpForm />
+          <button
+            type="button"
+            onClick={toggleForm}
+            className={styles.toLoginFormBtn}
+          >
+            Already have an account?
+          </button>
+        </div>
+      ) : (
+        <div className={styles.loginContainer}>
+          <LoginForm />
+          <div className={styles.divider}>
+            <span>Or continue with</span>
+          </div>
+          <div className={styles.alternateLoginsContainer}>
+            <div className={styles.oauthContainer}>
+              <GithubAuth />
+              <GoogleAuth />
             </div>
-            <div className={styles.alternateLoginsContainer}>
-              <div className={styles.oauthContainer}>
-                <GithubAuth />
-                <GoogleAuth />
-              </div>
-              <div className={styles.demoContainer}>
-                <DemoLogin />
-              </div>
+            <div className={styles.demoContainer}>
+              <DemoLogin />
             </div>
-            <div className={styles.divider} />
-            <button
-              type="button"
-              onClick={toggleForm}
-              className={styles.newAccountBtn}
-            >
-              Create new account
-            </button>
-          </>
-        )}
-      </div>
+          </div>
+          <div className={styles.divider} />
+          <button
+            type="button"
+            onClick={toggleForm}
+            className={styles.newAccountBtn}
+          >
+            Create new account
+          </button>
+        </div>
+      )}
     </div>
   );
 }

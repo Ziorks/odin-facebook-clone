@@ -2,6 +2,31 @@
   list-style: none;
 }
 
+.commentsList:not(:last-child) {
+  margin-bottom: 1rem;
+}
+
 .commentsList > li:not(:last-child) {
   margin-bottom: 0.4rem;
+}
+
+.noCommentsMsgContainer {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.noCommentsMsgContainer > img {
+  width: 100px;
+  margin-bottom: 1rem;
+}
+
+.noCommentsMsgContainer > p {
+  color: var(--color-gray-400);
+  font-size: 1rem;
+}
+
+.noCommentsMsgContainer > p:nth-child(2) {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
 }

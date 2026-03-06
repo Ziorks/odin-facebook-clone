@@ -19,7 +19,7 @@ function Email() {
 
   return (
     <Modal
-      heading={`${auth.user.email ? "Update" : "Add an"} Email`}
+      heading={`${auth.user.email ? "Update" : "Add an"} email`}
       handleClose={handleClose}
     >
       <div style={{ padding: "1rem" }}>
