@@ -67,7 +67,7 @@ function Feed() {
       )}
       <LoadingAndError
         isLoading={isLoading}
-        error={!error}
+        error={error}
         onTryAgain={fetchNext}
       />
     </div>
