@@ -204,7 +204,7 @@
 }
 
 .postModalContainer > div:first-child {
-  overflow: scroll;
+  overflow-y: auto;
   flex: 1;
   padding-bottom: 0;
 }
