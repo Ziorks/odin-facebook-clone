@@ -1,9 +1,9 @@
-// import styles from "./Oauth.module.css";
 import { useEffect, useContext, useState, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../api";
 import AuthContext from "../../contexts/AuthContext";
 import LoadingScreen from "../../components/LoadingScreen";
+import styles from "./Oauth.module.css";
 
 function Oauth() {
   const [searchParams] = useSearchParams();
@@ -41,10 +41,10 @@ function Oauth() {
   return (
     <>
       {error ? (
-        <p>
-          OAuth login failed. Check console for details. Click here to go{" "}
-          <Link to={"/"}>back</Link>.
-        </p>
+        <div className={styles.error}>
+          <p>OAuth login failed. Check console for details.</p>
+          <Link to={"/"}>Go back</Link>
+        </div>
       ) : (
         <LoadingScreen />
       )}

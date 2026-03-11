@@ -1,0 +1,26 @@
+.error {
+  padding: 2rem 1rem;
+  min-height: 100vh;
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-600);
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.error > p {
+  margin-bottom: 1rem;
+}
+
+.error > a {
+  display: inline-block;
+  padding: 0.8rem 2.5rem;
+  border-radius: 10px;
+  background-color: var(--color-primary-300);
+  color: #fff;
+  font-weight: 600;
+}
+
+.error > a:hover,
+.error > a:focus {
+  background-color: var(--color-primary-200);
+}
