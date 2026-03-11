@@ -14,6 +14,7 @@ import useDataFetch from "../../hooks/useDataFetch";
 import AboutForm from "../AboutForm";
 import FormInput from "../FormInput";
 import AboutDisplay from "../AboutDisplay";
+import LoadingAndError from "../LoadingAndError";
 import styles from "./AboutDetails.module.css";
 
 function DetailForm({ handleClose, onSuccess, detail, label, fieldName }) {
@@ -112,8 +113,11 @@ function AboutDetails() {
 
   return (
     <div className={styles.primaryContainer}>
-      {isLoading && <p>Loading...</p>}
-      {error && <p>An error occured while fetching data. Please try again</p>}
+      <LoadingAndError
+        isLoading={isLoading}
+        error={error}
+        onTryAgain={refetch}
+      />
       {data && (
         <>
           <DetailDisplay

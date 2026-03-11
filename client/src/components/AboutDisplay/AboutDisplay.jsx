@@ -51,11 +51,9 @@ function AboutDisplay({
           handleClose={() => setShowDeleteModal(false)}
         >
           <div className={styles.deleteModalContentContainer}>
-            {error && (
-              <p className={styles.deleteError}>
-                An error occured. Please try again.
-              </p>
-            )}
+            <p className={styles.deleteError} aria-live="polite">
+              {error && "An error occured. Please try again"}
+            </p>
             <p>
               {deleteConfirmMsg ||
                 "Are you sure you want to remove this item from your profile?"}

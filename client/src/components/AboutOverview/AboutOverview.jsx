@@ -4,6 +4,7 @@ import { FaCity, FaUserGraduate } from "react-icons/fa6";
 import { IoLocationOutline, IoHomeOutline } from "react-icons/io5";
 import { CURRENT_YEAR } from "../../utils/constants";
 import useDataFetch from "../../hooks/useDataFetch";
+import LoadingAndError from "../LoadingAndError";
 import AboutDisplay from "../AboutDisplay";
 import { CityForm } from "../AboutPlacesLived/AboutPlacesLived";
 import {
@@ -63,8 +64,11 @@ function AboutOverview() {
 
   return (
     <div className={styles.primaryContainer}>
-      {isLoading && <p>Loading...</p>}
-      {error && <p>An error occured while fetching data. Please try again</p>}
+      <LoadingAndError
+        isLoading={isLoading}
+        error={error}
+        onTryAgain={refetch}
+      />
       {data && (
         <>
           <h3>About Overview</h3>

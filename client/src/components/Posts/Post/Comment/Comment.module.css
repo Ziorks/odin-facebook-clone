@@ -3,6 +3,7 @@
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.5rem;
+  margin-bottom: 0.6rem;
 }
 
 .commentContainer > div:first-child {
@@ -74,6 +75,10 @@
   text-decoration: underline;
 }
 
+.error {
+  color: var(--color-error);
+}
+
 .replyFormContainer {
   position: relative;
   display: grid;
@@ -83,7 +88,7 @@
 
 .repliesContainer,
 .replyFormContainer {
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.6rem;
 }
 
 .replyList {
@@ -113,7 +118,7 @@
 }
 
 .replyFetchError {
-  color: red;
+  color: var(--color-error);
 }
 
 .replyFetchError > button {
@@ -153,7 +158,19 @@
   border-bottom-left-radius: 50%;
 }
 
-.editFormContainer > button {
+.errorsList {
+  margin: 1rem 0;
+  list-style: disc inside;
+  color: var(--color-error);
+  text-align: left;
+}
+
+.loadingContainer {
+  margin-top: 0.5rem;
+  margin-left: 0.5rem;
+}
+
+.editCancelBtn {
   padding: 0.4rem;
   border: none;
   background-color: transparent;
@@ -162,6 +179,54 @@
   font-weight: 600;
 }
 
-.editFormContainer > button:hover {
+.editCancelBtn:hover {
   text-decoration: underline;
+}
+
+.deleteModalContainer {
+  text-align: center;
+  padding: 1rem;
+  color: var(--color-gray-700);
+}
+
+.deleteModalActionsContainer {
+  display: flex;
+  justify-content: right;
+  gap: 1rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.deleteModalActionsContainer > button {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 700;
+  max-width: 180px;
+  padding: 0.8rem;
+  border-radius: 10px;
+  border: none;
+}
+
+.deleteModalActionsContainer > button:first-child {
+  background-color: transparent;
+  color: var(--color-primary-200);
+}
+
+.deleteModalActionsContainer > button:first-child:hover {
+  background-color: var(--color-gray-200);
+}
+
+.deleteModalActionsContainer > button:last-child {
+  background-color: var(--color-primary-200);
+  color: #fff;
+}
+
+.deleteModalActionsContainer > button:last-child:hover {
+  background-color: var(--color-primary-300);
+}
+
+.notificationsContainer {
+  display: flex;
+  justify-content: right;
+  color: var(--color-error);
 }

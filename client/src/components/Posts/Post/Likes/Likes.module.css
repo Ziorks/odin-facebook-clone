@@ -36,14 +36,37 @@
   bottom: 100%;
 }
 
+.modalContentContainer {
+  padding: 1rem;
+}
+
 .modalList,
 .sampleList {
   list-style: none;
 }
 
 .modalList {
-  padding: 1rem;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
   gap: 1rem;
+}
+
+.notificationsContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  color: var(--color-error);
+}
+
+.notificationsContainer button {
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-gray-500);
+  background-color: unset;
+}
+
+.notificationsContainer button:hover,
+.notificationsContainer button:focus {
+  text-decoration: underline;
 }

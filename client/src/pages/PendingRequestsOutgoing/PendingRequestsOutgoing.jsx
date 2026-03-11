@@ -1,9 +1,10 @@
 import useDataFetch from "../../hooks/useDataFetch";
 import FriendRequestDisplay from "../../components/FriendRequestDisplay";
+import LoadingAndError from "../../components/LoadingAndError";
 import styles from "./PendingRequestsOutgoing.module.css";
 
 function PendingRequestsOutgoing() {
-  const { data, error, isLoading } = useDataFetch(
+  const { data, error, isLoading, refetch } = useDataFetch(
     "/friendship/pending/outgoing",
   );
 
@@ -11,8 +12,11 @@ function PendingRequestsOutgoing() {
 
   return (
     <div className={styles.primaryContainer}>
-      {isLoading && <p>Loading...</p>}
-      {error && <p>An error occured</p>}
+      <LoadingAndError
+        isLoading={isLoading}
+        error={error}
+        onTryAgain={refetch}
+      />
       {data &&
         (nRequests > 0 ? (
           <>

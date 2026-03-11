@@ -51,13 +51,14 @@ function AboutForm({
 
   return (
     <>
-      {errors && (
-        <ul>
-          {errors.map((error, i) => (
+      <div className={styles.notificationsContainer}>
+        <p aria-live="polite">{isSaved && "Saved!"}</p>
+        <ul aria-live="polite">
+          {errors?.map((error, i) => (
             <li key={i}>{error.msg}</li>
           ))}
         </ul>
-      )}
+      </div>
       <form onSubmit={handleSubmit}>
         {children}
         <div className={styles.actionsContainer}>
@@ -68,7 +69,6 @@ function AboutForm({
             {isLoading ? loadingMsg || <Spinner size={16} /> : "Save"}
           </button>
         </div>
-        {isSaved && <p className={styles.savedMsg}>Saved!</p>}
       </form>
     </>
   );

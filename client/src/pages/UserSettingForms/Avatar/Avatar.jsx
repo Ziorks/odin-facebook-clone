@@ -39,7 +39,7 @@ function Avatar() {
 
   return (
     <Modal heading={"Update avatar"} handleClose={handleClose}>
-      <div style={{ padding: "1rem" }}>
+      <div className={styles.modalContentContainer}>
         <AboutForm
           method={"PUT"}
           url={`/users/${auth.user.id}`}

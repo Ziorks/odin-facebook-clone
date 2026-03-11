@@ -24,7 +24,7 @@ function useFriendshipActions(friendshipId) {
         return true;
       })
       .catch((err) => {
-        console.error(err);
+        console.error("remove friend error", err);
         setError(
           "An error occured while removing friendship. Please try again.",
         );
@@ -36,11 +36,12 @@ function useFriendshipActions(friendshipId) {
   const createRequest = (userId) => {
     setIsLoading(true);
     setError(null);
+
     return api
       .post("/friendship/request", { userId })
       .then((resp) => resp.data?.friendship)
       .catch((err) => {
-        console.error(err);
+        console.error("add friend error", err);
         setError(
           "An error occured while creating friend request. Please try again.",
         );
@@ -48,9 +49,11 @@ function useFriendshipActions(friendshipId) {
       })
       .finally(() => setIsLoading(false));
   };
+
   const acceptRequest = () => {
     setIsLoading(true);
     setError(null);
+
     return api
       .put(`/friendship/${friendshipId}/accept`)
       .then(async (resp) => {
@@ -58,7 +61,7 @@ function useFriendshipActions(friendshipId) {
         return resp.data?.friendship;
       })
       .catch((err) => {
-        console.error(err);
+        console.error("accept friend error", err);
         setError(
           "An error occured while accepting friend request. Please try again.",
         );

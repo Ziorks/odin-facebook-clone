@@ -4,6 +4,7 @@ import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import ProfilePicLink from "../ProfilePicLink";
 import PostCreationModal from "../PostCreationModal";
 import Posts from "../Posts";
+import LoadingAndError from "../LoadingAndError";
 import styles from "./Feed.module.css";
 
 function Feed() {
@@ -64,12 +65,11 @@ function Feed() {
           )}
         </>
       )}
-      {isLoading && <p>Loading...</p>}
-      {error && (
-        <p>
-          An error occured <button onClick={fetchNext}>Try again</button>
-        </p>
-      )}
+      <LoadingAndError
+        isLoading={isLoading}
+        error={!error}
+        onTryAgain={fetchNext}
+      />
     </div>
   );
 }

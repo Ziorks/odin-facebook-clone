@@ -11,6 +11,8 @@ import useFriendshipActions from "../../hooks/useFriendshipActions";
 import useDataFetch from "../../hooks/useDataFetch";
 import AuthContext from "../../contexts/AuthContext";
 import ProfilePic from "../../components/ProfilePic";
+import Spinner from "../../components/Spinner";
+import LoadingAndError from "../../components/LoadingAndError";
 import styles from "./UserProfileLayout.module.css";
 
 function Friendship({ friendship, userId, setData }) {
@@ -35,7 +37,7 @@ function Friendship({ friendship, userId, setData }) {
   };
 
   return (
-    <>
+    <div>
       <div className={styles.friendshipActions}>
         {friendship ? (
           friendship.accepted ? (
@@ -45,7 +47,7 @@ function Friendship({ friendship, userId, setData }) {
               }
               disabled={isLoading}
             >
-              <BsPersonFillDash />
+              {isLoading ? <Spinner size={16} /> : <BsPersonFillDash />}
               Remove Friend
             </button>
           ) : friendship.user1Id === userId ? (
@@ -55,7 +57,7 @@ function Friendship({ friendship, userId, setData }) {
                 onClick={handleAccept}
                 disabled={isLoading}
               >
-                <BsPersonFillCheck />
+                {isLoading ? <Spinner size={16} /> : <BsPersonFillCheck />}
                 Accept Request
               </button>
               <button
@@ -66,7 +68,7 @@ function Friendship({ friendship, userId, setData }) {
                 }
                 disabled={isLoading}
               >
-                <BsPersonFillX />
+                {isLoading ? <Spinner size={16} /> : <BsPersonFillX />}
                 Decline Request
               </button>
             </>
@@ -79,7 +81,7 @@ function Friendship({ friendship, userId, setData }) {
               }
               disabled={isLoading}
             >
-              <BsPersonFillX />
+              {isLoading ? <Spinner size={16} /> : <BsPersonFillX />}
               Cancel Request
             </button>
           )
@@ -89,14 +91,15 @@ function Friendship({ friendship, userId, setData }) {
             onClick={handleAdd}
             disabled={isLoading}
           >
-            <BsPersonFillAdd />
+            {isLoading ? <Spinner size={16} /> : <BsPersonFillAdd />}
             Add Friend
           </button>
         )}
       </div>
-      {isLoading && <span>Proccessing...</span>}
-      {error && <span>{error}</span>}
-    </>
+      <p className={styles.friendshipError} aria-live="polite">
+        {error}
+      </p>
+    </div>
   );
 }
 
@@ -106,7 +109,9 @@ function UserProfileLayout() {
   const location = useLocation();
   const { userId } = useParams();
   const { auth } = useContext(AuthContext);
-  const { data, setData, isLoading, error } = useDataFetch(`/users/${userId}`);
+  const { data, setData, isLoading, error, refetch } = useDataFetch(
+    `/users/${userId}`,
+  );
 
   const isCurrentUser = auth.user.id === data?.user.id;
   const currentPath = location.pathname.split("/").at(-1);
@@ -119,8 +124,13 @@ function UserProfileLayout() {
 
   return (
     <>
-      {isLoading && <p>Loading...</p>}
-      {error && <p>An error occured</p>}
+      <div className={styles.loadingAndErrorContainer}>
+        <LoadingAndError
+          isLoading={isLoading}
+          error={error}
+          onTryAgain={refetch}
+        />
+      </div>
       {data && (
         <>
           <div className={styles.primaryContainer}>

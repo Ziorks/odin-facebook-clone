@@ -34,7 +34,7 @@
 }
 
 .deleteError {
-  color: red;
+  color: var(--color-error);
   font-weight: 600;
 }
 

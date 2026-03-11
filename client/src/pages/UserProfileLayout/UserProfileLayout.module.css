@@ -17,6 +17,10 @@
   margin-bottom: 2rem;
 }
 
+.userInfo > *:first-child {
+  flex-shrink: 0;
+}
+
 .usernameAndnFriends {
   color: var(--color-gray-700);
   text-align: center;
@@ -30,7 +34,9 @@
 .ownerActions,
 .friendshipActions {
   display: flex;
+  justify-content: center;
   gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .ownerActions > *,
@@ -98,6 +104,15 @@
   border-bottom: 3px solid var(--color-primary-300);
 }
 
+.loadingAndErrorContainer {
+  padding: 2rem 1rem;
+}
+
+.friendshipError {
+  text-align: center;
+  color: var(--color-error);
+}
+
 @media (min-width: 800px) {
   .userInfo {
     flex-direction: row;
@@ -111,5 +126,13 @@
   .usernameAndnFriends {
     text-align: left;
     flex: 1;
+  }
+
+  .friendshipActions {
+    justify-content: right;
+  }
+
+  .friendshipError {
+    text-align: right;
   }
 }

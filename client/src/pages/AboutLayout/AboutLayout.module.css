@@ -114,14 +114,10 @@
   background-color: rgb(from var(--color-gray-700) r g b / 10%);
 }
 
-/* .friendsListContainer > ul > li > div > div > a {
-  font-size: 0.7rem;
-  text-wrap: nowrap;
-} */
-
 .seeAllFriendsLink {
   display: block;
   padding: 0.5rem;
+  margin-top: 2rem;
   background-color: var(--color-gray-300);
   border-radius: 5px;
   text-align: center;

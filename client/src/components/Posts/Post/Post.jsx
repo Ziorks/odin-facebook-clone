@@ -15,13 +15,14 @@ import {
   IoTrashSharp,
 } from "react-icons/io5";
 import { format } from "date-fns";
+import { MAX_UPLOAD_SIZE_POST } from "../../../utils/constants";
 import AuthContext from "../../../contexts/AuthContext";
 import PostContext from "../../../contexts/PostContext";
 import useApiPrivate from "../../../hooks/useApiPrivate";
 import useDataFetchPaginated from "../../../hooks/useDataFetchPaginated";
-import { MAX_UPLOAD_SIZE_POST } from "../../../utils/constants";
 import Modal from "../../Modal";
 import TextAndImageForm from "../../TextAndImageForm";
+import Spinner from "../../Spinner";
 import PostPrivacySelect from "../../PostPrivacySelect";
 import ProfilePic from "../../ProfilePic";
 import ProfilePicLink from "../../ProfilePicLink";
@@ -83,7 +84,7 @@ function EditModal() {
 
   return (
     <Modal
-      heading="Edit Post"
+      heading="Edit post"
       handleClose={() => {
         let confirmed = true;
         if (changesMade) {
@@ -97,6 +98,11 @@ function EditModal() {
       }}
     >
       <div className={styles.editModalFormContainer}>
+        <ul className={styles.errorsList} aria-live="polite">
+          {errors?.map((error, i) => (
+            <li key={i}>{error.msg}</li>
+          ))}
+        </ul>
         <TextAndImageForm
           content={post.content}
           imageUrl={post.mediaUrl}
@@ -118,13 +124,10 @@ function EditModal() {
             username={auth.user.username}
           />
         </TextAndImageForm>
-        {isLoading && <p>Saving...</p>}
-        {errors && (
-          <ul>
-            {errors.map((error, i) => (
-              <li key={i}>{error.msg}</li>
-            ))}
-          </ul>
+        {isLoading && (
+          <div className={styles.loadingContainer}>
+            <Spinner size={16} />
+          </div>
         )}
       </div>
     </Modal>
@@ -153,7 +156,7 @@ function DeleteModal() {
   };
 
   return (
-    <Modal heading="Delete Post" handleClose={toggleDeleteModal}>
+    <Modal heading="Delete post" handleClose={toggleDeleteModal}>
       <div className={styles.deleteModalContainer}>
         <p>Are you sure you want to delete this post forever?</p>
         <div className={styles.deleteModalActionsContainer}>
@@ -164,8 +167,16 @@ function DeleteModal() {
             DELETE
           </button>
         </div>
-        {isLoading && <p>Deleting post...</p>}
-        {error && <p>An error occured. Please try again.</p>}
+        <div className={styles.notificationsContainer}>
+          <p aria-live="polite">
+            {error && "An error occured. Please try again."}
+          </p>
+          {isLoading && (
+            <div>
+              <Spinner size={16} />
+            </div>
+          )}
+        </div>
       </div>
     </Modal>
   );

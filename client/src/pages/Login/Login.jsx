@@ -3,6 +3,7 @@ import { FaGoogle, FaGithub } from "react-icons/fa";
 import api from "../../api";
 import AuthContext from "../../contexts/AuthContext";
 import FormInput from "../../components/FormInput";
+import Spinner from "../../components/Spinner";
 const apiHost = import.meta.env.VITE_API_HOST;
 import styles from "./Login.module.css";
 
@@ -47,15 +48,15 @@ function SignUpForm() {
 
   return (
     <>
-      {isLoading && <p>Processing...</p>}
-      {errors && (
-        <ul className={styles.errorsList}>
-          {errors.map((error, i) => (
+      <h2>Create a new account</h2>
+      <div className={styles.notificationsContainer}>
+        {isLoading && <Spinner size={16} />}
+        <ul aria-live="polite">
+          {errors?.map((error, i) => (
             <li key={i}>{error.msg}</li>
           ))}
         </ul>
-      )}
-      <h2>Create a new account</h2>
+      </div>
       <form onSubmit={handleSubmit} className={styles.form}>
         <FormInput
           type="text"
@@ -135,8 +136,10 @@ function LoginForm() {
 
   return (
     <>
-      {isLoading && <p>Processing...</p>}
-      {error && <p>{error}</p>}
+      <div className={styles.notificationsContainer}>
+        {isLoading && <Spinner size={16} />}
+        <p aria-live="polite">{error}</p>
+      </div>
       <form onSubmit={handleLoginSubmit} className={styles.form}>
         <FormInput
           type="text"
@@ -171,7 +174,7 @@ function LoginForm() {
             disabled={isLoading}
             className={styles.logInBtn}
           >
-            Log In
+            Log in
           </button>
         </div>
       </form>

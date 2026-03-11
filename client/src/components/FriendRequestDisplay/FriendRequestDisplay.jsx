@@ -55,9 +55,11 @@ function FriendRequestDisplay({ request }) {
               {isIncoming ? "Decline" : "Cancel"}
             </button>
             <div className={styles.infoContainer}>
-              <p>{formatDistanceToNowShort(request.createdAt)}</p>{" "}
-              {isLoading && <Spinner size={15} />}
-              {error && <p>An error occurred</p>}
+              <p>{formatDistanceToNowShort(request.createdAt)}</p>
+              <p className={styles.error} aria-live="polite">
+                {error && "An error occurred"}
+              </p>
+              {isLoading && <Spinner size={16} />}
             </div>
           </>
         )}

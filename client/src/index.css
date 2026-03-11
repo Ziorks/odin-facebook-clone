@@ -16,6 +16,9 @@
   --color-accent-100: rgb(136, 207, 136);
   --color-accent-200: rgb(15, 192, 15);
   --color-accent-300: rgb(4, 143, 4);
+
+  --color-success: rgb(0, 153, 0);
+  --color-error: rgb(153, 0, 0);
 }
 
 :root[data-theme="dark"] {

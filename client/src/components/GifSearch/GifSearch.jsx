@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 const api_key = import.meta.env.VITE_GIPHY_API_KEY;
 import styles from "./GifSearch.module.css";
+import LoadingAndError from "../LoadingAndError";
 
 const trendingUrl = `https://api.giphy.com/v1/gifs/trending?api_key=${api_key}`;
 const STATUS = { OK: "OK", LOADING: "LOADING", ERROR: "ERROR" };
@@ -64,6 +65,11 @@ function GifSearch({ onSelect }) {
         />
       </div>
       <div className={styles.resultContainer}>
+        <LoadingAndError
+          isLoading={status === STATUS.LOADING}
+          error={status === STATUS.ERROR}
+          spinnerSize={50}
+        />
         {status === STATUS.OK &&
           (results.length > 0 ? (
             <ul className={styles.results}>
@@ -76,8 +82,6 @@ function GifSearch({ onSelect }) {
           ) : (
             <p>No results found</p>
           ))}
-        {status === STATUS.LOADING && <p>Loading...</p>}
-        {status === STATUS.ERROR && <p>An error occurred</p>}
       </div>
     </div>
   );

@@ -1,0 +1,23 @@
+.loading > * {
+  margin: 0 auto;
+}
+
+.error {
+  color: var(--color-error);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.error > button {
+  margin-left: 0.5rem;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-gray-500);
+  background-color: unset;
+}
+
+.error > button:hover,
+.error > button:focus {
+  text-decoration: underline;
+}

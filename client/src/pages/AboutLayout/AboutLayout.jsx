@@ -3,6 +3,7 @@ import { Link, useOutletContext, Outlet, useLocation } from "react-router-dom";
 import AuthContext from "../../contexts/AuthContext";
 import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import FriendList from "../../components/FriendList";
+import LoadingAndError from "../../components/LoadingAndError";
 import styles from "./AboutLayout.module.css";
 
 function FriendsPreview() {
@@ -26,6 +27,11 @@ function FriendsPreview() {
           </div>
         )}
       </div>
+      <LoadingAndError
+        isLoading={isLoading}
+        error={error}
+        onTryAgain={fetchNext}
+      />
       {friendships &&
         (count > 0 ? (
           <div className={styles.friendsListContainer}>
@@ -37,12 +43,6 @@ function FriendsPreview() {
         ) : (
           <p>{user.username} has no friends</p>
         ))}
-      {isLoading && <p>Loading...</p>}
-      {error && (
-        <p>
-          An error occurred <button onClick={fetchNext}>Try again</button>
-        </p>
-      )}
       <Link className={styles.seeAllFriendsLink} to={"friends"}>
         See all
       </Link>

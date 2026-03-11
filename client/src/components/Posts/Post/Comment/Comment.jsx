@@ -63,13 +63,14 @@ function Replies({
   };
 
   const replyCount = comment._count.replies;
-  const nWhitelistedReplies = idWhitelist
-    ? comment.replies?.filter(
-        (reply) =>
-          idWhitelist.ids.includes(reply.id) ||
-          idWhitelist.pendingIds.includes(reply.pendingId),
-      ).length
-    : comment.replies?.length || 0;
+  const nWhitelistedReplies =
+    (idWhitelist
+      ? comment.replies?.filter(
+          (reply) =>
+            idWhitelist.ids.includes(reply.id) ||
+            idWhitelist.pendingIds.includes(reply.pendingId),
+        ).length
+      : comment.replies?.length) || 0;
 
   return (
     <>
@@ -160,30 +161,35 @@ function EditForm({ comment, handleCancel, onSuccess }) {
   };
 
   return (
-    <div className={styles.editFormContainer}>
-      <div>
-        <TextAndImageForm
-          content={comment.content}
-          imageUrl={comment.mediaUrl}
-          handleSubmit={handleSubmit}
-          onChange={handleChange}
-          placeholderText={"Edit your comment"}
-          charLimit={500}
-          maxFilesize={MAX_UPLOAD_SIZE_COMMENT}
-          disableClearOnSubmit={true}
-          disableSubmit={!changesMade}
-        />
-      </div>
-      <button type="button" onClick={handleCancel} disabled={isLoading}>
-        Cancel
-      </button>
-      {isLoading && <p>Saving...</p>}
-      {errors && (
-        <ul>
-          {errors.map((error, i) => (
-            <li key={i}>{error.msg}</li>
-          ))}
-        </ul>
+    <div>
+      <ul className={styles.errorsList} aria-live="polite">
+        {errors?.map((error, i) => (
+          <li key={i}>{error.msg}</li>
+        ))}
+      </ul>
+      <TextAndImageForm
+        content={comment.content}
+        imageUrl={comment.mediaUrl}
+        handleSubmit={handleSubmit}
+        onChange={handleChange}
+        placeholderText={"Edit your comment"}
+        charLimit={500}
+        maxFilesize={MAX_UPLOAD_SIZE_COMMENT}
+        disableClearOnSubmit={true}
+        disableSubmit={!changesMade}
+      />
+      {isLoading ? (
+        <div className={styles.loadingContainer}>
+          <Spinner size={16} />
+        </div>
+      ) : (
+        <button
+          className={styles.editCancelBtn}
+          type="button"
+          onClick={handleCancel}
+        >
+          Cancel
+        </button>
       )}
     </div>
   );
@@ -212,18 +218,28 @@ function DeleteModal({ id, handleClose, onSuccess }) {
   };
 
   return (
-    <Modal handleClose={handleClose}>
-      <p>Are you sure you want to delete this comment forever?</p>
-      <div>
-        <button onClick={handleDelete} disabled={isLoading}>
-          DELETE
-        </button>
-        <button onClick={handleClose} disabled={isLoading}>
-          Cancel
-        </button>
+    <Modal heading="Delete comment" handleClose={handleClose}>
+      <div className={styles.deleteModalContainer}>
+        <p>Are you sure you want to delete this comment forever?</p>
+        <div className={styles.deleteModalActionsContainer}>
+          <button onClick={handleDelete} disabled={isLoading}>
+            DELETE
+          </button>
+          <button onClick={handleClose} disabled={isLoading}>
+            Cancel
+          </button>
+        </div>
+        <div className={styles.notificationsContainer}>
+          <p aria-live="polite">
+            {error && "An error occured. Please try again."}
+          </p>
+          {isLoading && (
+            <div>
+              <Spinner size={16} />
+            </div>
+          )}
+        </div>
       </div>
-      {isLoading && <p>Deleting comment...</p>}
-      {error && <p>An error occured. Please try again.</p>}
     </Modal>
   );
 }
@@ -235,7 +251,8 @@ function Comment({
   idWhitelist,
 }) {
   const { auth } = useContext(AuthContext);
-  const { useComments, addPendingIdToWhitelist } = useContext(PostContext);
+  const { setPost, useComments, addPendingIdToWhitelist } =
+    useContext(PostContext);
   const { setData: setComments } = useComments;
 
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -368,6 +385,10 @@ function Comment({
       }),
       _count: { ...prev._count, replies: prev._count.replies + 1 },
     }));
+    setPost((prev) => ({
+      ...prev,
+      _count: { ...prev._count, comments: prev._count.comments + 1 },
+    }));
   };
 
   return (
@@ -405,15 +426,18 @@ function Comment({
               <img className={styles.commentMedia} src={comment.mediaUrl} />
             )}
             <div className={styles.commentActions}>
-              <span>
-                {comment.error
-                  ? "Error: comment not posted"
-                  : pending
-                    ? "Posting..."
-                    : formatDistanceToNowShort(comment.createdAt)}
-              </span>
+              {comment.error && (
+                <div className={styles.error}>Error: comment not posted</div>
+              )}
+              {pending && (
+                <>
+                  <Spinner size={16} />
+                  Posting...
+                </>
+              )}
               {!pending && !comment.error && (
                 <>
+                  <div>{formatDistanceToNowShort(comment.createdAt)}</div>
                   {!comment.isDeleted && (
                     <LikeButton
                       like={comment.myLike}

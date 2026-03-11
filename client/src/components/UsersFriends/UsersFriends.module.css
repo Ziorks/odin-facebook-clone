@@ -45,21 +45,3 @@
   grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
   gap: 1rem;
 }
-
-.loadingContainer {
-  margin: 0 auto;
-  width: max-content;
-}
-
-.retryBtn {
-  border: none;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-primary-100);
-  background-color: unset;
-}
-
-.retryBtn:hover,
-.retryBtn:focus {
-  text-decoration: underline;
-}

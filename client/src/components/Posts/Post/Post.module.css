@@ -223,6 +223,21 @@
   padding: 1rem;
 }
 
+.errorsList {
+  margin-bottom: 1rem;
+  list-style: disc inside;
+  text-align: left;
+  color: var(--color-error);
+}
+
+.loadingContainer {
+  margin-top: 1rem;
+}
+
+.loadingContainer > * {
+  margin-left: auto;
+}
+
 .deleteModalContainer {
   text-align: center;
   padding: 1rem;
@@ -234,6 +249,7 @@
   justify-content: right;
   gap: 1rem;
   margin-top: 2rem;
+  margin-bottom: 1rem;
 }
 
 .deleteModalActionsContainer > button {
@@ -262,6 +278,12 @@
 
 .deleteModalActionsContainer > button:last-child:hover {
   background-color: var(--color-primary-300);
+}
+
+.notificationsContainer {
+  display: flex;
+  justify-content: right;
+  color: var(--color-error);
 }
 
 @media (min-width: 500px) {

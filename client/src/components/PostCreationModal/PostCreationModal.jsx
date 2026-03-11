@@ -3,6 +3,7 @@ import useApiPrivate from "../../hooks/useApiPrivate";
 import AuthContext from "../../contexts/AuthContext";
 import { MAX_UPLOAD_SIZE_POST } from "../../utils/constants";
 import Modal from "../Modal";
+import Spinner from "../Spinner";
 import TextAndImageForm from "../TextAndImageForm";
 import PostPrivacySelect from "../PostPrivacySelect";
 import styles from "./PostCreationModal.module.css";
@@ -53,10 +54,15 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
 
   return (
     <Modal heading={"Create Post"} handleClose={handleClose}>
-      <div className={styles.formContainer}>
+      <div className={styles.primaryContainer}>
+        <ul className={styles.errorsList} aria-live="polite">
+          {errors?.map((error, i) => (
+            <li key={i}>{error.msg}</li>
+          ))}
+        </ul>
         <TextAndImageForm
           handleSubmit={handleSubmit}
-          placeholderText={`What's on your mind, ${auth.user.username}`}
+          placeholderText={`What's on your mind, ${auth.user.profile.firstName || auth.user.username}`}
           charLimit={2000}
           maxFilesize={MAX_UPLOAD_SIZE_POST}
         >
@@ -67,13 +73,10 @@ function PostCreationModal({ handleClose, wallId, onSuccess }) {
             username={auth.user.username}
           />
         </TextAndImageForm>
-        {isLoading && <p>Posting...</p>}
-        {errors && (
-          <ul>
-            {errors.map((error, i) => (
-              <li key={i}>{error.msg}</li>
-            ))}
-          </ul>
+        {isLoading && (
+          <div className={styles.loadingContainer}>
+            <Spinner size={16} />
+          </div>
         )}
       </div>
     </Modal>

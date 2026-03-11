@@ -72,6 +72,25 @@
   flex: 1;
 }
 
+.notificationsContainer {
+  display: flex;
+  text-align: left;
+  color: var(--color-error);
+}
+
+.loginContainer .notificationsContainer {
+  margin-bottom: 1rem;
+}
+
+.signupContainer .notificationsContainer {
+  padding: 1rem;
+  padding-bottom: 0;
+}
+
+.notificationsContainer > ul {
+  list-style-position: inside;
+}
+
 .form {
   text-align: left;
 }
@@ -162,13 +181,6 @@
   color: var(--color-primary-200);
   font-size: 1rem;
   margin-bottom: 1rem;
-}
-
-/* TODO: make errors better 
-    eg: associate error with input */
-.errorsList {
-  color: red;
-  list-style-type: none;
 }
 
 @media (min-width: 700px) {

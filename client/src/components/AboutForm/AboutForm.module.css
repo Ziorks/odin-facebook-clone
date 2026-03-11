@@ -1,3 +1,19 @@
+.notificationsContainer {
+  margin-bottom: 1rem;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.notificationsContainer > p {
+  font-weight: bold;
+  color: var(--color-success);
+}
+
+.notificationsContainer > ul {
+  color: var(--color-error);
+  list-style-position: inside;
+}
+
 .actionsContainer {
   display: flex;
   justify-content: right;
@@ -37,12 +53,4 @@
 .actionsContainer > button:last-child:not(:disabled):hover,
 .actionsContainer > button:last-child:not(:disabled):focus {
   background-color: var(--color-primary-200);
-}
-
-.savedMsg {
-  padding: 1rem;
-  text-align: right;
-  font-size: 1rem;
-  font-weight: bold;
-  color: var(--color-accent-300);
 }

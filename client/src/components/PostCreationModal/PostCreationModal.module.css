@@ -1,5 +1,18 @@
-.formContainer {
+.primaryContainer {
   padding: 1rem;
 }
 
+.errorsList {
+  margin-bottom: 1rem;
+  list-style-position: inside;
+  text-align: left;
+  color: var(--color-error);
+}
 
+.loadingContainer {
+  margin-top: 1rem;
+}
+
+.loadingContainer > * {
+  margin-left: auto;
+}

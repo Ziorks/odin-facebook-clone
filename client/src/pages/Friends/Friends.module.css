@@ -3,17 +3,16 @@
   padding-top: 3rem;
   max-width: 800px;
   margin: 0 auto;
+  color: var(--color-gray-700);
 }
 
 .primaryContainer > h1 {
-  color: var(--color-gray-700);
   text-align: center;
   margin-bottom: 2rem;
   font-size: 2rem;
 }
 
 .listContainer > p {
-  color: var(--color-gray-700);
   font-size: 1.1rem;
   margin-bottom: 1rem;
 }
@@ -23,4 +22,8 @@
   gap: 1rem;
   grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
   list-style: none;
+}
+
+.loadingAndErrorContainer {
+  margin-top: 2rem;
 }

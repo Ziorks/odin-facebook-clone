@@ -5,6 +5,7 @@ import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import PostCreationModal from "../PostCreationModal";
 import ProfilePicLink from "../ProfilePicLink";
 import Posts from "../Posts";
+import LoadingAndError from "../LoadingAndError";
 import styles from "./Wall.module.css";
 
 function Wall() {
@@ -67,12 +68,11 @@ function Wall() {
           )}
         </>
       )}
-      {isLoading && <p>Loading...</p>}
-      {error && (
-        <p>
-          An error occured <button onClick={fetchNext}>Try again</button>
-        </p>
-      )}
+      <LoadingAndError
+        isLoading={isLoading}
+        error={error}
+        onTryAgain={fetchNext}
+      />
     </div>
   );
 }

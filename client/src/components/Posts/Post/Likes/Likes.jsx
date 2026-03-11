@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import likeGraphic from "../../../../assets/like.svg";
 import useDataFetchPaginated from "../../../../hooks/useDataFetchPaginated";
 import useIntersection from "../../../../hooks/useIntersection";
-import UserThumbnail from "../../../UserThumbnail";
 import Modal from "../../../Modal";
+import Spinner from "../../../Spinner";
+import UserThumbnail from "../../../UserThumbnail";
 import styles from "./Likes.module.css";
 
 function LikesModal({ handleClose, myLike, useLikes }) {
@@ -43,30 +44,34 @@ function LikesModal({ handleClose, myLike, useLikes }) {
 
   return (
     <Modal heading="Likes" handleClose={handleClose}>
-      {likes && (
-        <ul className={styles.modalList}>
-          {myLike && (
-            <li>
-              <UserThumbnail user={myLike.user} />
-            </li>
-          )}
-          {likes.length > 0 &&
-            likes.map((like, index) => (
-              <li
-                key={like.id}
-                ref={index + 1 === likes.length ? ref : undefined}
-              >
-                <UserThumbnail user={like.user} />
+      <div className={styles.modalContentContainer}>
+        {likes && (
+          <ul className={styles.modalList}>
+            {myLike && (
+              <li>
+                <UserThumbnail user={myLike.user} />
               </li>
-            ))}
-        </ul>
-      )}
-      {isLoading && <p>Loading...</p>}
-      {error && (
-        <p>
-          An error occurred. <button onClick={fetchNext}>Try again</button>
-        </p>
-      )}
+            )}
+            {likes.length > 0 &&
+              likes.map((like, index) => (
+                <li
+                  key={like.id}
+                  ref={index + 1 === likes.length ? ref : undefined}
+                >
+                  <UserThumbnail user={like.user} />
+                </li>
+              ))}
+          </ul>
+        )}
+        <div className={styles.notificationsContainer}>
+          {isLoading && <Spinner size={50} />}
+          {error && (
+            <p>
+              An error occurred. <button onClick={fetchNext}>Try again</button>
+            </p>
+          )}
+        </div>
+      </div>
     </Modal>
   );
 }
@@ -111,7 +116,7 @@ function LikesSample({ nLikes, myLike, useLikesSample }) {
           {nMoreLikes > 0 && <p>and {nMoreLikes} more... </p>}
         </>
       )}
-      {isLoading && <p>Loading...</p>}
+      {isLoading && <Spinner size={10} />}
       {error && <p>An error occurred.</p>}
     </div>
   );

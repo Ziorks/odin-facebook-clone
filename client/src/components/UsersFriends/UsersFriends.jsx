@@ -3,7 +3,7 @@ import { Link, useOutletContext } from "react-router-dom";
 import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import useIntersection from "../../hooks/useIntersection";
 import FriendList from "../FriendList";
-import Spinner from "../Spinner";
+import LoadingAndError from "../LoadingAndError";
 import styles from "./UsersFriends.module.css";
 
 function UsersFriends() {
@@ -54,19 +54,11 @@ function UsersFriends() {
         ) : (
           <p>{user.profile.firstName || user.username} has no friends</p>
         ))}
-      {isLoading && (
-        <div className={styles.loadingContainer}>
-          <Spinner size={50} />
-        </div>
-      )}
-      {error && (
-        <p>
-          An error occured.{" "}
-          <button className={styles.retryBtn} onClick={fetchNext}>
-            Try again
-          </button>
-        </p>
-      )}
+      <LoadingAndError
+        isLoading={isLoading}
+        error={error}
+        onTryAgain={fetchNext}
+      />
     </div>
   );
 }

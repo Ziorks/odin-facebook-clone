@@ -3,6 +3,7 @@ import AuthContext from "../../contexts/AuthContext";
 import useDataFetchPaginated from "../../hooks/useDataFetchPaginated";
 import useIntersection from "../../hooks/useIntersection";
 import FriendList from "../../components/FriendList/FriendList";
+import LoadingAndError from "../../components/LoadingAndError";
 import styles from "./Friends.module.css";
 
 function Friends() {
@@ -45,12 +46,13 @@ function Friends() {
         ) : (
           <p>You have no friends</p>
         ))}
-      {isLoading && <p>Loading...</p>}
-      {error && (
-        <p>
-          An error occured <button onClick={fetchNext}>Try again</button>
-        </p>
-      )}
+      <div className={styles.loadingAndErrorContainer}>
+        <LoadingAndError
+          isLoading={isLoading}
+          error={error}
+          onTryAgain={fetchNext}
+        />
+      </div>
     </div>
   );
 }
