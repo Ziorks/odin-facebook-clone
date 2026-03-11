@@ -1,0 +1,29 @@
+.error {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--color-gray-600);
+  font-size: 1rem;
+}
+
+.error > p:first-of-type {
+  color: var(--color-error);
+  font-size: 2rem;
+}
+
+.error > p:last-of-type {
+  margin-bottom: 1rem;
+}
+
+.error > button {
+  margin-left: 0.5rem;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-gray-500);
+  background-color: unset;
+}
+
+.error > button:hover,
+.error > button:focus {
+  text-decoration: underline;
+}

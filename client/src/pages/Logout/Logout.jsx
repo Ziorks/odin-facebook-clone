@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AuthContext from "../../contexts/AuthContext";
 import useApiPrivate from "../../hooks/useApiPrivate";
 import LoadingScreen from "../../components/LoadingScreen";
-// import styles from "./Logout.module.css";
+import styles from "./Logout.module.css";
 
 function Logout() {
   const api = useApiPrivate();
@@ -37,10 +37,13 @@ function Logout() {
   return (
     <>
       {error ? (
-        <p>
-          Logout failed. Check console for details. Click here to{" "}
-          <button onClick={doLogout}>try again</button>
-        </p>
+        <div className={styles.error}>
+          <p>Logout failed</p>
+          <p>Check console for details</p>
+          <button type="button" onClick={doLogout}>
+            Try again
+          </button>
+        </div>
       ) : (
         <LoadingScreen />
       )}
