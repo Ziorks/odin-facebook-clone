@@ -4,7 +4,6 @@ const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } }); //2MB
 const bcrypt = require("bcryptjs");
 const { body, validationResult } = require("express-validator");
 const db = require("../db/queries");
-const { postPrivacyValidation } = require("./helperFunctions");
 
 const existsMessage = " is required";
 
@@ -22,7 +21,8 @@ const errorHandler = (req, res, next) => {
 const validateRegister = [
   body("username")
     .exists()
-    .withMessage("'username'" + existsMessage)
+    .withMessage("Username" + existsMessage)
+    .bail()
     .trim()
     .isAlphanumeric()
     .withMessage("Username can only contain letters and numbers")
@@ -30,25 +30,28 @@ const validateRegister = [
     .withMessage("Username must be between 5 and 16 characters long"),
   body("email")
     .exists()
-    .withMessage("'email'" + existsMessage)
+    .withMessage("Email" + existsMessage)
+    .bail()
     .trim()
     .toLowerCase()
     .isEmail()
     .withMessage("Email must be a valid email address"),
   body("password")
     .exists()
-    .withMessage("'password'" + existsMessage)
+    .withMessage("Password" + existsMessage)
+    .bail()
     .trim()
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
   body("passwordConfirmation")
     .exists()
-    .withMessage("'passwordConfirmation'" + existsMessage)
+    .withMessage("Password confirmation" + existsMessage)
+    .bail()
     .trim()
     .custom((value, { req }) => {
       return value === req.body.password;
     })
-    .withMessage("'passwordConfirmation' must match 'password'"),
+    .withMessage("Password confirmation doesn't match password"),
   errorHandler,
 ];
 
@@ -96,7 +99,7 @@ const validateUserUpdate = [
         const match = await bcrypt.compare(oldPassword, user.password);
         if (!match) {
           req.oldPasswordValidationError = {
-            msg: "'oldPassword' is incorrect",
+            msg: "Old password is incorrect",
           };
         }
       }
@@ -147,7 +150,7 @@ const validateUserUpdate = [
     .withMessage("Email must be a valid email address"),
   body("oldPassword").custom((value, { req }) => {
     if (req.isOldPasswordRequired && !value) {
-      throw new Error("'oldPassword' is required in order to update password");
+      throw new Error("Old password is required to update password");
     }
 
     if (req.oldPasswordValidationError) {
@@ -169,23 +172,21 @@ const validateUserUpdate = [
       }
       return true;
     })
-    .withMessage("'passwordConfirmation' must match 'newPassword'"),
+    .withMessage("Password confirmation must match new password"),
   body("firstName")
     .optional()
     .trim()
     .isLength({ min: 1, max: 64 })
-    .withMessage("'firstName' must be between 1 and 64 characters")
-    .bail()
+    .withMessage("First name must be between 1 and 64 characters")
     .isAlpha()
-    .withMessage("'firstName' must only contain letters"),
+    .withMessage("First name must only contain letters"),
   body("lastName")
     .optional()
     .trim()
     .isLength({ min: 1, max: 64 })
-    .withMessage("'lastName' must be between 1 and 64 characters")
-    .bail()
+    .withMessage("Last name must be between 1 and 64 characters")
     .isAlpha()
-    .withMessage("'lastName' must only contain letters"),
+    .withMessage("Last name must only contain letters"),
   errorHandler,
 ];
 
@@ -208,18 +209,18 @@ const validatePost = [
   body("content")
     .optional()
     .isString()
-    .withMessage("'content' must be a string")
+    .withMessage("Content must be a string")
     .bail()
     .trim()
     .isLength({ max: 2048 })
-    .withMessage("'content' must be 2048 characters or less"),
+    .withMessage("Content must be 2048 characters or less"),
   body("imageUrl")
     .optional()
     .isURL()
-    .withMessage("'imageUrl' must be a valid URL")
+    .withMessage("Image URL must be a valid URL")
     .bail()
     .isLength({ max: 256 })
-    .withMessage("'imageUrl' must be 256 characters or less"),
+    .withMessage("Image URL must be 256 characters or less"),
   body("image").custom((_, { req }) => {
     if (req.fileValidationError) {
       throw new Error(req.fileValidationError.msg);
@@ -230,7 +231,7 @@ const validatePost = [
 
     const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(image.mimetype)) {
-      throw new Error("'image' must be an image file");
+      throw new Error("Image must be an image file");
     }
 
     return true;
@@ -239,7 +240,7 @@ const validatePost = [
     .optional()
     .isIn(["PUBLIC", "FRIENDS_ONLY", "PRIVATE"])
     .withMessage(
-      "'privacy' must be one of 'PUBLIC', 'FRIENDS_ONLY', or 'PRIVATE'",
+      "Privacy must be one of 'PUBLIC', 'FRIENDS_ONLY', or 'PRIVATE'",
     ),
   errorHandler,
 ];
@@ -263,17 +264,18 @@ const validateComment = [
   body("content")
     .optional()
     .isString()
-    .withMessage("'content' must be a string")
+    .withMessage("Content must be a string")
+    .bail()
     .trim()
     .isLength({ max: 512 })
-    .withMessage("'content' must be 512 characters or less"),
+    .withMessage("Content must be 512 characters or less"),
   body("imageUrl")
     .optional()
     .isURL()
-    .withMessage("'imageUrl' must be a valid URL")
+    .withMessage("Image URL must be a valid URL")
     .bail()
     .isLength({ max: 256 })
-    .withMessage("'imageUrl' must be 256 characters or less"),
+    .withMessage("Image URL must be 256 characters or less"),
   body("image").custom((_, { req }) => {
     if (req.fileValidationError) {
       throw new Error(req.fileValidationError.msg);
@@ -284,7 +286,7 @@ const validateComment = [
 
     const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(image.mimetype)) {
-      throw new Error("'image' must be an image file");
+      throw new Error("Image must be an image file");
     }
 
     return true;
@@ -295,9 +297,11 @@ const validateComment = [
 const validateWork = [
   body("company")
     .exists()
-    .withMessage("'company'" + existsMessage)
+    .withMessage("Company" + existsMessage)
+    .bail()
     .isString()
     .withMessage("Company must be a string")
+    .bail()
     .trim()
     .notEmpty()
     .withMessage("Company can't be an empty string")
@@ -307,6 +311,7 @@ const validateWork = [
     .optional({ values: "null" })
     .isString()
     .withMessage("Position must be a string")
+    .bail()
     .trim()
     .isLength({ max: 128 })
     .withMessage("Position can be no longer than 128 characters"),
@@ -314,6 +319,7 @@ const validateWork = [
     .optional({ values: "null" })
     .isString()
     .withMessage("Location must be a string")
+    .bail()
     .trim()
     .isLength({ max: 128 })
     .withMessage("Location can be no longer than 128 characters"),
@@ -321,38 +327,43 @@ const validateWork = [
     .optional({ values: "null" })
     .isString()
     .withMessage("Description must be a string")
+    .bail()
     .trim()
     .isLength({ max: 256 })
     .withMessage("Description can be no longer than 256 characters"),
   body("startYear")
     .optional({ values: "null" })
     .isInt()
-    .withMessage("StartYear must be an integer"),
+    .withMessage("Start year must be an integer"),
   body("endYear")
     .optional({ values: "null" })
     .isInt()
-    .withMessage("EndYear must be an integer")
+    .withMessage("End year must be an integer")
+    .bail()
     .custom((value, { req }) => {
       return value >= req.body.startYear;
     })
-    .withMessage("EndYear cannot be less than StartYear"),
+    .withMessage("End year cannot be less than start year"),
   body("currentJob")
     .customSanitizer((value, { req }) => {
       return req.body.endYear ? value : true;
     })
     .exists()
-    .withMessage("'currentJob'" + existsMessage)
+    .withMessage("Current job'" + existsMessage)
+    .bail()
     .isBoolean()
-    .withMessage("CurrentJob must be a boolean"),
+    .withMessage("Current job must be a boolean"),
   errorHandler,
 ];
 
 const validateSchool = [
   body("name")
     .exists()
-    .withMessage("'name'" + existsMessage)
+    .withMessage("Name" + existsMessage)
+    .bail()
     .isString()
     .withMessage("Name must be a string")
+    .bail()
     .trim()
     .notEmpty()
     .withMessage("Name can't be an empty string")
@@ -362,6 +373,7 @@ const validateSchool = [
     .optional({ values: "null" })
     .isString()
     .withMessage("Description must be a string")
+    .bail()
     .trim()
     .isLength({ max: 256 })
     .withMessage("Description can be no longer than 256 characters"),
@@ -369,24 +381,27 @@ const validateSchool = [
     .optional({ values: "null" })
     .isString()
     .withMessage("Degree must be a string")
+    .bail()
     .trim()
     .isLength({ max: 128 })
     .withMessage("Degree can be no longer than 128 characters"),
   body("startYear")
     .optional({ values: "null" })
     .isInt()
-    .withMessage("StartYear must be an integer"),
+    .withMessage("Start year must be an integer"),
   body("endYear")
     .optional({ values: "null" })
     .isInt()
-    .withMessage("EndYear must be an integer")
+    .withMessage("End year must be an integer")
+    .bail()
     .custom((value, { req }) => {
       return value >= req.body.startYear;
     })
-    .withMessage("EndYear cannot be less than StartYear"),
+    .withMessage("End year cannot be less than start year"),
   body("graduated")
     .exists()
-    .withMessage("'graduated'" + existsMessage)
+    .withMessage("Graduated" + existsMessage)
+    .bail()
     .isBoolean()
     .withMessage("Graduated must be a boolean"),
   errorHandler,
@@ -395,9 +410,11 @@ const validateSchool = [
 const validateCity = [
   body("name")
     .exists()
-    .withMessage("'name'" + existsMessage)
+    .withMessage("Name" + existsMessage)
+    .bail()
     .isString()
     .withMessage("Name must be a string")
+    .bail()
     .trim()
     .notEmpty()
     .withMessage("Name can't be an empty string")
@@ -406,15 +423,15 @@ const validateCity = [
   body("yearMoved")
     .optional({ values: "null" })
     .isInt()
-    .withMessage("YearMoved must be an integer"),
+    .withMessage("Year moved must be an integer"),
   body("isHometown")
     .optional()
     .isBoolean()
-    .withMessage("IsHometown must be a boolean"),
+    .withMessage("Is hometown must be a boolean"),
   body("isCurrentCity")
     .optional()
     .isBoolean()
-    .withMessage("IsCurrentCity must be a boolean"),
+    .withMessage("Is current city must be a boolean"),
   errorHandler,
 ];
 
@@ -422,7 +439,7 @@ const validateBasicInfo = [
   body("phoneNumbers")
     .optional()
     .isArray({ max: 5 })
-    .withMessage("PhoneNumbers must be an array of at most 5 elements")
+    .withMessage("Phone numbers must be an array of at most 5 elements")
     .bail()
     .customSanitizer((arr) =>
       arr
@@ -433,10 +450,10 @@ const validateBasicInfo = [
     ),
   body("phoneNumbers.*")
     .isString()
-    .withMessage("Each element of phoneNumbers must be a string")
+    .withMessage("Each phone number must be a string")
     .bail()
     .isLength({ max: 32 })
-    .withMessage("Each string in phoneNumbers must be 32 characters or less"),
+    .withMessage("Each string in phone numbers must be 32 characters or less"),
   body("emails")
     .optional()
     .isArray({ max: 5 })
@@ -451,7 +468,7 @@ const validateBasicInfo = [
     ),
   body("emails.*")
     .isEmail()
-    .withMessage("Each element of emails must be an email address")
+    .withMessage("Each email must be an email address")
     .bail()
     .isLength({ max: 64 })
     .withMessage("Each email must be 64 characters or less"),
@@ -469,14 +486,14 @@ const validateBasicInfo = [
     ),
   body("websites.*")
     .isURL()
-    .withMessage("Each element of websites must be a URL")
+    .withMessage("Each website must be a URL")
     .bail()
     .isLength({ max: 128 })
     .withMessage("Each website must be 128 characters or less"),
   body("socialLinks")
     .optional()
     .isArray({ max: 5 })
-    .withMessage("SocialLinks must be an array of at most 5 elements")
+    .withMessage("Social links must be an array of at most 5 elements")
     .bail()
     .customSanitizer((arr) =>
       arr
@@ -487,11 +504,10 @@ const validateBasicInfo = [
     ),
   body("socialLinks.*")
     .isURL()
-    .withMessage("Each element of socialLinks must be a URL")
+    .withMessage("Each social link must be a URL")
     .bail()
     .isLength({ max: 128 })
-    .withMessage("Each socialLink must be 128 characters or less"),
-
+    .withMessage("Each social link must be 128 characters or less"),
   body("gender")
     .optional({ values: "null" })
     .trim()
@@ -532,7 +548,7 @@ const validateBasicInfo = [
     ),
   body("languages.*")
     .isString()
-    .withMessage("Each element of languages must be a string")
+    .withMessage("Each language must be a string")
     .bail()
     .isLength({ max: 32 })
     .withMessage("Each language must be 32 characters or less"),
@@ -542,10 +558,10 @@ const validateBasicInfo = [
 function detailValidationChain(fieldname) {
   return body(fieldname)
     .optional({ values: "null" })
-    .trim()
     .isString()
     .withMessage(fieldname + " must be a string")
     .bail()
+    .trim()
     .customSanitizer((value) => value || null)
     .isLength({ max: 512 })
     .withMessage(fieldname + " must be 512 characters or less");
