@@ -55,6 +55,7 @@ const getRefreshTokenCookieOptions = ({ rememberDevice = false } = {}) => {
     httpOnly: true,
     secure: true,
     sameSite: "None",
+    partitioned: true,
     maxAge: rememberDevice ? REFRESH_TOKEN_EXPIRY_TIME : undefined,
   };
 };
