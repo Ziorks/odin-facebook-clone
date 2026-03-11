@@ -1,0 +1,66 @@
+.primaryContainer {
+  position: relative;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  min-height: calc(100vh - 3.6rem);
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-500);
+  text-align: center;
+}
+
+.graphic {
+  position: relative;
+}
+
+.graphic > p {
+  position: absolute;
+  color: var(--color-primary-200);
+  font-size: 1.5rem;
+}
+
+.graphic > p:first-of-type {
+  right: 3rem;
+  top: 1.2rem;
+  rotate: -80deg;
+}
+
+.graphic > p:nth-of-type(2) {
+  right: 1.9rem;
+  rotate: -30deg;
+  font-size: 2rem;
+}
+
+.graphic > p:nth-of-type(3) {
+  right: 0.8rem;
+  rotate: 10deg;
+}
+
+.graphic > svg {
+  font-size: 10rem;
+  color: var(--color-primary-200);
+}
+
+.primaryContainer > a {
+  padding: 0.8rem 2.5rem;
+  border-radius: 10px;
+  background-color: var(--color-primary-300);
+  color: #fff;
+  font-weight: 600;
+}
+
+.primaryContainer > a:hover,
+.primaryContainer > a:focus {
+  background-color: var(--color-primary-200);
+}
+
+.primaryContainer > button {
+  border: unset;
+  background-color: unset;
+  color: var(--color-primary-200);
+  font-weight: 600;
+  font-size: 1rem;
+}

@@ -29,86 +29,91 @@ const routes = [
   {
     path: "/",
     element: <App />,
-    errorElement: <Error />,
     children: [
       {
-        path: "logout",
-        element: <Logout />,
-      },
-      {
-        index: true,
-        element: <Home />,
-      },
-      {
-        path: "friends",
-        element: <FriendsLayout />,
-        children: [
-          { index: true, element: <Friends /> },
-          {
-            element: <PendingRequestsLayout />,
-            children: [
-              { path: "pending", element: <PendingRequestsIncoming /> },
-              {
-                path: "pending_incoming",
-                element: <PendingRequestsIncoming />,
-              },
-              {
-                path: "pending_outgoing",
-                element: <PendingRequestsOutgoing />,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        path: "users",
+        errorElement: <Error />,
         children: [
           {
             index: true,
-            element: <UserSearch />,
+            element: <Home />,
           },
           {
-            path: ":userId",
-            element: <UserProfileLayout />,
+            path: "logout",
+            element: <Logout />,
+          },
+          {
+            path: "friends",
+            element: <FriendsLayout />,
             children: [
-              { index: true, element: <Wall /> },
+              { index: true, element: <Friends /> },
               {
-                element: <AboutLayout />,
+                element: <PendingRequestsLayout />,
                 children: [
-                  { path: "about", element: <AboutOverview /> },
-                  { path: "about_overview", element: <AboutOverview /> },
+                  { path: "pending", element: <PendingRequestsIncoming /> },
                   {
-                    path: "about_work_and_education",
-                    element: <AboutWorkAndEducation />,
+                    path: "pending_incoming",
+                    element: <PendingRequestsIncoming />,
                   },
                   {
-                    path: "about_places_lived",
-                    element: <AboutPlacesLived />,
-                  },
-                  {
-                    path: "about_contact_info",
-                    element: <AboutContactInfo />,
-                  },
-                  {
-                    path: "about_details",
-                    element: <AboutDetails />,
+                    path: "pending_outgoing",
+                    element: <PendingRequestsOutgoing />,
                   },
                 ],
               },
-              { path: "friends", element: <UsersFriends /> },
             ],
           },
-        ],
-      },
-      {
-        path: "settings",
-        element: <UserSettings />,
-        children: [
-          { path: "username", element: <Username /> },
-          { path: "name", element: <Name /> },
-          { path: "email", element: <Email /> },
-          { path: "avatar", element: <Avatar /> },
-          { path: "password", element: <Password /> },
+          {
+            path: "users",
+            children: [
+              {
+                index: true,
+                element: <UserSearch />,
+              },
+              {
+                path: ":userId",
+                element: <UserProfileLayout />,
+                children: [
+                  { index: true, element: <Wall /> },
+                  {
+                    element: <AboutLayout />,
+                    children: [
+                      { path: "about", element: <AboutOverview /> },
+                      { path: "about_overview", element: <AboutOverview /> },
+                      {
+                        path: "about_work_and_education",
+                        element: <AboutWorkAndEducation />,
+                      },
+                      {
+                        path: "about_places_lived",
+                        element: <AboutPlacesLived />,
+                      },
+                      {
+                        path: "about_contact_info",
+                        element: <AboutContactInfo />,
+                      },
+                      {
+                        path: "about_details",
+                        element: <AboutDetails />,
+                      },
+                    ],
+                  },
+                  { path: "friends", element: <UsersFriends /> },
+                ],
+              },
+            ],
+          },
+          {
+            path: "settings",
+            element: <UserSettings />,
+            children: [
+              { path: "username", element: <Username /> },
+              { path: "name", element: <Name /> },
+              { path: "email", element: <Email /> },
+              { path: "avatar", element: <Avatar /> },
+              { path: "password", element: <Password /> },
+            ],
+          },
+          { path: "*", element: <Error /> },
         ],
       },
     ],
